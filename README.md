@@ -3,8 +3,8 @@ Forældreintra to Email
 
 This program logs into ForældreIntra (part of SkoleIntra) and converts the content inside to emails. This includes:
 
-* Frontpage: Notices on the bullitin board (opslagstavle)
-* Frontpage: Cover pictures
+* Front page: Notices on the bulletin board (opslagstavle)
+* Front page: Cover pictures
 * ...
 * Messages: "Emails" send inside the system to/from yourself
 
