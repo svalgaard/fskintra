@@ -5,7 +5,7 @@
 import os
 import sys
 import ConfigParser
-import md5
+import hashlib
 import codecs
 import locale
 
@@ -58,7 +58,7 @@ if '--config' in sys.argv:
             ('password',    u'Kodeord fx kaTTx24:'),
             ('hostname',    u'Skoleintra domæne fx www.xskolen.yby.dk:'),
             ('email',       u'Modtageremailadresse (evt. flere adskilt med komma):'),
-            ('senderemail', u'Afsenderemailadresse (evt. samme adresser som ovenover):')]
+            ('senderemail', u'Afsenderemailadresse (evt. samme adresse(r) som ovenover):')]
     for (var,question) in opts:
         while True:
             q = u'\n%s\n' % question
@@ -68,7 +68,7 @@ if '--config' in sys.argv:
         details[var] = a
     
     #md5 "encrypt" the password
-    details['password'] = md5.md5(details['password']).hexdigest()
+    details['password'] = hashlib.md5(details['password']).hexdigest()
     
     config = u'[default]\n'
     for opt,_ in opts:

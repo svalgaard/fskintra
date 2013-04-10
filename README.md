@@ -15,7 +15,7 @@ Requirements
 
 * Linux (probably)
 * Working mail from the command line (i.e., sendmail me@example.com should send an email to me@example.com )
-* Python 2.x
+* Python 2.5+ (not 3.x)
 * Python libraries: mechanize, BeautifulSoup
 
 You can get the required Python libraries in Ubuntu by running:
