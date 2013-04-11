@@ -270,11 +270,17 @@ class Message:
                 atag.replaceWithChildren() # kill link
                 continue
             if url.startswith('/') or config.HOSTNAME in url: # onsite!
-                data = surllib.skoleGetURL(url, False)
-                usefilename = atag['usefilename'] if atag.has_key('usefilename') else None
-                eatt = generateMIMEAttachment(url, data, usefilename)
-                attachments.append(eatt)
-                atag.replaceWithChildren() # kill the actual link
+                data = None
+                try:
+                    data = surllib.skoleGetURL(url, False)
+                except:
+                    # unable to fetch URL
+                    config.log(u'%s: Kan ikke hente flg. URL: %s' % (self.mp['title'] if self.mp['title'] else self, url))
+                if data:
+                    usefilename = atag['usefilename'] if atag.has_key('usefilename') else None
+                    eatt = generateMIMEAttachment(url, data, usefilename)
+                    attachments.append(eatt)
+                    atag.replaceWithChildren() # kill the actual link
 
 
         # now, put the pieces together
