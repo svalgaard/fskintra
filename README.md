@@ -14,7 +14,7 @@ Requirements
 ============
 
 * Linux (probably)
-* Working mail from the command line (i.e., sendmail me@example.com should send an email to me@example.com )
+* Working mail server answering on localhost port 25
 * Python 2.5+ (not 3.x)
 * Python libraries: mechanize, BeautifulSoup
 
