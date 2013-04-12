@@ -8,6 +8,7 @@ import ConfigParser
 import hashlib
 import codecs
 import locale
+import getpass
 
 ROOT = os.path.expanduser('~/.skoleintra/')
 CACHE_DN = os.path.join(ROOT, 'cache')
@@ -62,7 +63,10 @@ if '--config' in sys.argv:
     for (var,question) in opts:
         while True:
             q = u'\n%s\n' % question
-            a = raw_input(q).strip().decode(sys.stdin.encoding)
+            if var == 'password':
+                a = getpass.getpass(q).strip().decode(sys.stdin.encoding)
+            else:
+                a = raw_input(q).strip().decode(sys.stdin.encoding)
             if a: break
             print u'Angiv venligst en værdi'
         details[var] = a
