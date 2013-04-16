@@ -61,4 +61,4 @@ The current version of fskintra is not very good at handling http errors. If an 
 Author
 ======
 
-fskintra is maintained by Jens Svalgaard kohrt http://svalgaard.net/jens/
+fskintra is maintained by Jens Svalgaard kohrt - http://svalgaard.net/jens/ - github AT svalgaard.net
