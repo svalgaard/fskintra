@@ -13,10 +13,10 @@ Everything is cached, i.e., you only get an email, if there are any new messages
 Requirements
 ============
 
-* Linux, BSD
+* Linux, FreeBSD
 * Working mail server answering on localhost port 25
 * Python 2.5+ (not 3.x)
-* Python libraries: mechanize (0.2.5), BeautifulSoup (3.2.0)
+* Python libraries: mechanize (0.2.5), BeautifulSoup (3.2.x)
 
 You can get the required Python libraries in Ubuntu by running:
 
