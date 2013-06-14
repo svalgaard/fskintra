@@ -23,7 +23,7 @@ def skoleGetChildren():
     config.log(u'Henter liste af børn')
 
     if not _children:
-        data = surllib.skoleGetURL(URL, asSoup = True, noCache = False)
+        data = surllib.skoleGetURL(URL, asSoup = True, noCache = True)
 
         _children = {}
         for a in data.findAll('a'):
