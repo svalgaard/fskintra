@@ -9,17 +9,52 @@ import hashlib
 import codecs
 import locale
 import getpass
+import optparse
+import time
 
 ROOT = os.path.expanduser('~/.skoleintra/')
-CACHE_DN = os.path.join(ROOT, 'cache')
-MSG_DN = os.path.join(ROOT, 'msg')
-CONFIG_FN = os.path.join(ROOT, 'skoleintra.txt')
 DEFAULT_FN = os.path.join(os.path.dirname(__file__), 'default.inf')
-
+CONFIG_FN = '~/.skoleintra/skoleintra.txt'
 # Name of current child
 CHILDNAME = '' 
 
+#
+# Parse command line options
+#
+parser = optparse.OptionParser(usage = u'''%prog [options]
+
+Se flg. side for flere detaljer:
+   https://github.com/svalgaard/fskintra/''')
+parser.add_option('--config-file', dest='configfilename', default=None,
+                  help=u'Brug konfigurationsfilen FILNAVN - standard: %s'%CONFIG_FN,
+                  metavar='FILNAVN')
+parser.add_option('--config', dest='doconfig', default=False, action='store_true',
+                  help=u'Opsæt skoleintra')
+
+parser.add_option('-v', '--verbose', action='append_const', const=1, dest='verbosity', 
+                  help=u'Skriv flere log-linjer', default=[1])
+parser.add_option('-q',  '--quiet', action='append_const', const=-1, dest='verbosity', 
+                  help=u'Skriv færre log-linjer')
+
+(options, args) = parser.parse_args()
+
+if args:
+    parser.error(u'Ukendte argumenter: %s' % ' '.join(args))
+
+options.verbosity = max(sum(options.verbosity),0)
+
+CONFIG_FN = os.path.expanduser(CONFIG_FN)
+if options.configfilename:
+    TMP = os.path.expanduser(options.configfilename)
+    if not os.path.samefile(CONFIG_FN, TMP):
+        CONFIG_FN = TMP
+if not os.path.isfile(CONFIG_FN) and not options.doconfig:
+    parser.error(u'''Kan ikke finde konfigurationsfilen '%s'
+Kør først programmet med --config for at sætte det op'''  % CONFIG_FN)
+
+#
 # setup UTF-8 on stdout
+#
 def getNiceEncoding():
     enc = locale.getpreferredencoding()
     if not enc: enc = 'utf-8'
@@ -34,22 +69,13 @@ def getNiceEncoding():
 def niceStream(fd):
     return codecs.getwriter(getNiceEncoding())(fd)
 def ensureDanish():
-    '''Ensure that we can do Danish letters on stderr, stdout by wrapping them in a codecs thing'''
+    '''Ensure that we can do Danish letters on stderr, stdout by wrapping them using codecs.getwriter'''
     sys.stderr = niceStream(sys.stderr)
     sys.stdout = niceStream(sys.stdout)
 ensureDanish()
 
 
-def pleaseSetup(msg = ''):
-    if msg: print msg
-    print u'Kør venligst programmet med --config for at sætte din SkoleIntra konto op'
-    sys.exit(1)
-
-if not os.path.isfile(CONFIG_FN):
-    if not '--config' in sys.argv:
-        pleaseSetup('%s eksisterer ikke.' % CONFIG_FN)
-
-if '--config' in sys.argv:
+if options.doconfig:
     if os.path.isfile(CONFIG_FN):
         print u'Din opsætning bliver nulstillet, når du har besvareret nedenstående spørgsmål'
     print u'Din nye opsætning gemmes her:', CONFIG_FN
@@ -73,6 +99,11 @@ if '--config' in sys.argv:
     
     #md5 "encrypt" the password
     details['password'] = hashlib.md5(details['password']).hexdigest()
+
+    # if not using standard CONFIG_FN, setup prefix for cache and msg
+    if options.configfilename:
+      opts.append(('cacheprefix', ''))
+      details['cacheprefix'] = hex(int(time.time()))[2:] + '-'
     
     config = u'[default]\n'
     for opt,_ in opts:
@@ -86,11 +117,6 @@ if '--config' in sys.argv:
     print u'Din nye opsætning er klar -- kør nu programmet uden --config'
     sys.exit(1)
 
-# ensure that we have all directories setup
-for dn in (CACHE_DN, MSG_DN):
-    if not os.path.isdir(dn):
-        os.makedirs(dn)
-    
 # read configuration
 cfg = ConfigParser.ConfigParser()
 cfg.read(DEFAULT_FN)
@@ -102,18 +128,26 @@ try:
     HOSTNAME = cfg.get('default', 'hostname')
     SENDER   = cfg.get('default', 'senderemail')
     EMAIL    = cfg.get('default', 'email')
+    if options.configfilename:
+      CACHEPREFIX = cfg.get('default', 'cacheprefix')
+    else:
+      CACHEPREFIX = ''
 except ConfigParser.NoOptionError, e:
-    pleaseSetup(u'Mangler indstilling for: %s' % e.option)
+    parser.error(u'''Konfigurationsfilen '%s' mangler en indstilling for %s
+Kør først programmet med --config for at sætte det op'''  % (CONFIG_FN, e.option))
 
+# setup cache and msg directories, and ensure that they exist
+CACHE_DN = os.path.join(ROOT, CACHEPREFIX+'cache')
+MSG_DN = os.path.join(ROOT, CACHEPREFIX+'msg')
+for dn in (CACHE_DN, MSG_DN):
+    if not os.path.isdir(dn):
+        os.makedirs(dn)
+    
 # logging levels:
 #  0 some important stuff (requires -q)
 #  1 requires one         (default value)
 #  2 tiny log messages    (requires -v)
-VERBOSE = 1
-for (k,v) in [('-v',1),('-q',-1)]:
-    while k in sys.argv:
-        sys.argv.remove(k)
-        VERBOSE += v
+VERBOSE = options.verbosity
 def log(s, level = 1):
     if type(level) != int:
         raise Exception(u'level must be an int, not %s' % repr(level))
