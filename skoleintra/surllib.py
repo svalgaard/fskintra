@@ -93,7 +93,15 @@ def skoleGetURL(url, asSoup = False, noCache = False):
         uurl = url.decode('utf-8')
 
     # FIXME? fix urls without host names
-
+    
+    # Sometimes the URL is actually an empty string
+    if not url:
+      data = ''
+      if asSoup:
+        return beatify(data)
+      else:
+        return data
+    
     lfn = url2cacheFileName(url)
     
     if os.path.isfile(lfn) and not noCache:

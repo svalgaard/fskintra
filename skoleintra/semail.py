@@ -248,6 +248,9 @@ class Message:
             if url.lower().startswith('data:'):
                 # ignore 'inline' images
                 continue
+            elif not url:
+                # ignore empty URLs
+                continue
             if url not in iimgs:
                 data = surllib.skoleGetURL(url, False)
                 cid = 'image%d-%f@%s' % (len(iimgs)+1, time.time(), hostname)
