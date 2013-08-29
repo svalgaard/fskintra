@@ -14,6 +14,7 @@ TITLE_IGNORE = [u'Fælles nyheder', # ignored (use RSS)
                 ] 
 TITLE_COVERPIC = u'Forsidebillede'
 TITLE_BBB = u'Klassens opslagstavle'
+TITLE_NEWS = u'Nyt fra ...'
 
 def _unwrap(bs):
     if 'childGenerator' not in dir(bs):
@@ -63,6 +64,31 @@ def skoleFrontBBB(phtml):
         msg.updatePersonDate()
 
     semail.maybeEmail(msg)
+
+def skoleExamineNews(url, mid):
+    bs = surllib.skoleGetURL(url, True)
+
+    # title + main text
+    title = bs.h3.text
+    main = bs.findAll('table')[3].table
+
+    # create msg
+    msg = semail.Message(u'dialogue', main)
+    msg.setMessageID(mid)
+    msg.setTitle(title)
+    msg.updatePersonDate()
+
+    semail.maybeEmail(msg)
+    
+def skoleNewsFrom(bss):
+    # /Infoweb/Fi/VisNytFra.asp?ID=97&Kat=2
+
+    for bs in bss:
+        if not bs.a or not bs.a['href']: continue # ignore
+        href = bs.a['href']
+        mid  = href.split('/')[-1].replace('.asp?ID=','-').split('&')[0]
+        # e.g. VisNytFra-97
+        skoleExamineNews(href, mid)
 
 def skoleOtherStuff(title, phtml):
     # some part of the frontpage, e.g., weekly schedule
@@ -177,6 +203,9 @@ def skoleFrontpage():
             # ignore first table which is a wrapper around all entries
             xs = xs[1:]
             map(skoleFrontBBB, xs)
+        elif t == TITLE_NEWS:
+            # News from...
+            skoleNewsFrom(xs)
         else:
             # send msg if something has changed
             for x in xs:
