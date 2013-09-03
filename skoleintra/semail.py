@@ -376,7 +376,8 @@ class Message:
         config.log(u'Sender email %s' % (self.mp['title'] if self.mp['title'] else self))
         msg = self.asEmail()
         # open smtp connection
-        server = smtplib.SMTP('localhost')
+        server = smtplib.SMTP(config.SMTPHOST, config.SMTPPORT)
+        server.login(config.SMTPLOGIN, config.SMTPPASS)
         # server.set_debuglevel(1)
         server.sendmail(config.SENDER, config.EMAIL, msg.as_string())
         server.quit()

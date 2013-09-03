@@ -76,7 +76,11 @@ if options.doconfig:
             ('password',    u'Kodeord fx kaTTx24:'),
             ('hostname',    u'Skoleintra domæne fx www.xskolen.yby.dk:'),
             ('email',       u'Modtageremailadresse (evt. flere adskilt med komma):'),
-            ('senderemail', u'Afsenderemailadresse (evt. samme adresse(r) som ovenover):')]
+            ('senderemail', u'Afsenderemailadresse (evt. samme adresse(r) som ovenover):'),
+            ('smtpserver',  u'SMTP server hostname:'),
+            ('smtpport',    u'SMTP server port:'),
+            ('smtplogin',   u'SMTP Login (tom hvis login ikke påkrævet):'),
+            ('smtppassword', u'SMTP password (tom hvis login ikke påkrævet):')]
     for (var,question) in opts:
         while True:
             q = u'\n%s\n' % question
@@ -119,6 +123,10 @@ try:
     HOSTNAME = cfg.get('default', 'hostname')
     SENDER   = cfg.get('default', 'senderemail')
     EMAIL    = cfg.get('default', 'email')
+    SMTPHOST = cfg.get('default', 'smtpserver')
+    SMTPPORT = cfg.get('default', 'smtpport')
+    SMTPLOGIN= cfg.get('default', 'smtplogin')
+    SMTPPASS = cfg.get('default', 'smtppassword')
     if options.configfilename:
       CACHEPREFIX = cfg.get('default', 'cacheprefix')
     else:
