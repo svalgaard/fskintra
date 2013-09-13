@@ -55,25 +55,16 @@ Kør først programmet med --config for at sætte det op'''  % CONFIG_FN)
 #
 # setup UTF-8 on stdout
 #
-def getNiceEncoding():
-    enc = locale.getpreferredencoding()
-    if not enc: enc = 'utf-8'
-
-    # try to write æøå to this and see if we fail
-    try:
-        x = u'æøåÆØÅá'.decode(enc)
-    except UnicodeEncodeError, u:
-        # ignore the locale since this does not allow us to write what we want
-        enc = 'UTF-8'
-    return enc
-def niceStream(fd):
-    return codecs.getwriter(getNiceEncoding())(fd)
 def ensureDanish():
-    '''Ensure that we can do Danish letters on stderr, stdout by wrapping them using codecs.getwriter'''
-    sys.stderr = niceStream(sys.stderr)
-    sys.stdout = niceStream(sys.stdout)
-ensureDanish()
+    '''Ensure that we can do Danish letters on stderr, stdout by wrapping
+    them using codecs.getwriter if necessary'''
 
+    enc = locale.getpreferredencoding()
+    test = u'\xe6\xf8\xe5\xc6\xd8\xc5\xe1'.encode(enc, 'replace')
+    if '?' in test:
+        sys.stderr = codecs.getwriter('UTF-8')(sys.stderr)
+        sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
+ensureDanish()
 
 if options.doconfig:
     if os.path.isfile(CONFIG_FN):
