@@ -13,6 +13,7 @@ URL_BOX_PREFIX = URL_PREFIX + 'Oversigt.asp?Bakke='
 TRAYS = ('ind', 'ud')
 
 def diaExamineMessage(url, mid):
+    '''Look at the url and mid. Returns True iff an email was sent'''
     bs = surllib.skoleGetURL(url, True)
     
     # first, find main text
@@ -46,13 +47,16 @@ def diaExamineMessage(url, mid):
         else:
             config.log(u'Ukendt header i besked #%s: %s' % (mid, txt),-1)
             
-    msg.maybeSend()
+    return msg.maybeSend()
     
 def diaFindMessages(data):
+    '''Find all messages in the html data, return True iff at least one
+    email was sent'''
     global URL_PREFIX
     bs = surllib.beautify(data)
 
     atags = bs.findAll('a')
+    newMsgFound = False
     for atag in atags:
         href = atag['href']
         
@@ -66,7 +70,9 @@ def diaFindMessages(data):
         lurl = 'https://%s%s%s' % (config.HOSTNAME, URL_PREFIX, href)
         mid = re.search('Id=(\\d+)', href).group(1)
 
-        diaExamineMessage(lurl, mid)
+        if diaExamineMessage(lurl, mid):
+            newMsgFound = True
+    return newMsgFound 
 
 def skoleDialogue():
     global URL_BOX_PREFIX, TRAYS
@@ -78,22 +84,11 @@ def skoleDialogue():
 
         url = 'https://%s%s%s' % (config.HOSTNAME, URL_BOX_PREFIX, tray)
         
-        # first read the initial page
+        # Read the initial page, and search for messages
+        config.log(u'Bakke-URL: %s' % url)
         resp = br.open(url)
         data = resp.read()
-        diaFindMessages(data)
-        
-        # select specific class
-        try:
-            br.select_form(name='FrontPage_Form1')
-        except mechanize._mechanize.FormNotFoundError, e:
-            # ignore
-            continue
-        br['R1'] = ('klasse',)
-        
-        resp = br.submit()
-        data = resp.read()
-        diaFindMessages(data)
+        diaFindMessages(data)        
 
 if __name__ == '__main__':
     # test
