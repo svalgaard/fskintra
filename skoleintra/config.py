@@ -49,8 +49,9 @@ if options.configfilename:
     if not os.path.samefile(CONFIG_FN, TMP):
         CONFIG_FN = TMP
 if not os.path.isfile(CONFIG_FN) and not options.doconfig:
-    parser.error(u'''Kan ikke finde konfigurationsfilen '%s'
-Kør først programmet med --config for at sætte det op'''  % CONFIG_FN)
+    parser.error(u'''Kan ikke finde konfigurationsfilen
+%s
+Kør først programmet med --config for at sætte det op.'''  % CONFIG_FN)
 
 #
 # setup UTF-8 on stdout
@@ -72,34 +73,51 @@ if options.doconfig:
     print u'Din nye opsætning gemmes her:', CONFIG_FN
 
     details = {}
-    opts = [('username',    u'Brugernavn, fx. petjen:'),
-            ('password',    u'Kodeord fx kaTTx24:'),
-            ('hostname',    u'Skoleintra domæne fx www.xskolen.yby.dk:'),
-            ('email',       u'Modtageremailadresse (evt. flere adskilt med komma):'),
-            ('senderemail', u'Afsenderemailadresse (evt. samme adresse(r) som ovenover):'),
-            ('smtpserver',  u'SMTP server hostname:'),
-            ('smtpport',    u'SMTP server port:'),
-            ('smtplogin',   u'SMTP Login (tom hvis login ikke påkrævet):'),
-            ('smtppassword', u'SMTP password (tom hvis login ikke påkrævet):')]
-    for (var,question) in opts:
+    opts = [
+        ('username',
+         u'Brugernavn, fx. petjen:'),
+        ('password',
+         u'Kodeord fx kaTTx24:'),
+        ('hostname',
+         u'Skoleintra domæne fx www.xskolen.yby.dk:'),
+        ('email',
+         u'Modtageremailadresse (evt. flere adskilt med komma):'),
+        ('senderemail',
+         u'Afsenderemailadresse (evt. samme adresse(r) som ovenover):'),
+        ('smtpserver',
+         u'SMTP servernavn (evt. tom hvis localhost skal bruges) '
+         u'fx smtp.gmail.com eller asmtp.mail.dk:'),
+        ('smtpport',
+         u'SMTP serverport fx 25 (localhost), 587 (gmail, tdc):'),
+        ('smtplogin',
+         u'SMTP Login (tom hvis login ikke påkrævet):'),
+        ('smtppassword',
+         u'SMTP password (tom hvis login ikke påkrævet):')]
+    for (var, question) in opts:
         while True:
-            q = u'\n%s\n' % question
-            if var == 'password':
-                a = getpass.getpass(q).strip().decode(sys.stdin.encoding)
+            print
+            print question
+            if var.endswith('password'):
+                a = getpass.getpass('').strip().decode(sys.stdin.encoding)
             else:
-                a = raw_input(q).strip().decode(sys.stdin.encoding)
-            if a: break
+                a = raw_input().strip().decode(sys.stdin.encoding)
+            if a or var.startswith('smtp'):
+                break
             print u'Angiv venligst en værdi'
         details[var] = a
-    
-    #md5 "encrypt" the password
+
+    # md5 "encrypt" the password
     details['password'] = hashlib.md5(details['password']).hexdigest()
+    # base64 "encrypt" smtp password
+    if details['smtppassword']:
+        enc = 'pswd:' + details['smtppassword'].encode('base64')
+        details['smtppassword'] = enc
 
     # if not using standard CONFIG_FN, setup prefix for cache and msg
     if options.configfilename:
-      opts.append(('cacheprefix', ''))
-      details['cacheprefix'] = hex(int(time.time()))[2:] + '-'
-    
+        opts.append(('cacheprefix', ''))
+        details['cacheprefix'] = hex(int(time.time()))[2:] + '-'
+
     config = u'[default]\n'
     for opt,_ in opts:
         config += u'%s=%s\n' % (opt, details[opt])
@@ -117,23 +135,30 @@ cfg = ConfigParser.ConfigParser()
 cfg.read(DEFAULT_FN)
 cfg.read(CONFIG_FN)
 
+def softGet(cp, section, option):
+    if cp.has_option(section, option):
+        return cp.get(section, option)
+    else:
+        return ''
+
 try:
     USERNAME = cfg.get('default', 'username')
     PASS_MD5 = cfg.get('default', 'password')
     HOSTNAME = cfg.get('default', 'hostname')
     SENDER   = cfg.get('default', 'senderemail')
     EMAIL    = cfg.get('default', 'email')
-    SMTPHOST = cfg.get('default', 'smtpserver')
-    SMTPPORT = cfg.get('default', 'smtpport')
-    SMTPLOGIN= cfg.get('default', 'smtplogin')
-    SMTPPASS = cfg.get('default', 'smtppassword')
     if options.configfilename:
-      CACHEPREFIX = cfg.get('default', 'cacheprefix')
+        CACHEPREFIX = cfg.get('default', 'cacheprefix')
     else:
-      CACHEPREFIX = ''
+        CACHEPREFIX = ''
+    SMTPHOST = softGet(cfg, 'default', 'smtpserver')
+    SMTPPORT = softGet(cfg, 'default', 'smtpport')
+    SMTPLOGIN = softGet(cfg, 'default', 'smtplogin')
+    SMTPPASS = softGet(cfg, 'default', 'smtppassword')
 except ConfigParser.NoOptionError, e:
-    parser.error(u'''Konfigurationsfilen '%s' mangler en indstilling for %s
-Kør først programmet med --config for at sætte det op'''  % (CONFIG_FN, e.option))
+    parser.error(u'''Konfigurationsfilen '%s' mangler en indstilling for %s.
+Kør først programmet med --config for at sætte det op.
+Eller ret direkte i '%s'.''' % (CONFIG_FN, e.option, CONFIG_FN))
 
 # setup cache and msg directories, and ensure that they exist
 CACHE_DN = os.path.join(ROOT, CACHEPREFIX+'cache')
@@ -154,3 +179,30 @@ def log(s, level = 1):
         sys.stderr.write(u'%s\n'%s)
         sys.stderr.flush()
 
+#
+# Ensure that SMTP options are sane
+#
+if SMTPHOST:
+    try:
+        SMTPPORT = int(SMTPPORT)
+    except ValueError:
+        parser.error(u'''
+Konfigurationsfilen '%s' mangler en korrekt indstilling for smtpport.
+Nuværende indstilling er %s - en korrekt værdi kunne være fx. 25 eller 587.
+Ret evt direkte i konfigurationsfilen ved at tilføje en linje svarende til
+smtpport=25.'''.strip() % (CONFIG_FN, repr(SMTPPORT)))
+
+
+        log(u'Ugyldigt SMTP portnummer angivet %s - bruger 587' % repr(SMTPPORT))
+        SMTPPORT = 587
+
+    if not SMTPLOGIN:
+        SMTPPASS = ''
+
+    if SMTPPASS:
+        if SMTPPASS.startswith('pswd:'):
+            SMTPPASS = SMTPPASS[5:].decode('base64')
+else:
+    SMTPPORT = ''
+    SMTPLOGIN = ''
+    SMTPPASS = ''

@@ -14,7 +14,6 @@ Requirements
 ============
 
 * Linux, FreeBSD
-* Working mail server answering on localhost port 25
 * Python 2.5+ (not 3.x)
 * Python libraries: mechanize (0.2.5), BeautifulSoup (3.2.x)
 

@@ -376,9 +376,17 @@ class Message:
         config.log(u'Sender email %s' % (self.mp['title'] if self.mp['title'] else self))
         msg = self.asEmail()
         # open smtp connection
-        server = smtplib.SMTP(config.SMTPHOST, config.SMTPPORT)
-        server.login(config.SMTPLOGIN, config.SMTPPASS)
+        if config.SMTPHOST:
+            server = smtplib.SMTP(config.SMTPHOST, config.SMTPPORT)
+        else:
+            server = smtplib.SMTP('localhost')
         # server.set_debuglevel(1)
+        if config.SMTPLOGIN:
+            try:
+                server.starttls()
+            except SMTPException:
+                pass  # ok, but we tried...
+            server.login(config.SMTPLOGIN, config.SMTPPASS)
         server.sendmail(config.SENDER, config.EMAIL, msg.as_string())
         server.quit()
         
