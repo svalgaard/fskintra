@@ -11,6 +11,7 @@ import re
 TITLE_IGNORE = [u'Fælles nyheder', # ignored (use RSS)
                 u'Dialog mellem skole og hjem', # extra menu (with flags)
                 u'Information om klassen', # ekstra menu
+                u'Nyeste dokumenter', # handled separately in pgDocuments
                 ] 
 TITLE_COVERPIC = u'Forsidebillede'
 TITLE_BBB = u'Klassens opslagstavle'

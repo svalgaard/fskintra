@@ -6,59 +6,88 @@ import re
 import config
 import surllib
 import semail
-import mechanize
+import datetime
+import urllib
 
-URL_PREFIX = '/Infoweb/Fi/Dokumentarkiv/'
-URL_MAIN   = URL_PREFIX + 'Dokliste.asp'
-# /Infoweb/Fi/Dokumentarkiv/VisDokument.asp?Id=6816
+URL_PREFIX = 'http://%s/Infoweb/Fi/Dokumentarkiv/' % config.HOSTNAME
+URL_MAIN = URL_PREFIX + 'Dokliste.asp'
+URL_DOC = URL_PREFIX + 'VisDokument.asp?Id='
 
-def docFindDocuments(bs):
 
-    # Find title
-    # "Dokumentarkiv for 1C"
-    maintitle = bs.h2.text
+def docFindDocuments(bs, foldername='Dokumentarkiv'):
+    '''Input beatifulsoup with content from a page of documents
+    Looks at this and all subfolders, and sends any new messages'''
 
-    lines = bs.findAll('tr', 'linje1') + bs.findAll('tr', 'linje2')
+    trs = bs.findAll('tr')
 
-    for line in lines:
-        # One file type
-        fts = line.findAll('td', width='1%')
-        assert(len(fts) == 1 and fts[0].img) # excatly one file type image link
-        i = fts[0].img['src']
-        extension = u'.' + i.split('/')[-1][2:-4].lower()
+    for line in trs:
+        if not line.has_key('class'):
+            continue
+        if not [c for c in line['class'].split() if c.startswith('linje')]:
+            continue
 
-        # One document
-        ahs = line.findAll('td', width='58%')
-        assert(len(ahs) == 1 and ahs[0].text and ahs[0].a['href']) # exactly one title + link
-        href = ahs[0].a['href']
-        title = unicode(ahs[0].text)
+        links = line.findAll('a')
+        assert(len(links) == 2)
 
-        # find Date
+        # find file type
+        ext = links[0].img['src'].split('/')[-1][2:-4].lower()
+
+        # find name of file
+        title = links[1].text
+        ltitle = foldername + ' / ' + title
+
+        # find url
+        url = links[0]['href']
+        if 'visDokument' in url:
+            url = URL_DOC + re.search('.*?(\d+)', links[0]['href']).group(1)
+        url = urllib.quote(url.encode('iso-8859-1'), safe=':/?=&%')
+
+        # find date
         dts = line.findAll('td', width='18%')
-        assert(len(dts) == 1 and dts[0].text) # exactly one date
-        date = unicode(dts[0].text)
+        assert(len(dts) == 1 and dts[0].text)  # exactly one date
+        date = dts[0].text
 
-        # Create HTML snippet
-        h = surllib.beautify(u"<p>Nyt dokument: <a href=''>%s</a></p>" % title)
-        h.a['href'] = URL_PREFIX + href
-        h.a['usefilename'] = title + extension
-        
-        msg = semail.Message('documents', h)
-        msg.setTitle(u'%s (%s)' % (title, maintitle))
-        msg.setDate(date)
-        print msg
-        msg.send()
-        # semail.maybeEmail(msg)
+        # now do stuff
+        if 'Dokliste' in url:
+            # this is a subfolder
+
+            # first look at (potentially cached version)
+            suburl = URL_PREFIX + url
+            subbs = surllib.skoleGetURL(suburl, True)
+
+            subdate = datetime.date(*reversed(map(int, date.split('-'))))
+            if subbs.cachedate <= subdate:
+                # cached version is too old - refetch
+                subbs = surllib.skoleGetURL(suburl, True, True)
+                config.log(u'Kigger på folderen %s' % title)
+            else:
+                config.log(u'Kigger på folderen %s (fra cache)' % title)
+
+            docFindDocuments(subbs, ltitle)
+        else:
+            # this is an actual document
+            config.log(u'Kigger på dokumentet %s' % ltitle)
+
+            # Create HTML snippet
+            html = u"<p>Nyt dokument: <a href=''>%s</a></p>" % ltitle
+            h = surllib.beautify(html)
+            h.a['href'] = url
+            h.a['usefilename'] = title + '.' + ext
+
+            msg = semail.Message('documents', h)
+            msg.setTitle(u'%s' % title)
+            msg.setDate(date)
+            msg.maybeSend()
 
 
 def skoleDocuments():
-    global URL_MAIN, bs
+    global bs
 
+    # surllib.skoleLogin()
     config.log(u'Kigger efter nye dokumenter')
-    url = 'http://%s%s' % (config.HOSTNAME, URL_MAIN)
-        
+
     # read the initial page
-    bs = surllib.skoleGetURL(url, True) # FIXME set nocache=true
+    bs = surllib.skoleGetURL(URL_MAIN, True, True)
     docFindDocuments(bs)
 
 if __name__ == '__main__':
