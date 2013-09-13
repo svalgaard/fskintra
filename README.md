@@ -53,7 +53,7 @@ By adding -q you only get an email, if there is something interesting to see.
 Problems?
 ---------
 
-The current version of fskintra is not very good at handling http errors. If an error occurs, you can usually fix this by simply run the script again. If this is not enough, you can add the parameter -v to get more information on why the error occured:
+The current version of fskintra is not very good at handling http errors. If an error occurs, you can usually fix this by simply running the script again. If this is not enough, you can add the parameter -v to hopefully get more information on why the error occured:
 
 	fskintra.py -v
 
