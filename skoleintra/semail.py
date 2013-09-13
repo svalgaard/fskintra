@@ -66,11 +66,11 @@ def generateMIMEAttachment(path, data, usefilename=None):
     # do not do this here - already done above.
     # encoders.encode_base64(msg)
     # Set the filename parameter
-    if type(fn) == unicode: fn = fn.encode('utf-8')
-    msg.add_header('Content-Disposition', 'attachment', filename=('utf-8','',fn))
-
+    if type(fn) != unicode: fn = fn.decode('utf-8')
+    fne = headerEncodeField(fn)
+    msg.add_header('Content-Disposition', 'attachment', filename=fne)
+    msg.set_param('name', fne)
     return msg
-
 
 class Message:
     def __init__(self, type, phtml):
@@ -370,6 +370,7 @@ class Message:
             config.log(u'Hopper tidligere sendt besked over: %s' % self, 2)
             return False
         self.send()
+        return True
         
     def send(self):
         config.log(u'Sender email %s' % (self.mp['title'] if self.mp['title'] else self))
