@@ -11,9 +11,13 @@ import __init__
 import urlparse
 import os
 import re
+import datetime
+
 
 def beautify(data):
-    return BeautifulSoup.BeautifulSoup(data, convertEntities=BeautifulSoup.BeautifulStoneSoup.HTML_ENTITIES)
+    return BeautifulSoup.BeautifulSoup(data,
+        convertEntities=BeautifulSoup.BeautifulStoneSoup.HTML_ENTITIES)
+
 
 _browser = None
 def getBrowser():
@@ -21,11 +25,11 @@ def getBrowser():
     if _browser is None:
         # Start browser
         _browser = mechanize.Browser()
-        
+
         # Cookie Jar
         cj = cookielib.LWPCookieJar()
         _browser.set_cookiejar(cj)
-        
+
         # Browser options
         _browser.set_handle_equiv(True)
         # _browser.set_handle_gzip(True)
@@ -39,7 +43,8 @@ def getBrowser():
         #_browser._factory._links_factory._encoding = ENC
 
         # Follows refresh 0 but does not hang on refresh > 0
-        _browser.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
+        _browser.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(),
+                                    max_time=1)
 
         # Want debugging messages?
         #_browser.set_debug_http(True)
@@ -55,10 +60,11 @@ _skole_login_done = False
 def skoleLogin():
     'Login to the SkoleIntra website'
     global _skole_login_done
-    if _skole_login_done: return
+    if _skole_login_done:
+        return
     br = getBrowser()
     config.log(u'Login', 2)
-    
+
     URL_LOGIN = u'https://%s/Infoweb/Fi2/Login.asp' % config.HOSTNAME
     config.log(u'Login på skoleintra')
     resp = br.open(URL_LOGIN)
@@ -68,24 +74,24 @@ def skoleLogin():
     br['MD5kode'] = config.PASS_MD5
     br.submit()
     # we ignore the response and assume that things are ok
-    
+
     _skole_login_done = True
 
 def url2cacheFileName(url):
     assert(type(url) == str)
     up = urlparse.urlparse(url)
-    parts = [config.CACHE_DN, 
+    parts = [config.CACHE_DN,
              up.scheme,
              up.netloc,
              urllib.url2pathname(up.path)[1:]]
     if up.query:
         az = re.compile(r'[^0-9a-zA-Z]')
-        for (k,vs) in sorted(urlparse.parse_qs(up.query).items()):
-            xs = [az.sub(lambda x: hex(ord(x.group(0))), x) for x in [k]+vs]
+        for (k, vs) in sorted(urlparse.parse_qs(up.query).items()):
+            xs = [az.sub(lambda x: hex(ord(x.group(0))), x) for x in [k] + vs]
             parts[-1] += '_' + '-'.join(xs)
     return os.path.join(*parts)
 
-def skoleGetURL(url, asSoup = False, noCache = False):
+def skoleGetURL(url, asSoup=False, noCache=False):
     '''Returns data from url as raw string or as a beautiful soup'''
     if type(url) == unicode:
         url, uurl = url.encode('utf-8'), url
@@ -93,23 +99,25 @@ def skoleGetURL(url, asSoup = False, noCache = False):
         uurl = url.decode('utf-8')
 
     # FIXME? fix urls without host names
-    
+
     # Sometimes the URL is actually an empty string
     if not url:
-      data = ''
-      if asSoup:
-        return beatify(data)
-      else:
-        return data
-    
+        data = ''
+        if asSoup:
+            data = beautify(data)
+            data.cachedate = datetime.date.today()
+            return data
+        else:
+            return data
+
     lfn = url2cacheFileName(url)
-    
+
     if os.path.isfile(lfn) and not noCache:
-        config.log('skoleGetURL: Henter fra cache %s' % uurl,2)
-        data = open(lfn,'rb').read()
+        config.log('skoleGetURL: Henter fra cache %s' % uurl, 2)
+        data = open(lfn, 'rb').read()
     else:
         qurl = urllib.quote(url, safe=':/?=&%')
-        config.log(u'skoleGetURL: Trying to fetch %s' % qurl,2)
+        config.log(u'skoleGetURL: Trying to fetch %s' % qurl, 2)
         skoleLogin()
         br = getBrowser()
         resp = br.open(qurl)
@@ -119,8 +127,10 @@ def skoleGetURL(url, asSoup = False, noCache = False):
         if not os.path.isdir(ldn):
             os.makedirs(ldn)
         open(lfn, 'wb').write(data)
-    
+
     if asSoup:
-        return beautify(data)
+        data = beautify(data)
+        data.cachedate = datetime.date.fromtimestamp(os.path.getmtime(lfn))
+        return data
     else:
         return data
