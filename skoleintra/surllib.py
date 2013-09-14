@@ -9,6 +9,7 @@ import mechanize
 import BeautifulSoup
 import __init__
 import urlparse
+import cgi
 import os
 import re
 import datetime
@@ -86,8 +87,8 @@ def url2cacheFileName(url):
              urllib.url2pathname(up.path)[1:]]
     if up.query:
         az = re.compile(r'[^0-9a-zA-Z]')
-        for (k, vs) in sorted(urlparse.parse_qs(up.query).items()):
-            xs = [az.sub(lambda x: hex(ord(x.group(0))), x) for x in [k] + vs]
+        for (k, vs) in sorted(cgi.parse_qs(up.query).items()):
+            xs = [az.sub(lambda x: hex(ord(x.group(0))), x) for x in [k]+vs]
             parts[-1] += '_' + '-'.join(xs)
     return os.path.join(*parts)
 
