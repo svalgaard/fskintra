@@ -62,7 +62,7 @@ def ensureDanish():
 
     enc = locale.getpreferredencoding()
     test = u'\xe6\xf8\xe5\xc6\xd8\xc5\xe1'.encode(enc, 'replace')
-    if '?' in test:
+    if '?' in test or sys.version_info < (2,6):
         sys.stderr = codecs.getwriter('UTF-8')(sys.stderr)
         sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
 ensureDanish()
