@@ -1,63 +1,113 @@
-Forældreintra to Email
-======================
+Forældreintra til Email
+=======================
 
-This program logs into ForældreIntra (part of SkoleIntra) and converts the content inside to emails. This includes:
+Dette program logger på ForældreIntra (en del af SkoleIntra, der
+brugers af næsten alle danske folkeskoler) og konverterer indholdet
+til emails. Du vil bl.a. modtage emails, hver gang der kommer ny
 
-* Front page: Notices on the bulletin board (opslagstavle)
-* Front page: Cover pictures
-* ...
-* Messages: "Emails" send inside the system to/from yourself
+* Forsiden: Nyheder på opslagstavlen
+* Forsiden: Nyt forside billede, skema, osv.
+* Dialog/beskeder: Nye beskeder (både sendt og modtaget)
+* Arkiv/dokumenter: Nye dokumenter
 
-Everything is cached, i.e., you only get an email, if there are any new messages, etc.
+Alle emails bliver gemt, dvs. du får kun en email, såfremt der er kommet nyt.
 
-Requirements
-============
+Eksempel
+========
+
+Som standard tilbyde ForældreIntra at sende dig en email hvis der er
+nye beskeder eller andet, men du får kun overskriften/første linje af
+beskeden - nogle gange endda endnu mindre:
+
+<pre>
+> Advisering om nyt i ForældreIntra - Dinoskolen:
+>
+> 4.a:
+> *Besked*    Besked fra Peter Nielsen
+>
+> Klik for at åbne ForældreIntra eller MobilIntra.
+</pre>
+
+Med fskintra får du i stedet selve indholdet i beskeden og behøver
+ikke længere at logge på, for at se, hvad der står
+
+<pre>
+> Hvor er Annas sorte højregummistøvle?
+>
+> Fra: Peter Nielsen (Anna 3.a)
+> Til: Anders Andersen (Bjarke 3.a), m.fl.
+> Dato: 07-09-2013 12:14:16
+>
+> Anna kan ikke finde sin ene sorte gummistøvle - og får nu våde fødder.
+>
+> Kan du finde den? Vi/Anna giver en lakrids, hvis den bliver fundet og bragt til hende i 3.a
+>
+> Mvh, Peter Nielsen
+</pre>
+
+Krav
+====
 
 * Linux, FreeBSD
-* Python 2.5+ (not 3.x)
-* Python libraries: mechanize (0.2.5), BeautifulSoup (3.2.x)
+* Python 2.5+ (ikke 3.x)
+* Pythonpakker: mechanize (0.2.5), BeautifulSoup (3.2.x)
 
-You can get the required Python libraries in Ubuntu by running:
+Du kan få de krævede pythonpakker i Ubuntu ved at køre
 
-	apt-get install python-beautifulsoup python-mechanize
+    sudo apt-get install python-beautifulsoup python-mechanize
 
-The default packages in Ubuntu 12.04 works.
+Pakkerne i standard Ubuntu 12.04 virker.
 
 HOWTO
 =====
 
-Setup
------
+Opsætning
+---------
 
-Run the following command, and answer the questions
+Hent nyeste version af programmet fra denne side - fx ved at hente
+zip-filen, eller endnu bedre ved at bruge git
 
-	fskintra.py --config
+    https://github.com/svalgaard/fskintra
 
-Next, test this by running the actual script
+Kør følgende kommando, og besvar spørgsmålene
 
-	fskintra.py
+    fskintra.py --config
 
-Your configuration is saved in ~/.skoleintra/skoleintra.txt
-Further, ~/.skoleintra contains a cache of fetched content and sent emails.
+Dernæst, test programmet ved at køre det
+
+    fskintra.py
+
+Din opsætning gemmes i $HOME/.skoleintra/skoleintra.txt.
+I $HOME/.skoleintra gemmes også alt hentet indhold og alle sendte emails.
 
 Cron-job
 --------
 
-Add the following to your crontab file to make it run twice daily
+Tilføj flg. linje til din crontab fil for at få programmet til at køre
+to gange dagligt:
 
-	25 6,18 * * * /path/to/fskintra.py -q
+    25 6,18 * * * /path/to/fskintra.py -q
 
-By adding -q you only get an email, if there is something interesting to see.
+Ved at tilføje -q, får du kun en email, såfremt der er noget
+interessant at se (og ikke en email om, at fskintra har prøvet at
+finde noget nyt uden at gøre det).
 
-Problems?
----------
+Problemer?
+----------
 
-The current version of fskintra is not very good at handling http errors. If an error occurs, you can usually fix this by simply running the script again. If this is not enough, you can add the parameter -v to hopefully get more information on why the error occured:
+Den nuværende version af fskintra er ikke særlig god til at håndtere
+http fejl. Hvis der sker en fejl, kan du for det meste løse problemet
+ved at køre programmet igen. Hvis det ikke er nok, kan du evt. tilføje
+parameteren -v for mulighed at se mere om, hvad der går galt:
 
-	fskintra.py -v
+    fskintra.py -v
 
+Du er evt. velkommen til at kontakte mig. Såfremt det ikke virker, må
+du meget gerne vedhæfte hvad der bliver skrevet, når fskintra.py køres
+med -v.
 
 Author
 ======
 
-fskintra is maintained by Jens Svalgaard kohrt - http://svalgaard.net/jens/ - github AT svalgaard.net
+fskintra er skrevet/opdateres af
+Jens Svalgaard kohrt - http://svalgaard.net/jens/ - github AT svalgaard.net
