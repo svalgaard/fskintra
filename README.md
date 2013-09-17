@@ -1,23 +1,26 @@
 Forældreintra til Email
 =======================
 
-Dette program logger på ForældreIntra (en del af SkoleIntra, der
-brugers af næsten alle danske folkeskoler) og konverterer indholdet
-til emails. Du vil bl.a. modtage emails, hver gang der kommer ny
+ForældreIntra er en del af SkoleIntra, der brugers af næsten alle
+danske folkeskoler til kommunikation mellem skole og hjem. fskintra
+logger på ForældreIntra og konverterer indholdet til almindelige
+emails. Du vil bl.a. modtage en email, hver gang der kommer nyt et af
+flg. steder:
 
 * Forsiden: Nyheder på opslagstavlen
 * Forsiden: Nyt forside billede, skema, osv.
 * Dialog/beskeder: Nye beskeder (både sendt og modtaget)
 * Arkiv/dokumenter: Nye dokumenter
 
-Alle emails bliver gemt, dvs. du får kun en email, såfremt der er kommet nyt.
+Alle emails bliver gemt, dvs. du får kun en email, såfremt der faktisk
+er kommet nyt.
 
 Eksempel
 ========
 
 Som standard tilbyde ForældreIntra at sende dig en email hvis der er
 nye beskeder eller andet, men du får kun overskriften/første linje af
-beskeden - nogle gange endda endnu mindre:
+beskeden - nogle gange endda kun, hvem der har skrevet den:
 
 <pre>
 > Advisering om nyt i ForældreIntra - Dinoskolen:
@@ -28,8 +31,8 @@ beskeden - nogle gange endda endnu mindre:
 > Klik for at åbne ForældreIntra eller MobilIntra.
 </pre>
 
-Med fskintra får du i stedet selve indholdet i beskeden og behøver
-ikke længere at logge på, for at se, hvad der står
+Med fskintra får du i stedet en email med selve indholdet af beskeden
+og behøver ikke længere at logge på, for at se, hvad der står
 
 <pre>
 > Hvor er Annas sorte højregummistøvle?
@@ -48,7 +51,7 @@ ikke længere at logge på, for at se, hvad der står
 Krav
 ====
 
-* Linux, FreeBSD
+* Linux, FreeBSD (Virker måske i Windows, men det er ikke afprøvet)
 * Python 2.5+ (ikke 3.x)
 * Pythonpakker: mechanize (0.2.5), BeautifulSoup (3.2.x)
 
@@ -57,6 +60,10 @@ Du kan få de krævede pythonpakker i Ubuntu ved at køre
     sudo apt-get install python-beautifulsoup python-mechanize
 
 Pakkerne i standard Ubuntu 12.04 virker.
+Alternativt kan du bruge easy_install
+
+    sudo easy_install beautifulsoup mechanize
+
 
 HOWTO
 =====
@@ -64,7 +71,8 @@ HOWTO
 Opsætning
 ---------
 
-Hent nyeste version af programmet fra denne side - fx ved at hente
+Hent de krævede pythonpakker (se ovenfor). Dernæst hentes nyeste
+version af programmet fra nedenstående side - fx ved at hente
 zip-filen, eller endnu bedre ved at bruge git
 
     https://github.com/svalgaard/fskintra
@@ -73,12 +81,16 @@ Kør følgende kommando, og besvar spørgsmålene
 
     fskintra.py --config
 
-Dernæst, test programmet ved at køre det
+Til slut testes programmet ved at køre det
 
     fskintra.py
 
-Din opsætning gemmes i $HOME/.skoleintra/skoleintra.txt.
-I $HOME/.skoleintra gemmes også alt hentet indhold og alle sendte emails.
+Din opsætning gemmes i $HOME/.skoleintra/skoleintra.txt. Såfremt du
+kun skal rette lidt kan det evt. være smartest at rette direkte i
+filen i stedet for at køre --config igen.
+
+I $HOME/.skoleintra gemmes også alt hentet indhold og alle sendte
+emails.
 
 Cron-job
 --------
@@ -95,16 +107,17 @@ finde noget nyt uden at gøre det).
 Problemer?
 ----------
 
-Den nuværende version af fskintra er ikke særlig god til at håndtere
-http fejl. Hvis der sker en fejl, kan du for det meste løse problemet
-ved at køre programmet igen. Hvis det ikke er nok, kan du evt. tilføje
-parameteren -v for mulighed at se mere om, hvad der går galt:
+Den nuværende version af fskintra er ikke altid god til at håndtere
+http/html fejl. Hvis der sker en fejl, kan du for det meste løse
+problemet ved at køre fskintra igen. Hvis det ikke er nok, kan du
+evt. tilføje parameteren -v for muligvis at se mere om, hvad der går
+galt:
 
     fskintra.py -v
 
-Du er evt. velkommen til at kontakte mig. Såfremt det ikke virker, må
-du meget gerne vedhæfte hvad der bliver skrevet, når fskintra.py køres
-med -v.
+Du er evt. også velkommen til at kontakte mig. Såfremt det ikke
+virker, må du meget gerne vedhæfte hvad der bliver skrevet, når
+fskintra.py køres med -v.
 
 Author
 ======
