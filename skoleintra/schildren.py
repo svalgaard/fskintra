@@ -4,14 +4,13 @@
 
 import config
 import surllib
-import semail
-import re
 
 URL_PREFIX = 'http://%s/Infoweb/Fi2/' % config.HOSTNAME
 URL = URL_PREFIX + 'Faneblade.asp'
 
 # map of children => pageToSelectChild
 _children = None
+
 
 def skoleGetChildren():
     '''Returns of list of "available" children in the system'''
@@ -23,7 +22,7 @@ def skoleGetChildren():
     config.log(u'Henter liste af børn')
 
     if not _children:
-        data = surllib.skoleGetURL(URL, asSoup = True, noCache = True)
+        data = surllib.skoleGetURL(URL, asSoup=True, noCache=True)
 
         _children = {}
         for a in data.findAll('a'):
@@ -32,6 +31,7 @@ def skoleGetChildren():
             _children[name] = href
 
     return sorted(_children.keys())
+
 
 def skoleSelectChild(name):
     global _children, URL_PREFIX
@@ -42,12 +42,12 @@ def skoleSelectChild(name):
     else:
         config.log(u'Vælger [%s]' % name)
         url = URL_PREFIX + _children[name]
-        _ = surllib.skoleGetURL(url, False, noCache = True)
+        _ = surllib.skoleGetURL(url, False, noCache=True)
         config.CHILDNAME = name
 
 if False:
     c = skoleGetChildren()
     print repr(_children)
-    for name in c:
-        print name
-        skoleSelectChild(name)
+    for cname in c:
+        print cname
+        skoleSelectChild(cname)
