@@ -119,8 +119,11 @@ Du er evt. også velkommen til at kontakte mig. Såfremt det ikke
 virker, må du meget gerne vedhæfte hvad der bliver skrevet, når
 fskintra.py køres med -v.
 
-Author
-======
+Hvem?
+=====
 
 fskintra er skrevet/opdateres af
 Jens Svalgaard kohrt - http://svalgaard.net/jens/ - github AT svalgaard.net
+
+Ændringer og forslag er bl.a. kommet fra
+* Jacob Kjeldahl, https://github.com/kjeldahl
