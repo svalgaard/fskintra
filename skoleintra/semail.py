@@ -368,8 +368,8 @@ class Message:
         dt = time.strptime(dt, '%d-%m-%Y %H:%M:%S')
         dt = email.utils.formatdate(time.mktime(dt), True)
         msg['Received'] = ('from %s ([127.0.0.1] helo=%s) '
-                           'by %s with smtp (fskintra) for %s; %s')
-        msg['Received'] %= (hostname, hostname, hostname, config.EMAIL, dt)
+                           'by %s with smtp (fskintra) for %s; %s'
+                           ) % (hostname, hostname, hostname, config.EMAIL, dt)
         msg['Date'] = dt
 
         title = self.mp['title']
