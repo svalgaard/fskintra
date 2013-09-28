@@ -27,7 +27,7 @@ def docFindDocuments(bs, foldername='Dokumentarkiv'):
             continue
 
         links = line.findAll('a')
-        assert(len(links) == 2)
+        assert(len(links) >= 2)
 
         # find file type
         ext = links[0].img['src'].split('/')[-1][2:-4].lower()
@@ -40,6 +40,8 @@ def docFindDocuments(bs, foldername='Dokumentarkiv'):
         url = links[0]['href']
         if 'visDokument' in url:
             url = URL_DOC + re.search('.*?(\d+)', links[0]['href']).group(1)
+        else:
+            assert('Dokliste' in url)
         url = urllib.quote(url.encode('iso-8859-1'), safe=':/?=&%')
 
         # find date
