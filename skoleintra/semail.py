@@ -207,7 +207,7 @@ class Message:
             shutil.rmtree(tdn)  # Remove stuff
         os.mkdir(tdn)
 
-        fd = codecs.open(os.path.join(tdn, mid + '.eml'), 'wb', 'utf-8')
+        fd = open(os.path.join(tdn, mid + '.eml'), 'wb')
         fd.write(str(self.asEmail()))
         fd.close()
 
