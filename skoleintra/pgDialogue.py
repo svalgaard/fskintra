@@ -88,6 +88,12 @@ def skoleDialogue():
         config.log(u'Bakke-URL: %s' % url)
         resp = br.open(url)
         data = resp.read()
+        # ensure that we get only mgss for the current child
+        br.select_form(name='FrontPage_Form1')
+        br['R1'] = ('klasse',)
+        resp = br.submit()
+        data = resp.read()
+
         diaFindMessages(data)
 
 if __name__ == '__main__':
