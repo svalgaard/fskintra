@@ -17,6 +17,7 @@ import codecs
 import shutil
 import smtplib
 import mimetypes
+import urllib2
 
 import email
 from email import encoders
@@ -275,7 +276,11 @@ class Message:
                 # ignore empty URLs
                 continue
             if url not in iimgs:
-                data = surllib.skoleGetURL(url, False)
+                try:
+                    data = surllib.skoleGetURL(url, False)
+                except urllib2.HTTPError, e:
+                    # could not fetch URL for some reason - ignore
+                    continue
                 cid = 'image%d-%f@%s' % (len(iimgs) + 1, time.time(), hostname)
                 iimgs[url] = (cid, data)
             cid, _ = iimgs[url]
@@ -422,6 +427,7 @@ class Message:
 
         # ensure that we only send once
         self.store()
+
 
 def maybeEmail(msg):
     msg.maybeSend()
