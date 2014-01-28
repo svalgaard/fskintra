@@ -278,7 +278,7 @@ class Message:
             if url not in iimgs:
                 try:
                     data = surllib.skoleGetURL(url, False)
-                except urllib2.HTTPError, e:
+                except urllib2.URLError, e:
                     # could not fetch URL for some reason - ignore
                     continue
                 cid = 'image%d-%f@%s' % (len(iimgs) + 1, time.time(), hostname)
