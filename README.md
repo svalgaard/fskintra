@@ -126,10 +126,13 @@ I nogle situationer giver Python desværre en unicode-fejl lignende følgende
 En løsning vil i næsten alle tilfælde være at sætte miljøvariablen PYTHONIOENCODING til UTF-8.
 
 Hvis du bruger bash eller lignende (hvis du ikke ved, om du gør, så gør
-du sikkert). 
+du sikkert).
+
     export PYTHONIOENCODING=UTF-8
     /sti/til/fskintra
+
 Hvis du bruger tcsh eller lignende:
+
     setenv PYTHONIOENCODING UTF-8
     /sti/til/fskintra
 
