@@ -18,6 +18,7 @@ import shutil
 import smtplib
 import mimetypes
 import urllib2
+import imghdr
 
 import email
 from email import encoders
@@ -281,6 +282,9 @@ class Message:
                 except urllib2.URLError, e:
                     # could not fetch URL for some reason - ignore
                     continue
+                # is this actually an image?
+                if not imghdr.what('', data):
+                    continue  # ignore
                 cid = 'image%d-%f@%s' % (len(iimgs) + 1, time.time(), hostname)
                 iimgs[url] = (cid, data)
             cid, _ = iimgs[url]
