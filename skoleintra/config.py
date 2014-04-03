@@ -34,6 +34,9 @@ parser.add_option(
     '--config', dest='doconfig', default=False, action='store_true',
     help=u'Opsæt skoleintra')
 parser.add_option(
+    '--skip-cache', dest='skipcache', default=False, action='store_true',
+    help=u'Do not use previously cached files')
+parser.add_option(
     '-v', '--verbose', action='append_const', const=1, dest='verbosity',
     help=u'Skriv flere log-linjer', default=[1])
 parser.add_option(
@@ -56,6 +59,8 @@ if not os.path.isfile(CONFIG_FN) and not options.doconfig:
     parser.error(u'''Kan ikke finde konfigurationsfilen
 %s
 Kør først programmet med --config for at sætte det op.''' % CONFIG_FN)
+
+SKIP_CACHE = options.skipcache
 
 
 def ensureDanish():

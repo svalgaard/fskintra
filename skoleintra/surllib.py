@@ -122,7 +122,7 @@ def skoleGetURL(url, asSoup=False, noCache=False):
 
     lfn = url2cacheFileName(url)
 
-    if os.path.isfile(lfn) and not noCache:
+    if os.path.isfile(lfn) and not noCache and not config.SKIP_CACHE:
         config.log('skoleGetURL: Henter fra cache %s' % uurl, 2)
         data = open(lfn, 'rb').read()
     else:
