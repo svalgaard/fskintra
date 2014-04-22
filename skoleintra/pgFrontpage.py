@@ -181,7 +181,11 @@ def skoleFrontpage():
         data = surllib.skoleGetURL(url, asSoup=True, noCache=True)
 
     # find main table
-    maint = data.findAll('table', style='height:100%')
+    maint = []
+    for mt in data.findAll('table'):
+        if mt.findParents('table') or mt.has_key('bgcolor'):
+            continue
+        maint.append(mt)
     assert(len(maint) == 1)  # assume exactly one main table
 
     maint = maint[0]
