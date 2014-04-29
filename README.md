@@ -11,6 +11,7 @@ flg. steder:
 * Forsiden: Nyt forside billede, skema, osv.
 * Dialog/beskeder: Nye beskeder (både sendt og modtaget)
 * Arkiv/dokumenter: Nye dokumenter
+* Ugeplaner: Nye ugerplaner
 
 Alle emails bliver gemt, dvs. du får kun en email, såfremt der faktisk
 er kommet nyt.
