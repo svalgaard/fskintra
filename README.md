@@ -11,7 +11,7 @@ flg. steder:
 * Forsiden: Nyt forside billede, skema, osv.
 * Dialog/beskeder: Nye beskeder (både sendt og modtaget)
 * Arkiv/dokumenter: Nye dokumenter
-* Ugeplaner: Nye ugerplaner
+* Ugeplaner: Nye ugeplaner
 
 Alle emails bliver gemt, dvs. du får kun en email, såfremt der faktisk
 er kommet nyt.
@@ -158,3 +158,4 @@ Jens Svalgaard kohrt - http://svalgaard.net/jens/ - github AT svalgaard.net
 
 Ændringer og forslag er bl.a. kommet fra
 * Jacob Kjeldahl, https://github.com/kjeldahl
+* Michael Legart, https://github.com/legart
