@@ -12,6 +12,7 @@ import urllib
 URL_PREFIX = 'http://%s/Infoweb/Fi/' % config.HOSTNAME
 URL_MAIN = URL_PREFIX + 'Ugeplaner.asp'
 
+
 def docFindWeekplans(bs):
 
     trs = bs.findAll('tr')
@@ -30,7 +31,8 @@ def docFindWeekplans(bs):
 
         # find url
         url = links[0]['href']
-        url = URL_PREFIX + urllib.quote(url.encode('iso-8859-1'), safe=':/?=&%')
+        url = url.encode('iso-8859-1')
+        url = URL_PREFIX + urllib.quote(url, safe=':/?=&%')
 
         bs = surllib.skoleGetURL(url, True)
 
