@@ -2,19 +2,28 @@
 # -*- encoding: utf-8 -*-
 #
 
-import re
 import config
 import surllib
 import semail
-import datetime
 import urllib
 
 URL_PREFIX = 'http://%s/Infoweb/Fi/' % config.HOSTNAME
 URL_MAIN = URL_PREFIX + 'Ugeplaner.asp'
 
 
-def docFindWeekplans(bs):
+def wpTrimPlan(bs):
+    '''Trim HTML to only contain title + main table'''
+    b = surllib.beautify('')
+    title = bs.find('h2')
+    b.append(title)
 
+    maint = [t for t in bs.findAll('table') if len(t.findAll('tr')) > 2][0]
+    b.append(maint)
+
+    return b
+
+
+def wpFindWeekplans(bs):
     trs = bs.findAll('tr')
 
     for line in trs:
@@ -35,6 +44,7 @@ def docFindWeekplans(bs):
         url = URL_PREFIX + urllib.quote(url, safe=':/?=&%')
 
         bs = surllib.skoleGetURL(url, True)
+        bs = wpTrimPlan(bs)
 
         msg = semail.Message('weekplans', bs)
         msg.setTitle(u'%s' % title)
@@ -50,7 +60,7 @@ def skoleWeekplans():
 
     # read the initial page
     bs = surllib.skoleGetURL(URL_MAIN, True, True)
-    docFindWeekplans(bs)
+    wpFindWeekplans(bs)
 
 if __name__ == '__main__':
     # test
