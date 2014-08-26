@@ -6,6 +6,7 @@ import config
 import surllib
 import semail
 import re
+import BeautifulSoup
 
 # special titles
 TITLE_IGNORE = [u'Fælles nyheder',  # ignored (use RSS)
@@ -23,7 +24,7 @@ TEXT_I_CONFIRM = u'Jeg bekr\xe6fter, at oplysningerne er korrekte'
 def _unwrap(bs):
     if 'childGenerator' not in dir(bs):
         return bs
-    rs = [b for b in bs.childGenerator()]
+    rs = list(bs.childGenerator())
     if len(rs) == 1:
         return _unwrap(rs[0])
     else:
@@ -44,7 +45,11 @@ def _getTitle(bs):
 i.e., a <table><tr><td> wrapping a <b> + <hr>
 '''
     uw = _unwrap(bs)
-    # the first tag must be a b and the second a hr
+
+    # The first tag must be a b and the second a hr
+    # In some cases we might get a white space string before the <b><hr>
+    uw = [e for e in uw if type(e) != BeautifulSoup.NavigableString or \
+          e.string.strip()]
 
     if len(uw) != 2 \
             or uw[0].name != 'b' \
