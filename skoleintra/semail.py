@@ -96,6 +96,7 @@ class Message:
         self.mp['time'] = None
         self.mp['sender'] = None
         self.mp['recipient'] = None
+        self.mp['cc'] = None
         self.mp['mid'] = None
         self._email = None
 
@@ -128,6 +129,9 @@ class Message:
 
     def setRecipient(self, recipient):
         self.mp['recipient'] = recipient
+
+    def setCC(self, cc):
+        self.mp['cc'] = cc
 
     def setMessageID(self, mid):
         self.mp['mid'] = mid
@@ -239,6 +243,7 @@ class Message:
 
         wrapOrZap('sender', 'Fra')
         wrapOrZap('recipient', 'Til')
+        wrapOrZap('cc', 'Kopi til')
         if mpp.get('time', None):
             mpp['ttime'] = u' ' + mpp['time']
         else:
@@ -254,7 +259,7 @@ class Message:
 <body style='font-family: Verdana,Arial,Helvetica'>
 <h1>%(title)s</h1>
 <div class='meta' style='background-color: #eaeaea; color: #000; padding: 5px; margin: 0 0 10px 0;'>
-%(sender)s%(recipient)s  <p class='date' style='margin: 0;'>Dato: %(date)s%(ttime)s</p>
+%(sender)s%(recipient)s%(cc)s  <p class='date' style='margin: 0;'>Dato: %(date)s%(ttime)s</p>
 </div>
 <div class='text'>
   %(nicehtml)s

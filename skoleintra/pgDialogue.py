@@ -44,6 +44,9 @@ def diaExamineMessage(url, mid):
         elif txt.startswith(u'Sendt til '):
             # Sendt til ...
             msg.setRecipient(txt.split(u' ', 2)[-1])
+        elif txt.startswith(u'Kopi til '):
+            # Sendt til ...
+            msg.setCC(txt.split(u' ', 2)[-1])
         else:
             config.log(u'Ukendt header i besked #%s: %s' % (mid, txt), -1)
 
