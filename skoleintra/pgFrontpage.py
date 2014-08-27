@@ -105,6 +105,8 @@ def skoleNewsFrom(bss):
         href = bs.a['href']
         mid = href.split('/')[-1].replace('.asp?ID=', '-').split('&')[0]
         # e.g. VisNytFra-97
+        if not 'VisNytFra' in href:
+            continue
         skoleExamineNews(href, mid)
 
 
