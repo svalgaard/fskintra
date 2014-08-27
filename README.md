@@ -159,3 +159,4 @@ Jens Svalgaard kohrt - http://svalgaard.net/jens/ - github AT svalgaard.net
 Ændringer og forslag er bl.a. kommet fra
 * Jacob Kjeldahl, https://github.com/kjeldahl
 * Michael Legart, https://github.com/legart
+* Jesper Rønn-Jensen, https://github.com/jesperronn
