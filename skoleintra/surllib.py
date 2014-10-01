@@ -93,7 +93,10 @@ def skoleLogin():
     else:
         pswdReal = None  # not possible to "decrypt" an md5 password
         pswdMD5 = config.PASSWORD
-    if 'fAdgangskode' in cNames:
+    if 'MD5kode' in cNames:
+        # send md5 encoded password
+        br['MD5kode'] = pswdMD5
+    elif 'fAdgangskode' in cNames:
         # send real password
         if pswdReal is None:
             config.log(u'Din skoleintra installation er skiftet til at sende kodeord via https i stedet for md5 over http', -2)
@@ -101,9 +104,9 @@ def skoleLogin():
             config.log(u'Anvend augumentet --password KODEORD for at lægge kodeordet ind igen', -2)
             sys.exit(256)
         br['fAdgangskode'] = pswdReal
-    elif 'MD5kode' in cNames:
-        # send md5 encoded password
-        br['MD5kode'] = pswdMD5
+    else:
+        # something is wrong
+        config.log(u'Kan ikke finde kodeordsfeltet på loginskærmen? Du får nok en loginfejl om lidt', -2)
     resp = br.submit()
     if u'Fejlmeddelelse' in resp.geturl():
         config.log(u'Login giver en fejlmeddelse -- har du angivet korrekt '
