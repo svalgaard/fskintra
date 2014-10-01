@@ -10,8 +10,10 @@ import BeautifulSoup
 import urlparse
 import cgi
 import os
+import sys
 import re
 import datetime
+import hashlib
 
 
 def beautify(data):
@@ -66,6 +68,7 @@ _skole_login_done = False
 
 
 def skoleLogin():
+    global br, resp
     'Login to the SkoleIntra website'
     global _skole_login_done
     if _skole_login_done:
@@ -75,13 +78,40 @@ def skoleLogin():
 
     URL_LOGIN = u'https://%s/Infoweb/Fi2/Login.asp' % config.HOSTNAME
     config.log(u'Login på skoleintra')
+    config.log(u'skoleLogin: URL %s' % URL_LOGIN, 2)
     br.open(URL_LOGIN)
+    config.log(u'skoleLogin: Brugernavn %s' % config.USERNAME, 2)
     br.select_form(name='FrontPage_Form1')
     br.form.set_all_readonly(False)
+    cNames = [c.name for c in br.form.controls]
     br['fBrugernavn'] = config.USERNAME
-    br['MD5kode'] = config.PASS_MD5
-    br.submit()
-    # we ignore the response and assume that things are ok
+
+    # send password
+    if config.PASSWORD.startswith('pswd:'):
+        pswdReal = config.b64dec(config.PASSWORD)
+        pswdMD5 = hashlib.md5(pswdReal).hexdigest()
+    else:
+        pswdReal = None  # not possible to "decrypt" an md5 password
+        pswdMD5 = config.PASSWORD
+    if 'fAdgangskode' in cNames:
+        # send real password
+        if pswdReal is None:
+            config.log(u'Din skoleintra installation er skiftet til at sende kodeord via https i stedet for md5 over http', -2)
+            config.log(u'I den forbindelse bliver du nødt til at angive dit kodeord', -2)
+            config.log(u'Anvend augumentet --password KODEORD for at lægge kodeordet ind igen', -2)
+            sys.exit(256)
+        br['fAdgangskode'] = pswdReal
+    elif 'MD5kode' in cNames:
+        # send md5 encoded password
+        br['MD5kode'] = pswdMD5
+    resp = br.submit()
+    if u'Fejlmeddelelse' in resp.geturl():
+        config.log(u'Login giver en fejlmeddelse -- har du angivet korrekt '
+                   u'kodeord? Check konfigurationsfilen, angiv evt. nyt '
+                   u'kodeord med --password eller --config ELLER '
+                   u'prøv igen senere...', -2)
+        sys.exit(256)
+    # otherwise we ignore the response and assume that things are ok
 
     _skole_login_done = True
 

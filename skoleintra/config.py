@@ -5,12 +5,12 @@
 import os
 import sys
 import ConfigParser
-import hashlib
 import codecs
 import locale
 import getpass
 import optparse
 import time
+import re
 
 ROOT = os.path.expanduser('~/.skoleintra/')
 DEFAULT_FN = os.path.join(os.path.dirname(__file__), 'default.inf')
@@ -29,6 +29,10 @@ Se flg. side for flere detaljer:
 parser.add_option(
     '--config-file', dest='configfilename', default=None,
     help=u'Brug konfigurationsfilen FILNAVN - standard: %s' % CONFIG_FN,
+    metavar='FILNAVN')
+parser.add_option(
+    '--password', '-p', dest='password', default=None,
+    help=u'Opdatér kodeord. Dette skrives om muligt til konfigurationsfilen',
     metavar='FILNAVN')
 parser.add_option(
     '--config', dest='doconfig', default=False, action='store_true',
@@ -60,6 +64,9 @@ if not os.path.isfile(CONFIG_FN) and not options.doconfig:
 %s
 Kør først programmet med --config for at sætte det op.''' % CONFIG_FN)
 
+if options.doconfig and options.password is not None:
+    parser.error(u'''--config og --password kan ikke bruges samtidigt''')
+
 SKIP_CACHE = options.skipcache
 
 
@@ -73,6 +80,31 @@ def ensureDanish():
         sys.stderr = codecs.getwriter('UTF-8')(sys.stderr)
         sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
 ensureDanish()
+
+
+# logging levels:
+#  0 some important stuff (requires -q)
+#  1 requires one         (default value)
+#  2 tiny log messages    (requires -v)
+VERBOSE = options.verbosity
+
+
+def log(s, level=1):
+    if type(level) != int:
+        raise Exception(u'level must be an int, not %s' % repr(level))
+    if level <= VERBOSE:
+        sys.stderr.write(u'%s\n' % s)
+        sys.stderr.flush()
+
+
+def b64enc(pswd):
+    return 'pswd:' + pswd.encode('base64')
+
+
+def b64dec(pswd):
+    assert(pswd.startswith('pswd:'))
+    return pswd[5:].decode('base64')
+
 
 if options.doconfig:
     if os.path.isfile(CONFIG_FN):
@@ -114,12 +146,11 @@ if options.doconfig:
             print u'Angiv venligst en værdi'
         details[var] = a
 
-    # md5 "encrypt" the password
-    details['password'] = hashlib.md5(details['password']).hexdigest()
-    # base64 "encrypt" smtp password
+    # "encrypt" the password
+    details['password'] = b64enc(details['password'])
+    # "encrypt" smtp password
     if details['smtppassword']:
-        pswdenc = 'pswd:' + details['smtppassword'].encode('base64')
-        details['smtppassword'] = pswdenc
+        details['smtppassword'] = b64enc(details['smtppassword'])
 
     # if not using standard CONFIG_FN, setup prefix for cache and msg
     if options.configfilename:
@@ -138,10 +169,38 @@ if options.doconfig:
     print u'Din nye opsætning er klar -- kør nu programmet uden --config'
     sys.exit(1)
 
+
 # read configuration
 cfg = ConfigParser.ConfigParser()
 cfg.read(DEFAULT_FN)
 cfg.read(CONFIG_FN)
+
+
+# Maybe write new password to CONFIG_FN
+if options.password is not None:
+    pswd = b64enc(options.password)
+    if cfg.get('default', 'password') == pswd:
+        log(u'Nyt kodeord angivet med --password er ens med nuværende'
+            u' kodeord i %s' % CONFIG_FN, -2)
+    else:
+        cfg.set('default', 'password', pswd)
+
+        data = open(CONFIG_FN, 'r').read()
+        r = re.compile(ur'(?m)^password\s*=.*$')
+        if not r.findall(data):
+            log(u'Kan ikke finde linjen med password', -2)
+            log(u'Nyt kodeord bliver ikke skrevet i '
+                u'konfigurationsfilesn %s' % CONFIG_FN, -2)
+        else:
+            data = r.sub('password=%s' % pswd, data)
+            try:
+                open(CONFIG_FN, 'w').write(data)
+                log(u'Nyt kodeord er skrevet til'
+                    u'konfigurationsfilen %s' % CONFIG_FN, -2)
+            except:
+                log(u'Kan ikke skrive til '
+                    u'konfigurationsfilen %s' % CONFIG_FN, -2)
+                log(u'Nyt kodeord bliver ikke skrevet', -2)
 
 
 def softGet(cp, section, option):
@@ -152,7 +211,7 @@ def softGet(cp, section, option):
 
 try:
     USERNAME = cfg.get('default', 'username')
-    PASS_MD5 = cfg.get('default', 'password')
+    PASSWORD = cfg.get('default', 'password')
     HOSTNAME = cfg.get('default', 'hostname')
     SENDER = cfg.get('default', 'senderemail')
     EMAIL = cfg.get('default', 'email')
@@ -176,20 +235,6 @@ for dn in (CACHE_DN, MSG_DN):
     if not os.path.isdir(dn):
         os.makedirs(dn)
 
-# logging levels:
-#  0 some important stuff (requires -q)
-#  1 requires one         (default value)
-#  2 tiny log messages    (requires -v)
-VERBOSE = options.verbosity
-
-
-def log(s, level=1):
-    if type(level) != int:
-        raise Exception(u'level must be an int, not %s' % repr(level))
-    if level <= VERBOSE:
-        sys.stderr.write(u'%s\n' % s)
-        sys.stderr.flush()
-
 #
 # Ensure that SMTP options are sane
 #
@@ -212,7 +257,7 @@ smtpport=25.'''.strip() % (CONFIG_FN, repr(SMTPPORT)))
 
     if SMTPPASS:
         if SMTPPASS.startswith('pswd:'):
-            SMTPPASS = SMTPPASS[5:].decode('base64')
+            SMTPPASS = b64dec(SMTPPASS)
 else:
     SMTPPORT = ''
     SMTPLOGIN = ''
