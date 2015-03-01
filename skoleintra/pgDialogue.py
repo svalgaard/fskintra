@@ -1,11 +1,12 @@
+from __future__ import absolute_import
 #
 # -*- encoding: utf-8 -*-
 #
 
 import re
-import config
-import surllib
-import semail
+from . import config
+from . import surllib
+from . import semail
 
 URL_PREFIX = '/Infoweb/Fi/Besked/'
 URL_BOX_PREFIX = URL_PREFIX + 'Oversigt.asp?Bakke='

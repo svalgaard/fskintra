@@ -1,10 +1,11 @@
+from __future__ import absolute_import
 #
 # -*- encoding: utf-8 -*-
 #
 
 import cookielib
 import urllib
-import config
+from . import config
 import mechanize
 import BeautifulSoup
 import urlparse

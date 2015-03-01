@@ -1,15 +1,16 @@
+from __future__ import absolute_import
 #
 # -*- encoding: utf-8 -*-
 #
 # email validator
 # http://tools.ietf.org/tools/msglint/
 #
-import config
+from . import config
 import md5
 import re
 import socket
 import BeautifulSoup
-import surllib
+from . import surllib
 import time
 import os
 import glob
@@ -284,7 +285,7 @@ class Message:
             if url not in iimgs:
                 try:
                     data = surllib.skoleGetURL(url, False)
-                except urllib2.URLError, e:
+                except urllib2.URLError as e:
                     # could not fetch URL for some reason - ignore
                     continue
                 # is this actually an image?
@@ -319,7 +320,7 @@ class Message:
                                (self.mp['title'] if self.mp['title'] else self,
                                 url))
                 if data:
-                    if atag.has_key('usefilename'):
+                    if 'usefilename' in atag:
                         usefilename = atag['usefilename']
                     else:
                         usefilename = None

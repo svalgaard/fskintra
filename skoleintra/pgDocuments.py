@@ -1,11 +1,12 @@
+from __future__ import absolute_import
 #
 # -*- encoding: utf-8 -*-
 #
 
 import re
-import config
-import surllib
-import semail
+from . import config
+from . import surllib
+from . import semail
 import datetime
 import urllib
 
@@ -21,7 +22,7 @@ def docFindDocuments(bs, foldername='Dokumentarkiv'):
     trs = bs.findAll('tr')
 
     for line in trs:
-        if not line.has_key('class'):
+        if 'class' not in line:
             continue
         if not [c for c in line['class'].split() if c.startswith('linje')]:
             continue

@@ -1,3 +1,4 @@
+from __future__ import print_function
 #
 # -*- encoding: utf-8 -*-
 #
@@ -108,9 +109,9 @@ def b64dec(pswd):
 
 if options.doconfig:
     if os.path.isfile(CONFIG_FN):
-        print u'Din opsætning bliver nulstillet,',
-        print u'når du har besvareret nedenstående spørgsmål'
-    print u'Din nye opsætning gemmes her:', CONFIG_FN
+        print(u'Din opsætning bliver nulstillet,', end=' ')
+        print(u'når du har besvareret nedenstående spørgsmål')
+    print(u'Din nye opsætning gemmes her:', CONFIG_FN)
 
     details = {}
     opts = [
@@ -135,15 +136,15 @@ if options.doconfig:
          u'SMTP password (tom hvis login ikke påkrævet):')]
     for (var, question) in opts:
         while True:
-            print
-            print question
+            print()
+            print(question)
             if var.endswith('password'):
                 a = getpass.getpass('').strip().decode(sys.stdin.encoding)
             else:
                 a = raw_input().strip().decode(sys.stdin.encoding)
             if a or var.startswith('smtp'):
                 break
-            print u'Angiv venligst en værdi'
+            print(u'Angiv venligst en værdi')
         details[var] = a
 
     # "encrypt" the password
@@ -165,8 +166,8 @@ if options.doconfig:
         os.makedirs(ROOT)
     open(CONFIG_FN, 'w').write(config.encode('utf-8'))
 
-    print
-    print u'Din nye opsætning er klar -- kør nu programmet uden --config'
+    print()
+    print(u'Din nye opsætning er klar -- kør nu programmet uden --config')
     sys.exit(1)
 
 
@@ -223,7 +224,7 @@ try:
     SMTPPORT = softGet(cfg, 'default', 'smtpport')
     SMTPLOGIN = softGet(cfg, 'default', 'smtplogin')
     SMTPPASS = softGet(cfg, 'default', 'smtppassword')
-except ConfigParser.NoOptionError, e:
+except ConfigParser.NoOptionError as e:
     parser.error(u'''Konfigurationsfilen '%s' mangler en indstilling for %s.
 Kør først programmet med --config for at sætte det op.
 Eller ret direkte i '%s'.''' % (CONFIG_FN, e.option, CONFIG_FN))

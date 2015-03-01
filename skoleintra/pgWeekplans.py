@@ -1,10 +1,11 @@
+from __future__ import absolute_import
 #
 # -*- encoding: utf-8 -*-
 #
 
-import config
-import surllib
-import semail
+from . import config
+from . import surllib
+from . import semail
 import urllib
 
 URL_PREFIX = 'http://%s/Infoweb/Fi/' % config.HOSTNAME
@@ -27,7 +28,7 @@ def wpFindWeekplans(bs):
     trs = bs.findAll('tr')
 
     for line in trs:
-        if not line.has_key('class'):
+        if 'class' not in line:
             continue
         if not [c for c in line['class'].split() if c.startswith('linje')]:
             continue

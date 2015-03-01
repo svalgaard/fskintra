@@ -1,10 +1,11 @@
+from __future__ import absolute_import
 #
 # -*- encoding: utf-8 -*-
 #
 
-import config
-import surllib
-import semail
+from . import config
+from . import surllib
+from . import semail
 import re
 import BeautifulSoup
 
@@ -190,7 +191,7 @@ def skoleFrontpage():
     # find main table
     maint = []
     for mt in data.findAll('table'):
-        if mt.findParents('table') or mt.has_key('bgcolor'):
+        if mt.findParents('table') or 'bgcolor' in mt:
             continue
         maint.append(mt)
     assert(len(maint) == 1)  # assume exactly one main table
