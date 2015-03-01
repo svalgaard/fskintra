@@ -5,7 +5,8 @@ from __future__ import print_function
 
 import os
 import sys
-import ConfigParser
+import base64
+import configparser as ConfigParser
 import codecs
 import locale
 import getpass
@@ -77,7 +78,7 @@ def ensureDanish():
 
     enc = locale.getpreferredencoding() or 'ascii'
     test = u'\xe6\xf8\xe5\xc6\xd8\xc5\xe1'.encode(enc, 'replace')
-    if '?' in test or sys.version_info < (2, 6):
+    if '?' in test.decode("utf-8") or sys.version_info < (2, 6):
         sys.stderr = codecs.getwriter('UTF-8')(sys.stderr)
         sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
 ensureDanish()
@@ -104,7 +105,7 @@ def b64enc(pswd):
 
 def b64dec(pswd):
     assert(pswd.startswith('pswd:'))
-    return pswd[5:].decode('base64')
+    return base64.b64decode(pswd[5:]).decode('UTF-8')
 
 
 if options.doconfig:
@@ -187,7 +188,7 @@ if options.password is not None:
         cfg.set('default', 'password', pswd)
 
         data = open(CONFIG_FN, 'r').read()
-        r = re.compile(ur'(?m)^password\s*=.*$')
+        r = re.compile(r'(?m)^password\s*=.*$')
         if not r.findall(data):
             log(u'Kan ikke finde linjen med password', -2)
             log(u'Nyt kodeord bliver ikke skrevet i '
