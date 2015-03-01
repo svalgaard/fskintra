@@ -1,10 +1,10 @@
-from __future__ import absolute_import
 #
 # -*- encoding: utf-8 -*-
 #
 # email validator
 # http://tools.ietf.org/tools/msglint/
 #
+from __future__ import absolute_import
 from . import config
 import md5
 import re
