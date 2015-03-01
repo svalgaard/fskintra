@@ -2,6 +2,10 @@
 # -*- encoding: utf-8 -*-
 #
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import hex
+from builtins import input
 
 import os
 import sys
@@ -142,7 +146,7 @@ if options.doconfig:
             if var.endswith('password'):
                 a = getpass.getpass('').strip().decode(sys.stdin.encoding)
             else:
-                a = raw_input().strip().decode(sys.stdin.encoding)
+                a = input().strip().decode(sys.stdin.encoding)
             if a or var.startswith('smtp'):
                 break
             print(u'Angiv venligst en værdi')

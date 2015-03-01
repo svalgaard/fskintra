@@ -2,6 +2,7 @@
 # -*- encoding: utf-8 -*-
 #
 from __future__ import absolute_import
+from builtins import map
 
 from . import config
 from . import surllib
@@ -231,7 +232,7 @@ def skoleFrontpage():
             # BBB news are split
             # ignore first table which is a wrapper around all entries
             xs = xs[1:]
-            map(skoleFrontBBB, xs)
+            list(map(skoleFrontBBB, xs))
         elif t == TITLE_NEWS:
             # News from...
             skoleNewsFrom(xs)

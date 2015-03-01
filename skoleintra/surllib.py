@@ -2,13 +2,16 @@
 # -*- encoding: utf-8 -*-
 #
 from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import hex
 
-import cookielib
-import urllib
+import http.cookiejar
+import urllib.request, urllib.parse, urllib.error
 from . import config
 import mechanize
 import BeautifulSoup
-import urlparse
+import urllib.parse
 import cgi
 import os
 import sys
@@ -33,7 +36,7 @@ def getBrowser():
         _browser = mechanize.Browser()
 
         # Cookie Jar
-        cj = cookielib.LWPCookieJar()
+        cj = http.cookiejar.LWPCookieJar()
         _browser.set_cookiejar(cj)
 
         # Browser options
@@ -122,11 +125,11 @@ def skoleLogin():
 
 def url2cacheFileName(url):
     assert(type(url) == str)
-    up = urlparse.urlparse(url)
+    up = urllib.parse.urlparse(url)
     parts = [config.CACHE_DN,
              up.scheme,
              up.netloc,
-             urllib.url2pathname(up.path)[1:]]
+             urllib.request.url2pathname(up.path)[1:]]
     if up.query:
         az = re.compile(r'[^0-9a-zA-Z]')
         for (k, vs) in sorted(cgi.parse_qs(up.query).items()):
@@ -137,7 +140,7 @@ def url2cacheFileName(url):
 
 def skoleGetURL(url, asSoup=False, noCache=False):
     '''Returns data from url as raw string or as a beautiful soup'''
-    if type(url) == unicode:
+    if type(url) == str:
         url, uurl = url.encode('utf-8'), url
     else:
         uurl = url.decode('utf-8')
@@ -160,7 +163,7 @@ def skoleGetURL(url, asSoup=False, noCache=False):
         config.log('skoleGetURL: Henter fra cache %s' % uurl, 2)
         data = open(lfn, 'rb').read()
     else:
-        qurl = urllib.quote(url, safe=':/?=&%')
+        qurl = urllib.parse.quote(url, safe=':/?=&%')
         config.log(u'skoleGetURL: Trying to fetch %s' % qurl, 2)
         skoleLogin()
         br = getBrowser()

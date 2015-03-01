@@ -2,13 +2,16 @@
 # -*- encoding: utf-8 -*-
 #
 from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import map
 
 import re
 from . import config
 from . import surllib
 from . import semail
 import datetime
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 URL_PREFIX = 'http://%s/Infoweb/Fi/Dokumentarkiv/' % config.HOSTNAME
 URL_MAIN = URL_PREFIX + 'Dokliste.asp'
@@ -43,7 +46,7 @@ def docFindDocuments(bs, foldername='Dokumentarkiv'):
             url = URL_DOC + re.search('.*?(\d+)', links[0]['href']).group(1)
         else:
             assert('Dokliste' in url)
-        url = urllib.quote(url.encode('iso-8859-1'), safe=':/?=&%')
+        url = urllib.parse.quote(url.encode('iso-8859-1'), safe=':/?=&%')
 
         # find date
         dts = line.findAll('td', width='18%')
@@ -58,7 +61,7 @@ def docFindDocuments(bs, foldername='Dokumentarkiv'):
             suburl = URL_PREFIX + url
             subbs = surllib.skoleGetURL(suburl, True)
 
-            subdate = datetime.date(*reversed(map(int, date.split('-'))))
+            subdate = datetime.date(*reversed(list(map(int, date.split('-')))))
             if subbs.cachedate <= subdate or \
                (datetime.date.today() - subbs.cachedate).days > 2:
                 # cached version is too old - refetch

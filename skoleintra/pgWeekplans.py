@@ -2,11 +2,13 @@
 # -*- encoding: utf-8 -*-
 #
 from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
 
 from . import config
 from . import surllib
 from . import semail
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 URL_PREFIX = 'http://%s/Infoweb/Fi/' % config.HOSTNAME
 URL_MAIN = URL_PREFIX + 'Ugeplaner.asp'
@@ -42,7 +44,7 @@ def wpFindWeekplans(bs):
         # find url
         url = links[0]['href']
         url = url.encode('iso-8859-1')
-        url = URL_PREFIX + urllib.quote(url, safe=':/?=&%')
+        url = URL_PREFIX + urllib.parse.quote(url, safe=':/?=&%')
 
         bs = surllib.skoleGetURL(url, True)
         bs = wpTrimPlan(bs)
