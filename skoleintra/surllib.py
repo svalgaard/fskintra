@@ -78,8 +78,27 @@ def skoleLogin():
 
     URL_LOGIN = u'https://%s/Infoweb/Fi2/Login.asp' % config.HOSTNAME
     config.log(u'Login på skoleintra')
-    config.log(u'skoleLogin: URL %s' % URL_LOGIN, 2)
-    br.open(URL_LOGIN)
+    err = True
+    try:
+        config.log(u'skoleLogin: URL %s' % URL_LOGIN, 2)
+        br.open(URL_LOGIN)
+        err = False
+    except Exception, e:
+        if 'EOF occurred in violation of protocol' in str(e.reason):
+            config.log(u'skoleLogin: Prøver igen med sslfix')
+            import sslfix
+            config.log(u'skoleLogin: URL %s' % URL_LOGIN, 2)
+            try:
+                br.open(URL_LOGIN)
+                err = False
+            except Exception, e:
+                pass
+    if err:
+        config.log(u'skoleLogin: Kan ikke logge på', 0)
+        config.log(u'skoleLogin: Check at URLen %s er rigtig', 0)
+        config.log(u'skoleLogIn: og prøv igen senere' % URL_LOGIN, 0)
+        sys.exit(0)
+
     config.log(u'skoleLogin: Brugernavn %s' % config.USERNAME, 2)
     br.select_form(name='FrontPage_Form1')
     br.form.set_all_readonly(False)
