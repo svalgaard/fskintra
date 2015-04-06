@@ -184,10 +184,10 @@ class Message:
             self.mp['nicehtml'] = nicehtml(self.mp['data'])
 
     def getMessageID(self):
+        self.prepareMessage()
         if self.mp.get('mid', None):
-            return self.mp['mid']
+            return self.mp['md5'] + '--' + self.mp['mid']
         else:
-            self.prepareMessage()
             return self.mp['md5']
 
     def getLongMessageID(self):
@@ -196,9 +196,13 @@ class Message:
 
     def hasBeenSent(self):
         ''' Tests whether this email has previously been sent'''
-        mid = self.getMessageID()
-        old = glob.glob(os.path.join(config.MSG_DN, '*--%s' % mid))
-        return old
+        self.prepareMessage()
+        path = os.path.join(config.MSG_DN, '%s%s%s')
+        if glob.glob(path % ('*--', self.mp['md5'], '*')):
+            return True
+        if self.mp.get('mid', None):
+            return bool(glob.glob(path % ('*', '--', self.mp['mid'])))
+        return False
 
     def store(self):
         mid = self.getMessageID()
