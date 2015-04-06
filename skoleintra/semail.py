@@ -4,12 +4,17 @@
 # email validator
 # http://tools.ietf.org/tools/msglint/
 #
-import config
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
+from . import config
 import md5
 import re
 import socket
 import BeautifulSoup
-import surllib
+from . import surllib
 import time
 import os
 import glob
@@ -17,7 +22,7 @@ import codecs
 import shutil
 import smtplib
 import mimetypes
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import imghdr
 
 import email
@@ -72,7 +77,7 @@ def generateMIMEAttachment(path, data, usefilename=None):
     # do not do this here - already done above.
     # encoders.encode_base64(msg)
     # Set the filename parameter
-    if type(fn) != unicode:
+    if type(fn) != str:
         fn = fn.decode('utf-8')
     fne = headerEncodeField(fn)
     msg.add_header('Content-Disposition', 'attachment', filename=fne)
@@ -80,7 +85,7 @@ def generateMIMEAttachment(path, data, usefilename=None):
     return msg
 
 
-class Message:
+class Message(object):
 
     def __init__(self, type, phtml):
         self.mp = {}
@@ -141,7 +146,7 @@ class Message:
             d = phtml.renderContents().decode('utf-8')
         else:
             d = self.mp['data']
-        assert(type(d) == unicode)  # must be unicode
+        assert(type(d) == str)  # must be unicode
 
         # e.g. front page pics
         m = re.findall(u'>(?:Lagt ind|Skrevet) af ([^<]*?) den ([-0-9]*?)<', d)
@@ -173,7 +178,7 @@ class Message:
         if not self.mp.get('md5', None):
             keys = 'type,date,title,data'.split(',')
             txt = u' '.join([self.mp[x] for x in keys if self.mp.get(x, None)])
-            self.mp['md5'] = unicode(md5.md5(txt.encode('utf-8')).hexdigest())
+            self.mp['md5'] = str(md5.md5(txt.encode('utf-8')).hexdigest())
 
         if not self.mp.get('date', None):
             # use today as the date
@@ -217,7 +222,7 @@ class Message:
         fd.write(str(self.asEmail()))
         fd.close()
 
-        mpp = [(unicode(k), unicode(v)) for (k, v) in self.mp.items()]
+        mpp = [(str(k), str(v)) for (k, v) in list(self.mp.items())]
         fd = codecs.open(os.path.join(tdn, mid + '.txt'), 'wb', 'utf-8')
         fd.write(repr(mpp))
         fd.close()
@@ -284,7 +289,7 @@ class Message:
             if url not in iimgs:
                 try:
                     data = surllib.skoleGetURL(url, False)
-                except urllib2.URLError, e:
+                except urllib.error.URLError as e:
                     # could not fetch URL for some reason - ignore
                     continue
                 # is this actually an image?
@@ -319,7 +324,7 @@ class Message:
                                (self.mp['title'] if self.mp['title'] else self,
                                 url))
                 if data:
-                    if atag.has_key('usefilename'):
+                    if 'usefilename' in atag:
                         usefilename = atag['usefilename']
                     else:
                         usefilename = None
@@ -352,7 +357,7 @@ class Message:
             msg.attach(msgHtml)
 
             # attach images if any
-            for (url, (cid, data)) in iimgs.items():
+            for (url, (cid, data)) in list(iimgs.items()):
                 m = MIMEImage(data)
                 m.add_header('Content-ID', '<%s>' % cid)
                 fn = os.path.basename(url).encode('utf-8')

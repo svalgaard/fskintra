@@ -1,9 +1,11 @@
 #
 # -*- encoding: utf-8 -*-
 #
+from __future__ import print_function
+from __future__ import absolute_import
 
-import config
-import surllib
+from . import config
+from . import surllib
 
 URL_PREFIX = 'http://%s/Infoweb/Fi2/' % config.HOSTNAME
 URL = URL_PREFIX + 'Faneblade.asp'
@@ -47,7 +49,7 @@ def skoleSelectChild(name):
 
 if False:
     c = skoleGetChildren()
-    print repr(_children)
+    print(repr(_children))
     for cname in c:
-        print cname
+        print(cname)
         skoleSelectChild(cname)

@@ -1,10 +1,12 @@
 #
 # -*- encoding: utf-8 -*-
 #
+from __future__ import absolute_import
+from builtins import map
 
-import config
-import surllib
-import semail
+from . import config
+from . import surllib
+from . import semail
 import re
 import BeautifulSoup
 
@@ -190,7 +192,7 @@ def skoleFrontpage():
     # find main table
     maint = []
     for mt in data.findAll('table'):
-        if mt.findParents('table') or mt.has_key('bgcolor'):
+        if mt.findParents('table') or 'bgcolor' in mt:
             continue
         maint.append(mt)
     assert(len(maint) == 1)  # assume exactly one main table
@@ -230,7 +232,7 @@ def skoleFrontpage():
             # BBB news are split
             # ignore first table which is a wrapper around all entries
             xs = xs[1:]
-            map(skoleFrontBBB, xs)
+            list(map(skoleFrontBBB, xs))
         elif t == TITLE_NEWS:
             # News from...
             skoleNewsFrom(xs)
