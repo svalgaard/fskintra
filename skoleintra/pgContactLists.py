@@ -28,7 +28,7 @@ def listsCheckList(postData, listtype):
     # Fetch potential cached version
     bs = surllib.skoleGetURL(URL_MAIN, True, False, True, postData)
 
-    if bs.cacheage > 7 * 24 * 3600:
+    if bs.cacheage > 6.9:
         bs = surllib.skoleGetURL(URL_MAIN, True, True, True, postData)
 
     tbl = bs.findAll('table')[2]

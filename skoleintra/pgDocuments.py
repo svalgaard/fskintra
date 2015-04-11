@@ -58,8 +58,7 @@ def docFindDocuments(bs, foldername='Dokumentarkiv'):
             subbs = surllib.skoleGetURL(suburl, True)
 
             subdate = datetime.date(*reversed(map(int, date.split('-'))))
-            if subbs.cachedate <= subdate or \
-               (datetime.date.today() - subbs.cachedate).days > 2:
+            if subbs.cachedate <= subdate or subbs.cacheage >= 1.9:
                 # cached version is too old - refetch
                 subbs = surllib.skoleGetURL(suburl, True, True)
                 config.log(u'Kigger på folderen %s' % title)

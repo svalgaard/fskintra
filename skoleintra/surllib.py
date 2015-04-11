@@ -206,7 +206,7 @@ def skoleGetURL(url, asSoup=False, noCache=False, perChild=False, postData=None)
     if asSoup:
         data = beautify(data)
         data.cachedate = datetime.date.fromtimestamp(os.path.getmtime(lfn))
-        data.cacheage = time.time() - os.path.getmtime(lfn)
+        data.cacheage = (time.time() - os.path.getmtime(lfn))/(24 * 3600.)
         return data
     else:
         return data
