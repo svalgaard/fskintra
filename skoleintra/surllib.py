@@ -95,8 +95,8 @@ def skoleLogin():
                 pass
     if err:
         config.log(u'skoleLogin: Kan ikke logge på', 0)
-        config.log(u'skoleLogin: Check at URLen %s er rigtig', 0)
-        config.log(u'skoleLogIn: og prøv igen senere' % URL_LOGIN, 0)
+        config.log(u'skoleLogin: Check at URLen %s er rigtig' % URL_LOGIN, 0)
+        config.log(u'skoleLogIn: og prøv igen senere', 0)
         sys.exit(0)
 
     config.log(u'skoleLogin: Brugernavn %s' % config.USERNAME, 2)
