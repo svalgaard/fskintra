@@ -33,12 +33,21 @@ def listsCheckList(postData, listtype):
 
     tbl = bs.findAll('table')[2]
     if listtype == 'V6':
-        # Remove links to pictures
+        # Remove links to pictures of parents
         for a in tbl.findAll('a'):
             a.replaceWithChildren()
 
+    tr = tbl.find('tr')
+    if tr.find('h2'):
+        title = tr.find('h2').text
+        tr.extract()
+    elif tbl.find('h2'):
+        title = tbl.find('h2').text
+    else:
+        title = u'Kontaktoplysninger'
+
     msg = semail.Message('contactList', tbl)
-    msg.setTitle(tbl.find('h2').text)
+    msg.setTitle(title)
     semail.maybeEmail(msg)
 
 
