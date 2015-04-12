@@ -43,7 +43,7 @@ def wpFindWeekplans(bs):
         url = url.encode('iso-8859-1')
         url = URL_PREFIX + urllib.quote(url, safe=':/?=&%')
 
-        bs = surllib.skoleGetURL(url, True)
+        bs = surllib.skoleGetURL(url, True, True)
         bs = wpTrimPlan(bs)
 
         msg = semail.Message('weekplans', bs)
