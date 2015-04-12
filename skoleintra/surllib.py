@@ -158,7 +158,7 @@ def url2cacheFileName(url, perChild, postData):
     return os.path.join(*parts)
 
 
-def skoleGetURL(url, asSoup=False, noCache=False, perChild=False, postData=None):
+def skoleGetURL(url, asSoup=False, noCache=False, perChild=True, postData=None):
     '''Returns data from url as raw string or as a beautiful soup'''
     if type(url) == unicode:
         url, uurl = url.encode('utf-8'), url
