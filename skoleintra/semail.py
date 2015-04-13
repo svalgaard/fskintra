@@ -14,6 +14,7 @@ import time
 import os
 import glob
 import codecs
+import colors
 import shutil
 import smtplib
 import mimetypes
@@ -414,14 +415,15 @@ class Message:
 
     def maybeSend(self):
         if self.hasBeenSent():
-            config.log(u'Hopper tidligere sendt besked over: %s' % self, 2)
+            txt = u'Hopper tidligere sendt besked over: %s' % self
+            config.log( colors.draw( txt, fg_dark_grey=True), 2 )
             return False
         self.send()
         return True
 
     def send(self):
         config.log(u'Sender email %s' %
-                   (self.mp['title'] if self.mp['title'] else self))
+                   (self.mp['title'] if self.mp['title'] else self), 3)
         msg = self.asEmail()
         # open smtp connection
         if config.SMTPHOST:

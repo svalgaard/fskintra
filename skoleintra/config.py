@@ -6,6 +6,7 @@ import os
 import sys
 import ConfigParser
 import codecs
+import colors
 import locale
 import getpass
 import optparse
@@ -88,13 +89,48 @@ ensureDanish()
 #  2 tiny log messages    (requires -v)
 VERBOSE = options.verbosity
 
+def success(s):
+    log(s, 'SUCCESS')
 
-def log(s, level=1):
-    if type(level) != int:
+def info(s):
+    log(s, 1)
+
+def notice(s):
+    log(s, 1)
+
+def warn(s):
+    log(s, 'WARN')
+
+def debug(s):
+    log(s, 0)
+
+
+def log(s, level= 'NOTICE' ):
+    accepted_log_levels = {
+        0: {'fg_yellow': True},
+        1: {'fg_dark_grey': True},
+        2: {'fg_purple': True},
+        3: {'fg_green': True},
+        'ERROR': {'fg_red': True},
+        'WARN': {'fg_yellow': True},
+        'INFO': {'fg_light_grey': True},
+        'NOTICE': {'fg_dark_grey': True},
+        'DEBUG': {'fg_purple': True},
+        'TRACE': {'fg_cyan': True},
+        'SUCCESS': {'fg_green': True},
+    }
+
+    if level not in accepted_log_levels:
         raise Exception(u'level must be an int, not %s' % repr(level))
-    if level <= VERBOSE:
-        sys.stderr.write(u'%s\n' % s)
-        sys.stderr.flush()
+
+    if type(level) == int and level > VERBOSE:
+        return True
+
+    txt = u'%s\n' % s
+
+    # double splat '**' will unpack to argument list
+    sys.stderr.write(colors.draw(txt, **accepted_log_levels[level]))
+    sys.stderr.flush()
 
 
 def b64enc(pswd):
