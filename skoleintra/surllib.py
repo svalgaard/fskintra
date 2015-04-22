@@ -187,7 +187,6 @@ def skoleGetURL(url, asSoup=False, noCache=False, perChild=True, postData=None):
 
     if os.path.isfile(lfn) and not noCache and not config.SKIP_CACHE:
         config.log('skoleGetURL: Henter fra cache %s' % uurl, 2)
-        config.log('skoleGetURL: %s' % lfn, 2)
         data = open(lfn, 'rb').read()
     else:
         qurl = urllib.quote(url, safe=':/?=&%')

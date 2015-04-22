@@ -67,13 +67,13 @@ def skoleContactLists():
         if not inp:
             config.log(u'pgContactLists: INPUT med %s ej fundet' % repr(inpd))
             return
-        postData[inp['name']] = inp['value']
+        postData[inp['name']] = inp['value'].encode('utf-8') if type(inp['value']) == unicode else inp['value'] 
 
     lists = None
     for sel in bs.findAll('select'):
         fst = sel.option['value']
         if sel['name'] in ['fKlasse', 'fSortering']:
-            postData[sel['name']] = fst
+            postData[sel['name']] = fst.encode('utf-8') if type(fst) == unicode else fst
         elif sel['name'] == 'R1':
             lists = sel
         else:
@@ -87,7 +87,7 @@ def skoleContactLists():
 
     for opt in lists.findAll('option'):
         if opt['value'] in LISTS_TO_SEND:
-            postData[lists['name']] = opt['value']
+            postData[lists['name']] = opt['value'].encode('utf-8') if type(opt['value']) == unicode else opt['value']
             listsCheckList(postData, opt['value'])
 
 
