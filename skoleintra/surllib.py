@@ -155,7 +155,10 @@ def url2cacheFileName(url, perChild, postData):
         for (k, vs) in sorted(cgi.parse_qs(up.query).items()):
             xs = [az.sub(lambda x: hex(ord(x.group(0))), x) for x in [k] + vs]
             parts[-1] += '_' + '-'.join(xs)
-    return os.path.join(*parts)
+    cfn = os.path.join(*parts)
+    if type(cfn) == unicode and not os.path.supports_unicode_filenames:
+        cfn = cfn.encode('utf-8')
+    return cfn
 
 
 def skoleGetURL(url, asSoup=False, noCache=False, perChild=True, postData=None):
