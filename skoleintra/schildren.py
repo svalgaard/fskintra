@@ -40,7 +40,7 @@ def skoleSelectChild(name):
     if name == config.CHILDNAME:
         config.log(u'[%s] er allerede valgt som barn' % name)
     else:
-        config.log(u'Vælger [%s]' % name)
+        config.warn(u'Vælger [%s]' % name)
         url = URL_PREFIX + _children[name]
         _ = surllib.skoleGetURL(url, False, noCache=True)
         config.CHILDNAME = name
