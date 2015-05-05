@@ -25,9 +25,15 @@ def unienc(s):
 
 
 def beautify(data):
-    return BeautifulSoup.BeautifulSoup(
-        data,
-        convertEntities=BeautifulSoup.BeautifulStoneSoup.HTML_ENTITIES)
+    try:
+        return BeautifulSoup.BeautifulSoup(
+            data,
+            convertEntities=BeautifulSoup.BeautifulStoneSoup.HTML_ENTITIES)
+    except ValueError, e:
+        # Maybe due to 'wide' unicode char, e.g., smiley &#128516;
+        #    ValueError: unichr() arg not in range(0x10000) (narrow Python build)
+        # This breaks some python installs
+        return BeautifulSoup.BeautifulSoup(data)
 
 
 _browser = None
