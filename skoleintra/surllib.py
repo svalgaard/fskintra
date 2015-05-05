@@ -17,6 +17,13 @@ import hashlib
 import time
 
 
+def unienc(s):
+    if type(s) == unicode:
+        return s.encode('utf-8')
+    else:
+        return s
+
+
 def beautify(data):
     return BeautifulSoup.BeautifulSoup(
         data,
@@ -142,7 +149,7 @@ def skoleLogin():
 def url2cacheFileName(url, perChild, postData):
     assert(type(url) == str)
     if perChild:
-        url += '&CHILDNAME=' + config.CHILDNAME
+        url += '&CHILDNAME=' + unienc(config.CHILDNAME)
     if postData:
         url += postData
     up = urlparse.urlparse(url)
@@ -181,13 +188,18 @@ def skoleGetURL(url, asSoup=False, noCache=False, perChild=True, postData=None):
             return data
 
     if type(postData) == dict:
-        postData = urllib.urlencode(postData)
+        pd = {}
+        for (k,v) in postData.items():
+            pd[unienc(k)] = unienc(v)
+        postData = urllib.urlencode(pd)
+    else:
+        postData = unienc(postData)
 
     lfn = url2cacheFileName(url, perChild, postData)
 
     if os.path.isfile(lfn) and not noCache and not config.SKIP_CACHE:
         config.log('skoleGetURL: Henter fra cache %s' % uurl, 2)
-        config.log('skoleGetURL: %s' % lfn, 2)
+        config.log('skoleGetURL: %s' % unienc(lfn), 2)
         data = open(lfn, 'rb').read()
     else:
         qurl = urllib.quote(url, safe=':/?=&%')
