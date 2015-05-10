@@ -93,7 +93,7 @@ def log(s, level=1):
     if type(level) != int:
         raise Exception(u'level must be an int, not %s' % repr(level))
     if level <= VERBOSE:
-        sys.stderr.write(u'%s\n' % s)
+        sys.stderr.write('%s\n' % s)
         sys.stderr.flush()
 
 
