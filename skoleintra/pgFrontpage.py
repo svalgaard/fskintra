@@ -7,6 +7,7 @@ import surllib
 import semail
 import re
 import BeautifulSoup
+import time
 
 # special titles
 TITLE_IGNORE = [u'Fælles nyheder',  # ignored (use RSS)
@@ -72,10 +73,11 @@ def skoleFrontBBB(phtml):
     txt = re.sub('<.*?>', ' ', txt)
     txt = re.sub('[ \n\t]+', ' ', txt)
 
-    if u'har fødselsdag i dag' in txt and 'Skrevet af' not in txt:
+    if u'har fødselsdag' in txt and u'Skrevet af' not in txt:
         # somebody's birthday
         msg.setTitle(txt)
         msg.setSender(txt.split(u' har ')[0].strip())
+        msg.setDate(time.strftime('%d-%m-%Y'))
     else:
         txt = re.sub('<.*?>', ' ', txt)
         txt = re.sub('[ \n\t]+', ' ', txt)
