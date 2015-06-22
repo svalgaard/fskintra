@@ -38,7 +38,9 @@ def docFindDocuments(bs, foldername='Dokumentarkiv'):
 
         # find url
         url = links[0]['href']
-        if 'visDokument' in url:
+        config.log(u'kigger på dokument url: %s' % url, 2)
+        # eks på url: url: javascript:visdokument(2564,'/Faelles/Fi/Arkiv177/Festarrangører%20i%20beg.docx');
+        if 'visdokument' in url:
             url = URL_DOC + re.search('.*?(\d+)', links[0]['href']).group(1)
         else:
             assert('Dokliste' in url)
