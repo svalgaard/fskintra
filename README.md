@@ -160,3 +160,4 @@ Jens Svalgaard kohrt - http://svalgaard.net/jens/ - github AT svalgaard.net
 * Jacob Kjeldahl, https://github.com/kjeldahl
 * Michael Legart, https://github.com/legart
 * Jesper Rønn-Jensen, https://github.com/jesperronn
+* Benny Simonsen, https://github.com/bennyslbs
