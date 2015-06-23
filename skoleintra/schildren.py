@@ -8,6 +8,8 @@ import surllib
 URL_PREFIX = 'http://%s/Infoweb/Fi2/' % config.HOSTNAME
 URL = URL_PREFIX + 'Faneblade.asp'
 
+SKOLEBESTYRELSE_NAME = 'Skolebestyrelsen'
+
 # map of children => pageToSelectChild
 _children = None
 
@@ -28,6 +30,11 @@ def skoleGetChildren():
         for a in data.findAll('a'):
             href = a['href']
             name = a.span.text
+
+            if name == SKOLEBESTYRELSE_NAME:
+                skoleintra.config.log(u'Ignorerer [%s]' % name)
+                continue
+
             _children[name] = href
 
     return sorted(_children.keys())
