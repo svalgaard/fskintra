@@ -32,7 +32,7 @@ def skoleGetChildren():
             name = a.span.text
 
             if name == SKOLEBESTYRELSE_NAME:
-                skoleintra.config.log(u'Ignorerer [%s]' % name)
+                config.log(u'Ignorerer [%s]' % name)
                 continue
 
             _children[name] = href
