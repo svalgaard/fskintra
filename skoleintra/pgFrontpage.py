@@ -49,7 +49,7 @@ i.e., a <table><tr><td> wrapping a <b> + <hr>
 
     # The first tag must be a b and the second a hr
     # In some cases we might get a white space string before the <b><hr>
-    uw = [e for e in uw if type(e) != BeautifulSoup.NavigableString or \
+    uw = [e for e in uw if type(e) != BeautifulSoup.NavigableString or
           e.string.strip()]
 
     if len(uw) != 2 \
@@ -112,7 +112,7 @@ def skoleNewsFrom(bss):
         href = bs.a['href']
         mid = href.split('/')[-1].replace('.asp?ID=', '-').split('&')[0]
         # e.g. VisNytFra-97
-        if not 'VisNytFra' in href:
+        if 'VisNytFra' not in href:
             continue
         skoleExamineNews(href, mid)
 
@@ -156,7 +156,7 @@ def skoleConfirmPersonalData(bs):
 
     # And now, click the button to confirm the details
     br = surllib.getBrowser()
-    fs = [f for f in br.forms()]
+    fs = list(br.forms())
 
     if len(fs) == 1 and fs[0].name == 'FrontPage_Form1':
         # we have one form!

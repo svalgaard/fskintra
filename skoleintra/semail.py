@@ -180,7 +180,7 @@ class Message:
             self.setDate(time.strftime('%d-%m-%Y')),  # today
 
         # create nice version of the raw html
-        if not 'nicehtml' in self.mp:
+        if 'nicehtml' not in self.mp:
             self.mp['nicehtml'] = nicehtml(self.mp['data'])
 
     def getMessageID(self):
@@ -288,7 +288,7 @@ class Message:
             if url not in iimgs:
                 try:
                     data = surllib.skoleGetURL(url, False)
-                except urllib2.URLError, e:
+                except urllib2.URLError:
                     # could not fetch URL for some reason - ignore
                     continue
                 # is this actually an image?
@@ -432,7 +432,7 @@ class Message:
         if config.SMTPLOGIN:
             try:
                 server.starttls()
-            except SMTPException:
+            except smtplib.SMTPException:
                 pass  # ok, but we tried...
             server.login(config.SMTPLOGIN, config.SMTPPASS)
         server.sendmail(config.SENDER, config.EMAIL, msg.as_string())

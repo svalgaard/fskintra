@@ -49,7 +49,7 @@ def skoleSelectChild(name):
     else:
         config.log(u'Vælger [%s]' % name)
         url = URL_PREFIX + _children[name]
-        _ = surllib.skoleGetURL(url, False, noCache=True)
+        surllib.skoleGetURL(url, False, noCache=True)
         config.CHILDNAME = name
 
 if False:

@@ -29,9 +29,9 @@ def beautify(data):
         return BeautifulSoup.BeautifulSoup(
             data,
             convertEntities=BeautifulSoup.BeautifulStoneSoup.HTML_ENTITIES)
-    except ValueError, e:
+    except ValueError:
         # Maybe due to 'wide' unicode char, e.g., smiley &#128516;
-        #    ValueError: unichr() arg not in range(0x10000) (narrow Python build)
+        # ValueError: unichr() arg not in range(0x10000) (narrow Python build)
         # This breaks some python installs
         return BeautifulSoup.BeautifulSoup(data)
 
@@ -57,18 +57,18 @@ def getBrowser():
         _browser.set_handle_robots(False)
 
         # Encoding
-        #_browser._factory.encoding = ENC
-        #_browser._factory._forms_factory.encoding = ENC
-        #_browser._factory._links_factory._encoding = ENC
+        # _browser._factory.encoding = ENC
+        # _browser._factory._forms_factory.encoding = ENC
+        # _browser._factory._links_factory._encoding = ENC
 
         # Follows refresh 0 but does not hang on refresh > 0
         _browser.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(),
                                     max_time=1)
 
         # Want debugging messages?
-        #_browser.set_debug_http(True)
-        #_browser.set_debug_redirects(True)
-        #_browser.set_debug_responses(True)
+        # _browser.set_debug_http(True)
+        # _browser.set_debug_redirects(True)
+        # _browser.set_debug_responses(True)
 
         # User-Agent
         _browser.addheaders = [
@@ -101,6 +101,7 @@ def skoleLogin():
         if 'EOF occurred in violation of protocol' in str(e.reason):
             config.log(u'skoleLogin: Prøver igen med sslfix')
             import sslfix
+            sslfix.override()
             config.log(u'skoleLogin: URL %s' % URL_LOGIN, 2)
             try:
                 br.open(URL_LOGIN)
@@ -132,14 +133,18 @@ def skoleLogin():
     elif 'fAdgangskode' in cNames:
         # send real password
         if pswdReal is None:
-            config.log(u'Din skoleintra installation er skiftet til at sende kodeord via https i stedet for md5 over http', -2)
-            config.log(u'I den forbindelse bliver du nødt til at angive dit kodeord', -2)
-            config.log(u'Anvend augumentet --password KODEORD for at lægge kodeordet ind igen', -2)
+            config.log(u'Din skoleintra installation er skiftet til at sende '
+                       u'kodeord via https i stedet for md5 over http', -2)
+            config.log(u'I den forbindelse bliver du nødt til at angive dit '
+                       u'kodeord', -2)
+            config.log(u'Anvend augumentet --password KODEORD for at lægge '
+                       u'kodeordet ind igen', -2)
             sys.exit(256)
         br['fAdgangskode'] = pswdReal
     else:
         # something is wrong
-        config.log(u'Kan ikke finde kodeordsfeltet på loginskærmen? Du får nok en loginfejl om lidt', -2)
+        config.log(u'Kan ikke finde kodeordsfeltet på loginskærmen? Du får '
+                   u'nok en loginfejl om lidt', -2)
     resp = br.submit()
     if u'Fejlmeddelelse' in resp.geturl():
         config.log(u'Login giver en fejlmeddelse -- har du angivet korrekt '
@@ -174,7 +179,8 @@ def url2cacheFileName(url, perChild, postData):
     return cfn
 
 
-def skoleGetURL(url, asSoup=False, noCache=False, perChild=True, postData=None):
+def skoleGetURL(url, asSoup=False, noCache=False, perChild=True,
+                postData=None):
     '''Returns data from url as raw string or as a beautiful soup'''
     if type(url) == unicode:
         url, uurl = url.encode('utf-8'), url
@@ -195,7 +201,7 @@ def skoleGetURL(url, asSoup=False, noCache=False, perChild=True, postData=None):
 
     if type(postData) == dict:
         pd = {}
-        for (k,v) in postData.items():
+        for (k, v) in postData.items():
             pd[unienc(k)] = unienc(v)
         postData = urllib.urlencode(pd)
     else:

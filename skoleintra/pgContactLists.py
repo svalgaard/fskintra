@@ -2,12 +2,9 @@
 # -*- encoding: utf-8 -*-
 #
 
-import re
 import config
 import surllib
 import semail
-import datetime
-import urllib
 
 URL_MAIN = 'http://%s/Infoweb/Fi/Klasselister.asp' % config.HOSTNAME
 
@@ -22,6 +19,7 @@ URL_MAIN = 'http://%s/Infoweb/Fi/Klasselister.asp' % config.HOSTNAME
 # V7  = Forældres profilbilleder
 # V10 = Kontaktlærere
 LISTS_TO_SEND = 'V5', 'V6'
+
 
 def listsCheckList(postData, listtype):
     global bs, tbl
