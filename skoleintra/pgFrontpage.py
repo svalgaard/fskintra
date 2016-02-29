@@ -69,6 +69,7 @@ def skoleCoverPic(phtml):
 
 def skoleFrontBBB(phtml):
     msg = semail.Message('frontpage', phtml)
+    [styletag.replaceWith('') for styletag in phtml.findAll('style')]
     txt = phtml.renderContents().decode('utf-8')
     txt = re.sub('<.*?>', ' ', txt)
     txt = re.sub('[ \n\t]+', ' ', txt)
