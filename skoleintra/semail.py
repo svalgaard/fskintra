@@ -280,6 +280,8 @@ class Message:
         # iimags: mapping from URL to (cid, binary string contents)
         iimgs = {}
         for imgtag in html.findAll('img'):
+            if not imgtag.has_key('src'):
+                continue  # ignore
             url = imgtag['src']
             if url.lower().startswith('data:'):
                 # ignore 'inline' images
