@@ -115,7 +115,22 @@ def skoleLogin():
         sys.exit(0)
 
     config.log(u'skoleLogin: Brugernavn %s' % config.USERNAME, 2)
-    br.select_form(name='FrontPage_Form1')
+    try:
+        br.select_form(name='FrontPage_Form1')
+    except mechanize._mechanize.FormNotFoundError:
+        try:
+            br.select_form(nr=0)
+            if [c for c in br.form.controls if c.name == 'UserName']:
+                config.log(u'skoleLogin: Den angivne hjemmeside er til skolens "nye skoleintra".'
+                           u' Brug adressen til skolens "gamle skoleintraside".')
+                sys.exit(1)
+        except mechanize._mechanize.FormNotFoundError:
+            pass
+        config.log(u'skoleLogin: Kan ikke logge på', 0)
+        config.log(u'skoleLogin: Check at URLen %s er rigtig' % URL_LOGIN, 0)
+        config.log(u'skoleLogIn: og prøv igen senere', 0)
+        sys.exit(1)
+
     br.form.set_all_readonly(False)
     cNames = [c.name for c in br.form.controls]
     br['fBrugernavn'] = config.USERNAME
