@@ -230,7 +230,7 @@ def skoleGetURL(url, asSoup=False, noCache=False, perChild=True,
         data = open(lfn, 'rb').read()
     else:
         qurl = urllib.quote(url, safe=':/?=&%')
-        msg = u'Trying to fetch %s' % qurl
+        msg = u'Prøver at hente %s' % qurl
         if perChild:
             msg += u' child='+config.CHILDNAME
         if postData:
@@ -245,6 +245,7 @@ def skoleGetURL(url, asSoup=False, noCache=False, perChild=True,
         if not os.path.isdir(ldn):
             os.makedirs(ldn)
         open(lfn, 'wb').write(data)
+        config.log(u'skoleGetURL: Gemmer siden i filen %r' % lfn, 2)
 
     if asSoup:
         data = beautify(data)
