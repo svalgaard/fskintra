@@ -195,6 +195,9 @@ def skoleFrontpage():
     for mt in data.findAll('table'):
         if mt.findParents('table') or mt.has_key('bgcolor'):
             continue
+        txt = mt.text
+        if len(txt) < 30 and txt.lower().startswith(u'forældreintra for '):
+            continue  # just the title
         maint.append(mt)
     assert(len(maint) == 1)  # assume exactly one main table
 
