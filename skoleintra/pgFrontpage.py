@@ -215,7 +215,7 @@ def skoleFrontpage():
         t = _getTitle(itag)
         if t is None:
             # not a title
-            assert(g is not None)  # the first MUST be a title
+            assert(g)  # the first MUST be a title
             g[-1][1].append(itag)
         else:
             # we have a new title
