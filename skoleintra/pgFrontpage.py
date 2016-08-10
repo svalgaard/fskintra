@@ -215,7 +215,9 @@ def skoleFrontpage():
         t = _getTitle(itag)
         if t is None:
             # not a title
-            assert(g)  # the first MUST be a title
+            if not g:
+                # In some cases (slideshows), the real title may be missing
+                g.append((itags[0].text, []))
             g[-1][1].append(itag)
         else:
             # we have a new title
