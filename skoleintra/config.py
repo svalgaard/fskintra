@@ -33,7 +33,7 @@ parser.add_option(
 parser.add_option(
     '--password', '-p', dest='password', default=None,
     help=u'Opdatér kodeord. Dette skrives om muligt til konfigurationsfilen',
-    metavar='FILNAVN')
+    metavar='PASSWORD')
 parser.add_option(
     '--config', dest='doconfig', default=False, action='store_true',
     help=u'Opsæt skoleintra')
