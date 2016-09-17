@@ -68,6 +68,18 @@ if options.doconfig and options.password is not None:
 SKIP_CACHE = options.skipcache
 
 
+def ensureDanish():
+    '''Ensure that we can do Danish letters on stderr, stdout by wrapping
+    them using codecs.getwriter if necessary'''
+
+    enc = locale.getpreferredencoding() or 'ascii'
+    test = u'\xe6\xf8\xe5\xc6\xd8\xc5\xe1'.encode(enc, 'replace')
+    if '?' in test or sys.version_info < (2, 6):
+        sys.stderr = codecs.getwriter('UTF-8')(sys.stderr)
+        sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
+ensureDanish()
+
+
 # logging levels:
 #  0 some important stuff (requires -q)
 #  1 requires one         (default value)
