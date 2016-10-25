@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-    [Docker](https://www.docker.com/)
+[Docker](https://www.docker.com/)
 
 ## Setup
 
