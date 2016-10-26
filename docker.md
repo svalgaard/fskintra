@@ -18,8 +18,12 @@
 
 ### Server
 
-    cp -R ~/.skoleintra/* .skoleintra
-    docker run -v $(pwd)/.skoleintra:/root/.skoleintra -t fintra
+#### Mac
+
+Adjust line 9, then:
+
+    cp _services/Mac/dk.webcom.fintra.plist ~/Library/LaunchAgents
+    launchctl load -w ~/Library/LaunchAgents/dk.webcom.fintra.plist
 
 ## PanicButton
 
