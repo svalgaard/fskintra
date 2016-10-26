@@ -1,0 +1,24 @@
+{
+  "family": "fintra",
+  "containerDefinitions": [
+    {
+      "name": "fintra",
+      "image": "webjay/fintra",
+      "memory": "256",
+      "mountPoints": [
+        {
+          "sourceVolume": "fintradata",
+          "containerPath": "/root/.skoleintra"
+        }
+      ]
+    }
+  ],
+  "volumes": [
+    {
+      "name": "fintradata",
+      "host": {
+        "sourcePath": "/ecs/fintradata"
+      }
+    }
+  ]
+}
