@@ -29,7 +29,12 @@ def listsCheckList(postData, listtype):
     if bs.cacheage > 6.9:
         bs = surllib.skoleGetURL(URL_MAIN, True, True, True, postData)
 
-    tbl = bs.findAll('table')[2]
+    tbl = bs.findAll('table')
+    if len(str(tbl[2])) < 150:
+        tbl = tbl[1]
+    else:
+        tbl = tbl[2]
+
     if listtype == 'V6':
         # Remove links to pictures of parents
         for a in tbl.findAll('a'):
