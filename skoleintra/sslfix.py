@@ -1,6 +1,4 @@
-#
-# -*- encoding: utf-8 -*-
-#
+# -*- coding: utf-8 -*-
 
 #
 # Fix (Mac) HTTPS (SSL) issues

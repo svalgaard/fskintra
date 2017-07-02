@@ -1,7 +1,5 @@
-#! /usr/bin/env python
-#
-#
-#
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import skoleintra.config
 import skoleintra.pgContactLists
