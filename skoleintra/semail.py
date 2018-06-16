@@ -426,6 +426,10 @@ class Message:
     def send(self):
         config.log(u'Sender email %s' %
                    (self.mp['title'] if self.mp['title'] else self))
+        if config.CATCHUP:
+            config.log(u'(sendes faktisk ikke pga --catchup)')
+            return self.store()
+
         msg = self.asEmail()
         # open smtp connection
         if config.SMTPHOST:

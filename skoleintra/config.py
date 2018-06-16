@@ -39,6 +39,10 @@ parser.add_option(
     '--skip-cache', dest='skipcache', default=False, action='store_true',
     help=u'Do not use previously cached files')
 parser.add_option(
+    '--catchup', '-c', dest='catchup', default=False, action='store_true',
+    help=u'Catchup. Fetch + mark everything as seen, but do not send any '
+    'emails')
+parser.add_option(
     '-v', '--verbose', action='append_const', const=1, dest='verbosity',
     help=u'Skriv flere log-linjer', default=[1])
 parser.add_option(
@@ -65,6 +69,7 @@ Kør først programmet med --config for at sætte det op.''' % CONFIG_FN)
 if options.doconfig and options.password is not None:
     parser.error(u'''--config og --password kan ikke bruges samtidigt''')
 
+CATCHUP = options.catchup
 SKIP_CACHE = options.skipcache
 
 
