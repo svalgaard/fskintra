@@ -12,9 +12,10 @@ import skoleintra.schildren
 cnames = skoleintra.schildren.skoleGetChildren()
 for cname in cnames:
     skoleintra.schildren.skoleSelectChild(cname)
-
-    skoleintra.pgContactLists.skoleContactLists()
     skoleintra.pgFrontpage.skoleFrontpage()
-    skoleintra.pgDialogue.skoleDialogue()
-    skoleintra.pgDocuments.skoleDocuments()
-    skoleintra.pgWeekplans.skoleWeekplans()
+
+    # PENDING
+    # skoleintra.pgContactLists.skoleContactLists()
+    # skoleintra.pgDialogue.skoleDialogue()
+    # skoleintra.pgDocuments.skoleDocuments()
+    # skoleintra.pgWeekplans.skoleWeekplans()

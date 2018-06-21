@@ -10,20 +10,41 @@ import optparse
 import time
 import re
 
+#
+# Check whether our extra dependencies are here
+#
+try:
+    import bs4
+except ImportError:
+    print u'BeautifulSoup 4.x er krævet for at køre programmet. Se evt. her for hjælp'
+    print u'    https://github.com/svalgaard/fskintra/#krav'
+    print u'Du har muligvis BeautifulSoup 3.x installeret, hvilket vil virke'
+    sys.exit(1)
+try:
+    import mechanize
+except ImportError:
+    print u'Python mechanize er krævet for at køre programmet. Se evt. her for hjælp'
+    print u'    https://github.com/svalgaard/fskintra/#krav'
+    sys.exit(1)
+
 ROOT = os.path.expanduser('~/.skoleintra/')
 DEFAULT_FN = os.path.join(os.path.dirname(__file__), 'default.inf')
-CONFIG_FN = '~/.skoleintra/skoleintra.txt'
+CONFIG_FN = os.path.join(ROOT, 'skoleintra.txt')
+LOGIN_TYPES = ['alm', 'uni']
 # Name of current child
-CHILDNAME = ''
-
+CHILD_NAME = ''
+CHILD_URL = ''
 #
 # Parse command line options
 #
 parser = optparse.OptionParser(usage=u'''%prog [options]
 
 Se flg. side for flere detaljer:
-   https://github.com/svalgaard/fskintra/''')
+   https://github.com/svalgaard/fskintra/''', add_help_option=False)
 
+parser.add_option(
+    '--help', '-h', action='help',
+    help=u"Vis denne besked og afslut")
 parser.add_option(
     '--config-file', dest='configfilename', default=None,
     help=u'Brug konfigurationsfilen FILNAVN - standard: %s' % CONFIG_FN,
@@ -37,11 +58,10 @@ parser.add_option(
     help=u'Opsæt skoleintra')
 parser.add_option(
     '--skip-cache', dest='skipcache', default=False, action='store_true',
-    help=u'Do not use previously cached files')
+    help=u'Brug ikke tidligere hentet indhold/cache')
 parser.add_option(
     '--catchup', '-c', dest='catchup', default=False, action='store_true',
-    help=u'Catchup. Fetch + mark everything as seen, but do not send any '
-    'emails')
+    help=u'Hent & marker alt indhold som set uden at sende nogen e-mails')
 parser.add_option(
     '-v', '--verbose', action='append_const', const=1, dest='verbosity',
     help=u'Skriv flere log-linjer', default=[1])
@@ -117,12 +137,14 @@ if options.doconfig:
 
     details = {}
     opts = [
+        ('logintype',
+         u"Logintype - enten 'alm' (almindeligt) eller 'uni' (UNI-Login)"),
         ('username',
          u'Brugernavn, fx. petjen:'),
         ('password',
          u'Kodeord fx kaTTx24:'),
         ('hostname',
-         u'Skoleintra domæne fx www.xskolen.yby.dk:'),
+         u'Skoleintra domæne fx aaskolen.m.skoleintra.dk:'),
         ('email',
          u'Modtageremailadresse (evt. flere adskilt med komma):'),
         ('senderemail',
@@ -144,6 +166,8 @@ if options.doconfig:
                 a = getpass.getpass('').strip().decode(sys.stdin.encoding)
             else:
                 a = raw_input().strip().decode(sys.stdin.encoding)
+            if var == 'logintype' and a not in LOGIN_TYPES:
+                print u"Angiv venligst en af flg.: %s" % ', '.join(LOGIN_TYPES)
             if a or var.startswith('smtp'):
                 break
             print u'Angiv venligst en værdi'
@@ -206,13 +230,14 @@ if options.password is not None:
                 log(u'Nyt kodeord bliver ikke skrevet', -2)
 
 
-def softGet(cp, section, option):
+def softGet(cp, section, option, default=''):
     if cp.has_option(section, option):
         return cp.get(section, option)
     else:
-        return ''
+        return default
 
 try:
+    LOGINTYPE = softGet(cfg, 'default', 'logintype', 'alm')
     USERNAME = cfg.get('default', 'username')
     PASSWORD = cfg.get('default', 'password')
     HOSTNAME = cfg.get('default', 'hostname')

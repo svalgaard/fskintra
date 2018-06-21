@@ -2,38 +2,37 @@
 
 import config
 import surllib
-
-URL_PREFIX = 'http://%s/Infoweb/Fi2/' % config.HOSTNAME
-URL = URL_PREFIX + 'Faneblade.asp'
+import re
 
 NAMES_IGNORE = [u'Skolebestyrelsen', u'Kontaktforældre']
 
-# map of children => pageToSelectChild
+# map of children => urlPrefix
+# 'Andrea 0A' => '/parent/1234/Andrea/'
 _children = None
 
 
 def skoleGetChildren():
     '''Returns of list of "available" children in the system'''
-    global URL, _children
-
-    # ensure that we are logged in
-    # surllib.skoleLogin() # done automatically later
-
-    config.log(u'Henter liste af børn')
-
+    global _children
     if not _children:
-        data = surllib.skoleGetURL(URL, asSoup=True, noCache=True)
+        _children = dict()
+        seen = set()
 
-        _children = {}
-        for a in data.findAll('a'):
-            href = a['href']
-            name = a.span.text
+        config.log(u'Henter liste af børn')
+        data = surllib.skoleLogin()
 
-            if name in NAMES_IGNORE:
-                config.log(u'Ignorerer [%s]' % name)
+        # Name of "First child"
+        fst = data.find(id="sk-personal-menu-button").text.strip()
+
+        for a in data.findAll('a', href=re.compile('.*/Index$')):
+            url = a['href'].rsplit('/', 1)[0]
+            if url in seen:
                 continue
-
-            _children[name] = href
+            seen.add(url)
+            name = a.text.strip() or fst
+            if name not in _children:
+                config.log(u'Barn %s => %s' % (name, url), 1)
+                _children[name] = url
 
     return sorted(_children.keys())
 
@@ -42,17 +41,9 @@ def skoleSelectChild(name):
     global _children, URL_PREFIX
     assert(name in _children)
 
-    if name == config.CHILDNAME:
+    if name == config.CHILD_NAME:
         config.log(u'[%s] er allerede valgt som barn' % name)
     else:
         config.log(u'Vælger [%s]' % name)
-        url = URL_PREFIX + _children[name]
-        surllib.skoleGetURL(url, False, noCache=True)
-        config.CHILDNAME = name
-
-if False:
-    c = skoleGetChildren()
-    print repr(_children)
-    for cname in c:
-        print cname
-        skoleSelectChild(cname)
+        config.CHILD_NAME = name
+        config.CHILD_PREFIX = 'https://%s%s' % (config.HOSTNAME, _children[name])

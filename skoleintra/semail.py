@@ -89,8 +89,8 @@ class Message:
 
         self.mp['type'] = type  # frontpage or ...
         self.mp['phtml'] = phtml  # use self.data in general
-        self.mp['data'] = str(phtml).decode('utf-8')
-        self.mp['childname'] = config.CHILDNAME
+        self.mp['data'] = unicode(phtml)
+        self.mp['childname'] = config.CHILD_NAME
 
         # not set by constructor
         self.mp['title'] = None
