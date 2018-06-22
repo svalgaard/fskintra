@@ -34,7 +34,8 @@ def skoleGetChildren():
                 config.log(u'Barn %s => %s' % (name, url), 1)
                 _children[name] = url
 
-    return sorted(_children.keys())
+    ckey = lambda n: tuple(n.rsplit(' ', 1)[::-1])
+    return sorted(_children.keys(), key=ckey)
 
 
 def skoleSelectChild(name):
