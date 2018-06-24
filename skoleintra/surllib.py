@@ -15,6 +15,12 @@ import hashlib
 import time
 
 
+def absurl(url):
+    if url and url[0] != '/':
+        return url
+    return 'https://%s%s' % (config.HOSTNAME, url)
+
+
 def unienc(s):
     if type(s) == unicode:
         return s.encode('utf-8')

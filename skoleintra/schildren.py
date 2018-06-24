@@ -11,7 +11,7 @@ NAMES_IGNORE = [u'Skolebestyrelsen', u'Kontaktforældre']
 _children = None
 
 
-def skoleGetChildren():
+def getChildren():
     '''Returns of list of "available" children in the system'''
     global _children
     if not _children:
@@ -25,7 +25,7 @@ def skoleGetChildren():
         fst = data.find(id="sk-personal-menu-button").text.strip()
 
         for a in data.findAll('a', href=re.compile('.*/Index$')):
-            url = a['href'].rsplit('/', 1)[0]
+            url = a['href'].rsplit('/', 1)[0].rstrip('/')
             if url in seen:
                 continue
             seen.add(url)
@@ -33,18 +33,15 @@ def skoleGetChildren():
             if name not in _children:
                 config.log(u'Barn %s => %s' % (name, url), 1)
                 _children[name] = url
+        config.log(u'Følgende børn blev fundet: ' + u', '.join())
+
 
     ckey = lambda n: tuple(n.rsplit(' ', 1)[::-1])
     return sorted(_children.keys(), key=ckey)
 
 
-def skoleSelectChild(name):
-    global _children, URL_PREFIX
+def getChildURLPrefix(cname):
+    getChildren()
     assert(name in _children)
 
-    if name == config.CHILD_NAME:
-        config.log(u'[%s] er allerede valgt som barn' % name)
-    else:
-        config.log(u'Vælger [%s]' % name)
-        config.CHILD_NAME = name
-        config.CHILD_PREFIX = 'https://%s%s' % (config.HOSTNAME, _children[name])
+    return surllib.absurl(_children[cname])

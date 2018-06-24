@@ -31,9 +31,7 @@ ROOT = os.path.expanduser('~/.skoleintra/')
 DEFAULT_FN = os.path.join(os.path.dirname(__file__), 'default.inf')
 CONFIG_FN = os.path.join(ROOT, 'skoleintra.txt')
 LOGIN_TYPES = ['alm', 'uni']
-# Name of current child
-CHILD_NAME = ''
-CHILD_URL = ''
+
 #
 # Parse command line options
 #
@@ -118,6 +116,10 @@ def log(s, level=1):
     if level <= VERBOSE:
         sys.stderr.write('%s\n' % s)
         sys.stderr.flush()
+
+
+def clog(cname, s, level=1):
+    return log(u'[%s] %s' % (cname, s), level)
 
 
 def b64enc(pswd):
