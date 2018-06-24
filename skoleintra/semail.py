@@ -42,12 +42,16 @@ def nicehtml(html):
             # add <ul>
             st = li.start()
             html = html[:st] + '</p><ul>' + html[st:]
-    bs = BeautifulSoup.ICantBelieveItsBeautifulSoup(html)
-    return bs.prettify().decode('utf-8')
+    bs = surllib.beautify(html)
+    return unicode(bs)
 
 
 def headerEncodeField(f):
-    return str(Header(f, 'utf-8', 40))
+    try:
+        f.encode('ascii')
+        return str(Header(f, 'ascii', 40))
+    except UnicodeDecodeError:
+        return str(Header(f, 'utf-8', 40))
 
 
 def generateMIMEAttachment(path, data, usefilename=None):
@@ -83,16 +87,17 @@ def generateMIMEAttachment(path, data, usefilename=None):
 
 
 class Message:
-
-    def __init__(self, type, phtml):
+    def __init__(self, tp, phtml):
         self.mp = {}
 
-        self.mp['type'] = type  # frontpage or ...
-        self.mp['phtml'] = phtml  # use self.data in general
+        assert(type(tp) == unicode)
+        self.mp['type'] = tp  # frontpage or ...
+        assert(type(phtml) == bs4.BeautifulSoup)
+        self.mp['phtml'] = phtml  # soup with html content
         self.mp['data'] = unicode(phtml)
-        self.mp['childname'] = config.CHILD_NAME
 
         # not set by constructor
+        self.mp['children'] = []
         self.mp['title'] = None
         self.mp['date'] = None
         self.mp['time'] = None
@@ -112,11 +117,18 @@ class Message:
         return txt
 
     def setTitle(self, title, shorten=False):
+        assert(type(title) == unicode)
         if shorten and len(title) > 40:
             title = title[:40] + title[40:].split(' ', 2)[0] + '...'
         self.mp['title'] = title
 
+    def addChild(self, cname):
+        assert(type(cname) == unicode)
+        if cname not in self.mp['children']:
+            self.mp['children'].append(cname)
+
     def setDate(self, date):
+        assert(type(date) == unicode)
         date = date.strip()
         if ' ' in date:  # also time
             date, time = date.split()
@@ -124,50 +136,24 @@ class Message:
         self.mp['date'] = date
 
     def setTime(self, time):
+        assert(type(time) == unicode)
         self.mp['time'] = time
 
     def setSender(self, sender):
+        assert(type(sender) == unicode)
         self.mp['sender'] = sender
 
     def setRecipient(self, recipient):
+        assert(type(recipient) == unicode)
         self.mp['recipient'] = recipient
 
     def setCC(self, cc):
+        assert(type(cc) == unicode)
         self.mp['cc'] = cc
 
     def setMessageID(self, mid):
+        assert(type(cc) == unicode)
         self.mp['mid'] = mid
-
-    def updatePersonDate(self, phtml=None):
-        if phtml:
-            d = phtml.renderContents().decode('utf-8')
-        else:
-            d = self.mp['data']
-        assert(type(d) == unicode)  # must be unicode
-
-        # e.g. front page pics
-        m = re.findall(u'>(?:Lagt ind|Skrevet) af ([^<]*?) den ([-0-9]*?)<', d)
-        if m:
-            m = m[-1]
-            self.setSender(m[0])
-            self.setDate(m[1])
-            return
-
-        m = re.findall(u'(?s)<small>Besked fra([^<]*?) - (?:modtaget|sendt) '
-                       u'den ([^<]*?)</small>', d)
-        if not m:
-            m = re.findall(u'(?s)<small>Oprettet af([^<]*?) '
-                           u'den ([^<]*?)</small>', d)
-
-        if m:
-            m = m[0]
-            self.setSender(m[0].strip())
-            self.setDate(m[1].strip())
-            return
-        else:
-            # neither Sender nor date/time found
-            config.log('No sender found', 2)
-            return
 
     def prepareMessage(self):
         # add missing fields, if any
@@ -395,8 +381,8 @@ class Message:
         msg['Date'] = dt
 
         title = self.mp['title']
-        if self.mp['childname']:
-            title = u'[%s] %s' % (self.mp['childname'], title)
+        if self.mp['children']:
+            title = u'[%s] %s' % (', '.join(self.mp['children']), title)
         msg['Subject'] = Header(title, 'utf-8', 60)
         if 'sender' in self.mp and self.mp['sender']:
             sender = u'Skoleintra - %s' % self.mp['sender']
