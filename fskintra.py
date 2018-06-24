@@ -9,10 +9,12 @@ import skoleintra.pgFrontpage
 import skoleintra.pgWeekplans
 import skoleintra.schildren
 
-cnames = skoleintra.schildren.skoleGetChildren()
+cnames = skoleintra.schildren.getChildren()
+
+skoleintra.pgFrontpage.skoleFrontpage(cnames)
+
 for cname in cnames:
-    skoleintra.schildren.skoleSelectChild(cname)
-    skoleintra.pgFrontpage.skoleFrontpage()
+    pass
 
     # PENDING
     # skoleintra.pgContactLists.skoleContactLists()

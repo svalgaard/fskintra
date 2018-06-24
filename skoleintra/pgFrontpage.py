@@ -6,27 +6,27 @@ import semail
 import re
 import BeautifulSoup
 import time
+import schildren
+import collections
 
-URL_SUFFIX = '/Index'
 
-def skoleFrontpage():
-    global div # FIXME
-    # FIXME also do birthdays!
-    assert(config.CHILD_PREFIX)
+def parseFrontpage(cname, bs):
+    msgs = []
 
-    url = config.CHILD_PREFIX + URL_SUFFIX
-
-    config.log('Behandler forsiden %s' % url)
-    data = surllib.skoleGetURL(url, asSoup=True, noCache=True)
+    # FIXME also look at birthdays
 
     # find interesting main front page items
-    for div in data.findAll('div', 'sk-news-item'):
+    fps = bs.findAll('div', 'sk-news-item')
+    assert(len(fps) > 2)  # at least two msgs on the frontpage or something is wrong
+    for div in fps[::-1]:
         author = div.find('div', 'sk-news-item-author')
         body = div.findAll('div', 'sk-user-input')[0]
         msg = semail.Message(u'frontpage', body)
+        msg.addChild(cname)
 
-        msg.setTitle(body.text, True)
-        msg.setMessageID(div['data-feed-item-id'])
+        msg.setTitle(body.text.strip(), True)
+        # Do not use the msgid as we then may not notice updates
+        # msg.setMessageID(div['data-feed-item-id'])
         msg.setSender(author.span.text)
 
         author.span.extract() # remove author
@@ -41,14 +41,37 @@ def skoleFrontpage():
         msg.setRecipient(author.text)
 
         # 19. jun. 2018 => 19-06-2018
-        ds = div.find('div', 'sk-news-item-timestamp').text
-        ds = time.strptime(ds, '%d. %b. %Y')
+        dst = div.find('div', 'sk-news-item-timestamp').text
+        ds = time.strptime(dst, '%d. %b. %Y')
         msg.setDate(time.strftime('%d-%m-%Y', ds))
 
-        semail.maybeEmail(msg)
+        msgs.append(msg)
+
+    return msgs
 
 
+def getMsgsForChild(cname):
+    url = schildren.getChildURLPrefix(cname) + '/Index'
+    config.clog(cname, u'Behandler forsiden %s' % url)
+    bs = surllib.skoleGetURL(url, asSoup=True, noCache=True)
 
-if __name__ == '__main__':
-    # test
-    skoleFrontpage()
+    return parseFrontpage(cname, bs)
+
+
+def skoleFrontpage(cnames):
+    msgs = collections.OrderedDict()
+    for cname in cnames:
+        for msg in getMsgsForChild(cname):
+            if msg.hasBeenSent():
+                continue
+            config.clog(cname, u'Ny besked fundet: %s' % msg.mp['title'])
+            mid = msg.getLongMessageID()
+            if mid in msgs:
+                msgs[mid].addChild(cname)
+            else:
+                msgs[mid] = msg
+
+    for msg in msgs:
+        cname = ','.join(msgs.mp['children'])
+        config.clog(cname, u'Ny besked fundet: %s' % msg.mp['title'])
+        msg.maybeSend()
