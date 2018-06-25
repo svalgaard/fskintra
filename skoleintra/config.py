@@ -102,6 +102,9 @@ def ensureDanish():
         sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
 ensureDanish()
 
+# Also ensure that we can parse Danish time stamps
+locale.setlocale(locale.LC_TIME, "da_DK")
+
 
 # logging levels:
 #  0 some important stuff (requires -q)
