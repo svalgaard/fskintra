@@ -10,6 +10,62 @@ import schildren
 import collections
 
 
+def parseFrontpageItem(cname, div):
+
+    # do we have any comments
+    comments = div.find('div', 'sk-news-item-comments')
+    cdiv = u''
+    if comments:
+        global c
+        # Comments are enabled
+        txt = comments.text.strip()
+        m = re.match(ur'.*vis (\d+) kommentarer.*', txt.lower())
+        assert(m)
+        nc = int(m.group(1))
+        if nc > 0:
+            suff = '/news/pins/%s/comments' % div['data-feed-item-id']
+            url = schildren.getChildURL(cname, suff)
+            bs = surllib.skoleGetURL(url, asSoup=True, postData={'_':str(nc)})
+            cdiv = unicode(bs.find('div', 'sk-comments-container'))
+            cdiv = u'<br>' + cdiv
+
+
+    author = div.find('div', 'sk-news-item-author')
+    body = div.findAll('div', 'sk-user-input')[0]
+    msg = semail.Message(u'frontpage', unicode(body)+cdiv)
+    msg.addChild(cname)
+
+    msg.setTitle(body.get_text('\n').strip().split('\n')[0].strip(), True)
+    # Do not use the msgid as we then may not notice updates
+    # msg.setMessageID(div['data-feed-item-id'])
+    msg.setSender(author.span.text)
+
+    # find list of reciepients
+    author.span.extract() # remove author
+    for tag in [
+        author.span, # remove author
+        author.find('span', 'sk-news-item-for'), # remove 'til'
+        author.find('span', 'sk-news-item-and'), # ' og '
+        author.find('a', 'sk-news-show-more-link')]:
+        if tag:
+            tag.extract()
+    recp = re.sub(ur'\s*(,| og )\s*', ',', author.text.strip())
+    recp = recp.split(u',')
+    msg.setRecipient(recp)
+
+    msg.setDateTime(div.find('div', 'sk-news-item-timestamp').text)
+
+    # do we have any attachments?
+    divA = div.find('div', 'sk-attachments-list')
+    if divA:
+        for att in (divA.findAll('a') or []):
+            url = att['href']
+            text = att.text.strip()
+            msg.addAttachment(url, text)
+
+    return msg
+
+
 def parseFrontpage(cname, bs):
     msgs = []
 
@@ -41,46 +97,14 @@ def parseFrontpage(cname, bs):
     fps = bs.findAll('div', 'sk-news-item')
     assert(len(fps) > 2)  # at least two msgs on the frontpage or something is wrong
     for div in fps[::-1]:
-        author = div.find('div', 'sk-news-item-author')
-        body = div.findAll('div', 'sk-user-input')[0]
-        msg = semail.Message(u'frontpage', unicode(body))
-        msg.addChild(cname)
-
-        msg.setTitle(body.get_text('\n').strip().split('\n')[0].strip(), True)
-        # Do not use the msgid as we then may not notice updates
-        # msg.setMessageID(div['data-feed-item-id'])
-        msg.setSender(author.span.text)
-
-        # find list of reciepients
-        author.span.extract() # remove author
-        for tag in [
-            author.span, # remove author
-            author.find('span', 'sk-news-item-for'), # remove 'til'
-            author.find('span', 'sk-news-item-and'), # ' og '
-            author.find('a', 'sk-news-show-more-link')]:
-            if tag:
-                tag.extract()
-        recp = re.sub(ur'\s*(,| og )\s*', ',', author.text.strip())
-        recp = recp.split(u',')
-        msg.setRecipient(recp)
-
-        msg.setDateTime(div.find('div', 'sk-news-item-timestamp').text)
-
-        # do we have any attachments?
-        divA = div.find('div', 'sk-attachments-list')
-        if divA:
-            for att in (divA.findAll('a') or []):
-                url = att['href']
-                text = att.text.strip()
-                msg.addAttachment(url, text)
-
+        msg = parseFrontpageItem(cname, div)
         msgs.append(msg)
 
     return msgs
 
 
 def getMsgsForChild(cname):
-    url = schildren.getChildURLPrefix(cname) + '/Index'
+    url = schildren.getChildURL(cname, '/Index')
     config.clog(cname, u'Behandler forsiden %s' % url)
     bs = surllib.skoleGetURL(url, asSoup=True, noCache=True)
 
