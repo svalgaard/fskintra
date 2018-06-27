@@ -8,7 +8,7 @@ import config
 import md5
 import re
 import socket
-import BeautifulSoup
+import bs4
 import surllib
 import time
 import os
@@ -33,26 +33,12 @@ from email.mime.image import MIMEImage
 email.Charset.add_charset('utf-8', email.Charset.QP, email.Charset.QP, 'utf-8')
 
 
-def nicehtml(html):
-    # ensure that the first <li is wrapped in a <ul
-    oul = re.search('(?i)<[ou]l', html)
-    li = re.search('(?i)<li', html)
-    if li:
-        if not oul or (li.start() < oul.start()):
-            # add <ul>
-            st = li.start()
-            html = html[:st] + '</p><ul>' + html[st:]
-    bs = surllib.beautify(html)
-    return unicode(bs)
-
-
 def headerEncodeField(f):
     try:
         f.encode('ascii')
         return str(Header(f, 'ascii', 40))
-    except UnicodeDecodeError:
+    except UnicodeEncodeError:
         return str(Header(f, 'utf-8', 40))
-
 
 def generateMIMEAttachment(path, data, usefilename=None):
     fn = usefilename if usefilename else os.path.basename(path)
@@ -87,24 +73,25 @@ def generateMIMEAttachment(path, data, usefilename=None):
 
 
 class Message:
-    def __init__(self, tp, phtml):
+    def __init__(self, tp, html):
         self.mp = {}
 
         assert(type(tp) == unicode)
         self.mp['type'] = tp  # frontpage or ...
-        assert(type(phtml) == bs4.BeautifulSoup)
-        self.mp['phtml'] = phtml  # soup with html content
-        self.mp['data'] = unicode(phtml)
+        assert(type(html) == unicode)
+        self.mp['html'] = html  # html content
 
-        # not set by constructor
         self.mp['children'] = []
         self.mp['title'] = None
-        self.mp['date'] = None
-        self.mp['time'] = None
         self.mp['sender'] = None
         self.mp['recipient'] = None
         self.mp['cc'] = None
+        # use today by default
+        self.mp['date_ts'] = time.localtime()
+        self.mp['date'] = time.strftime('%Y-%m-%d', self.mp['date_ts'])
+        self.mp['date_string'] = self.mp['date']
         self.mp['mid'] = None
+        self.mp['attatchments'] = []
         self._email = None
 
     def __repr__(self):
@@ -127,23 +114,39 @@ class Message:
         if cname not in self.mp['children']:
             self.mp['children'].append(cname)
 
-    def setDate(self, date):
-        assert(type(date) == unicode)
-        date = date.strip()
-        if ' ' in date:  # also time
-            date, time = date.split()
-            self.setTime(time)
-        self.mp['date'] = date
+    def setDateTime(self, dt):
+        assert(type(dt) == unicode)
+        ts = time.localtime()  # use "NOW" by default
 
-    def setTime(self, time):
-        assert(type(time) == unicode)
-        self.mp['time'] = time
+        dt2 = dt.split(',')[-1].strip().replace('.', '')
+        if ':' not in dt2:
+            dt2 += ' 12:00'
+        try:
+            # 25. jun. 2018 16:26
+            ts = time.strptime(dt2, '%d %b %Y %H:%M')
+        except ValueError:
+            config.log(u'Ukendt tidsstempel %r' % dt)
+            fixme
+
+        self.mp['date_string'] = dt
+        self.mp['date_ts'] = ts
+        self.mp['date'] = time.strftime('%Y-%m-%d', ts)
 
     def setSender(self, sender):
         assert(type(sender) == unicode)
         self.mp['sender'] = sender
 
     def setRecipient(self, recipient):
+        if type(recipient) == list and recipient:
+            N = 9
+            if len(recipient) == 1:
+                recipient = recipient[0]
+            else:
+                if len(recipient) > N + 1:
+                    last = u'%d andre' % (len(recipient)-N)
+                    recipient = recipient[:N] + [last]
+                recipient = u', '.join(recipient[:-1]) + ' og ' + recipient[-1]
+
         assert(type(recipient) == unicode)
         self.mp['recipient'] = recipient
 
@@ -151,25 +154,21 @@ class Message:
         assert(type(cc) == unicode)
         self.mp['cc'] = cc
 
-    def setMessageID(self, mid):
-        assert(type(cc) == unicode)
-        self.mp['mid'] = mid
+    def setMessageID(self, *mid):
+        assert(type(mid) == tuple)
+        self.mp['mid'] = u'--'.join(mid)
+
+    def addAttachment(self, url, text):
+        assert(type(url) in [str, unicode])
+        assert(type(text) == unicode)
+        self.mp['attatchments'].append((surllib.absurl(url), text))
 
     def prepareMessage(self):
         # add missing fields, if any
-
         if not self.mp.get('md5', None):
-            keys = 'type,date,title,data'.split(',')
+            keys = 'type,date,title,html'.split(',')
             txt = u' '.join([self.mp[x] for x in keys if self.mp.get(x, None)])
             self.mp['md5'] = unicode(md5.md5(txt.encode('utf-8')).hexdigest())
-
-        if not self.mp.get('date', None):
-            # use today as the date
-            self.setDate(time.strftime('%d-%m-%Y')),  # today
-
-        # create nice version of the raw html
-        if 'nicehtml' not in self.mp:
-            self.mp['nicehtml'] = nicehtml(self.mp['data'])
 
     def getMessageID(self):
         self.prepareMessage()
@@ -179,8 +178,7 @@ class Message:
             return self.mp['md5']
 
     def getLongMessageID(self):
-        dt = '-'.join(reversed(self.mp['date'].split('-')))
-        return '%s--%s' % (dt, self.getMessageID())
+        return '%s--%s' % (self.mp['date'], self.getMessageID())
 
     def hasBeenSent(self):
         ''' Tests whether this email has previously been sent'''
@@ -225,48 +223,44 @@ class Message:
 
         mpp = self.mp.copy()
 
-        def wrapOrZap(key, title):
-            val = self.mp.get(key, None)
+        def wrapOrZap(key, title, tag=''):
+            if title: title += u': '
+            val = mpp.get(key, None)
             if val:
-                mpp[key] = "<p class='%s' style='margin: 0;'>%s: %s</p>\n"
-                mpp[key] %= (key, title, val)
+                if tag:
+                    val = u'<%s>%s</%s>' % (tag, val, tag.split()[0])
+                mpp[key] = u"<span style='font-size: 15px'>%s%s</span><br>\n  " % (title, val)
             else:
                 mpp[key] = ''
 
-        wrapOrZap('sender', 'Fra')
+        wrapOrZap('sender', '', 'b style="font-size: 17px"')
         wrapOrZap('recipient', 'Til')
         wrapOrZap('cc', 'Kopi til')
-        if mpp.get('time', None):
-            mpp['ttime'] = u' ' + mpp['time']
-        else:
-            mpp['ttime'] = u''
 
         # create initial HTML version
-        html = u'''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+        html = u'''<!DOCTYPE html>
+<html lang="da">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <meta charset="utf-8">
   <title>%(title)s</title>
 </head>
-<body style='font-family: Verdana,Arial,Helvetica'>
+<body style='font-family: Helvetica, sans-serif; font-size: 14px;'>
 <h1>%(title)s</h1>
-<div class='meta' style='background-color: #eaeaea; color: #000; padding: 5px; margin: 0 0 10px 0;'>
-%(sender)s%(recipient)s%(cc)s  <p class='date' style='margin: 0;'>Dato: %(date)s%(ttime)s</p>
+<div class='header' style='padding: 5px; background-color: #eee; margin-bottom: 15px;'>
+  %(sender)s%(recipient)s%(cc)s<span>%(date_string)s</span>
 </div>
 <div class='text'>
-  %(nicehtml)s
+  %(html)s
 </div>
 </body>
-</html>
-'''
-        html %= mpp
-        html = BeautifulSoup.ICantBelieveItsBeautifulSoup(html)
+</html>''' % mpp
+        html = surllib.beautify(html)
 
         # first look for inline images (if any)
         # iimags: mapping from URL to (cid, binary string contents)
         iimgs = {}
         for imgtag in html.findAll('img'):
-            if not imgtag.has_key('src'):
+            if not imgtag.has_attr('src'):
                 continue  # ignore
             url = imgtag['src']
             if url.lower().startswith('data:'):
@@ -300,9 +294,6 @@ class Message:
                 atag.replaceWithChildren()  # kill the "broken" link
                 continue
             url = atag['href']
-            if 'Tilmelding/Oversigt.asp' in url:
-                atag.replaceWithChildren()  # kill link
-                continue
             if url.startswith('/') or config.HOSTNAME in url:  # onsite!
                 data = None
                 try:
@@ -313,16 +304,18 @@ class Message:
                                (self.mp['title'] if self.mp['title'] else self,
                                 url))
                 if data:
-                    if atag.has_key('usefilename'):
-                        usefilename = atag['usefilename']
-                    else:
-                        usefilename = None
-                    eatt = generateMIMEAttachment(url, data, usefilename)
+                    eatt = generateMIMEAttachment(url, data, None)
                     attachments.append(eatt)
                     atag.replaceWithChildren()  # kill the actual link
 
+        # Attach actual attachments (if any)
+        for (url, text) in self.mp['attatchments']:
+            data = surllib.skoleGetURL(url, False)
+            eatt = generateMIMEAttachment(url, data, text)
+            attachments.append(eatt)
+
         # now, put the pieces together
-        html = html.prettify().decode('utf-8')
+        html = html.prettify()
         msgHtml = MIMEText(html, 'html', 'utf-8')
         if not iimgs and not attachments:
             # pure HTML version
@@ -362,19 +355,7 @@ class Message:
                 msg.attach(attachment)
 
         # now for the general headers
-        dt = self.mp['date']
-        if self.mp.get('time', None):
-            dt += ' ' + self.mp['time']
-        else:
-            if dt == time.strftime('%d-%m-%Y'):  # today
-                ts = time.strftime('%H:%M:%S')
-                if ts > '12:00:00':
-                    ts = '12:00:00'
-                dt += ' ' + ts
-            else:
-                dt += ' 12:00:00'
-        dt = time.strptime(dt, '%d-%m-%Y %H:%M:%S')
-        dt = email.utils.formatdate(time.mktime(dt), True)
+        dt = email.utils.formatdate(time.mktime(self.mp['date_ts']), True)
         msg['Received'] = ('from %s ([127.0.0.1] helo=%s) '
                            'by %s with smtp (fskintra) for %s; %s'
                            ) % (hostname, hostname, hostname, config.EMAIL, dt)
@@ -434,6 +415,14 @@ class Message:
 
         # ensure that we only send once
         self.store()
+
+
+def hasSeenMessage(*lmid):
+    mid = u'--'.join(lmid)
+    path = os.path.join(config.MSG_DN, '*%s*' % mid)
+    if glob.glob(path):
+        return True
+    return False
 
 
 def maybeEmail(msg):

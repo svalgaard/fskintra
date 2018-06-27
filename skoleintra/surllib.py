@@ -55,7 +55,7 @@ class Browser(mechanize.Browser):
 
         # Follows refresh 0 but does not hang on refresh > 0
         self.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(),
-                                            max_time=1)
+                                            max_time=60)
 
         # Want debugging messages?
         if False:
@@ -130,7 +130,7 @@ def skoleLogin():
     config.log(u'Login', 2)
 
     config.log(u'Login på skoleintra')
-    url = u'https://%s/' % config.HOSTNAME
+    url = u'https://%s/Account/IdpLogin' % config.HOSTNAME
     if br.get_last_index():
         urlL = br.get_last_index()
         if urlL.startswith('/'):
@@ -145,6 +145,7 @@ def skoleLogin():
     for round in range(5): # try at most 5 times before failing
         url = resp.geturl()
         data = resp.read()
+        config.log(u'Login næste skridt %s' % url, 3)
 
         forms = list(br.forms())
         if len(forms) == 1:
@@ -152,28 +153,47 @@ def skoleLogin():
 
         if url == br.get_last_index() and data:
             # we are fine / logged in
+            config.log(u'Succesfuldt log ind til %s' % url, 1)
             _skole_login_done = beautify(data)
             return _skole_login_done
 
-        if '/sso/ssocomplete' in url and len(forms) == 1:
+        if len(forms) == 1 and (
+            '/sso/ssocomplete' in url or
+            re.search('<form[^>]*name=.relay.', data)):
+            # One of the intermediate small pages on the way
             resp = br.submit()
             continue
+
+        if url.startswith('https://login.emu.dk/'):
+            config.log(u'Bruger uni-login med brugernavn %r' % config.USERNAME, 3)
+            assert(config.LOGINTYPE != 'alm')  # This must be uni login
+            br['user'] = 'TEST'
+            br['pass'] = sys.argv[1]
+            resp = br.submit()
+            continue
+
 
         if '/Account/IdpLogin' in resp.geturl() \
             and len(forms) == 1 \
             and 'UserName' in br and 'Password' in br:
 
-            if u'ikke adgang' in data:
+            if 'ikke adgang' in data:
                 config.log(u'Logind giver en fejlmeddelse -- har du angivet korrekt '
                         u'kodeord? Check konfigurationsfilen, angiv evt. nyt '
                         u'kodeord med --password eller --config ELLER '
                         u'prøv igen senere...', -2)
+                sys.exit(1)
 
             # this is the main login page
+            config.log(u'Bruger %s-login med brugernavn %r' % (config.LOGINTYPE, config.USERNAME), 3)
             if config.LOGINTYPE != 'alm':
                 # UNI-login
-                print u'UNI-login not implemented yet'
-                sys.exit(1)
+                links = br.links(url_regex=re.compile('.*RedirectToUniLogin.*'))
+                if not links:
+                    config.log(u'Kan IKKE finde LOG PÅ MED UNILOGIN linket på siden?', -1)
+                    sys.exit(1)
+                resp = br.follow_link(links[0])
+                continue
             else:
                 # "Ordinary login"
                 br['UserName'] = config.USERNAME
@@ -197,12 +217,13 @@ def url2cacheFileName(url, postData):
     parts = [config.CACHE_DN,
              up.scheme,
              up.netloc,
-             urllib.url2pathname(up.path)[1:]]
+             urllib.url2pathname(up.path)[1:] + '.cache']
     if up.query:
         az = re.compile(r'[^0-9a-zA-Z]')
         for (k, vs) in sorted(cgi.parse_qs(up.query).items()):
             xs = [az.sub(lambda x: hex(ord(x.group(0))), x) for x in [k] + vs]
             parts[-1] += '_' + '-'.join(xs)
+
     cfn = os.path.join(*parts)
     if type(cfn) == unicode and not os.path.supports_unicode_filenames:
         cfn = cfn.encode('utf-8')

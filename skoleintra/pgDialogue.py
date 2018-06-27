@@ -4,99 +4,119 @@ import re
 import config
 import surllib
 import semail
-
-URL_PREFIX = '/Infoweb/Fi/Besked/'
-URL_BOX_PREFIX = URL_PREFIX + 'Oversigt.asp?Bakke='
-TRAYS = ('ind', 'ud')
-
-
-def diaExamineMessage(url, mid):
-    '''Look at the url and mid. Returns True iff an email was sent'''
-    bs = surllib.skoleGetURL(url, True)
-
-    # first, find main text
-    tr = bs.find('tr', valign='top')
-    assert(tr)
-    phtml = tr.find('td')
-    msg = semail.Message(u'dialogue', phtml)
-    msg.setMessageID(mid)
-
-    # next, look at the header
-    header = bs.find('table', 'linje1')
-    assert(header)  # there must be a header
-    headerLines = header.findAll('tr')
-    assert(len(headerLines) >= 3)  # there must be something inside the header
-
-    for hl in headerLines:
-        txt = hl.text
-        if not txt:
-            continue  # ignore
-        elif txt.startswith(u'Denne besked slettes'):
-            pass  # ignore
-        elif hl.find('h4'):
-            # title
-            msg.setTitle(txt)
-        elif txt.startswith(u'Besked fra') or txt.startswith(u'Oprettet af'):
-            # Besked fra Frk Nielsen - modtaget den 26-09-2012 20:29:44
-            msg.updatePersonDate(hl)
-        elif txt.startswith(u'Sendt til '):
-            # Sendt til ...
-            msg.setRecipient(txt.split(u' ', 2)[-1])
-        elif txt.startswith(u'Kopi til '):
-            # Sendt til ...
-            msg.setCC(txt.split(u' ', 2)[-1])
-        else:
-            config.log(u'Ukendt header i besked #%s: %s' % (mid, txt), -1)
-
-    return msg.maybeSend()
+import sys
+import json
+import collections
+import schildren
+import time
 
 
-def diaFindMessages(data):
-    '''Find all messages in the html data, return True iff at least one
-    email was sent'''
-    bs = surllib.beautify(data)
+def msgFromJson(cname, threadId, msg):
+    '''Input is a decoded JSON representation of a message (Besked).
+Output is an semail.Message ready to be sent'''
 
-    atags = bs.findAll('a')
-    newMsgFound = False
-    for atag in atags:
-        href = atag['href']
+    # We have never seen this set to anything -- need to check
+    # when this happens
+    assert(not msg['AdditionalLinkUrl'])
 
-        if not href.startswith('VisBesked'):
-            continue  # ignore
+    html = u'<div class="base">%s</div>\n' % msg['BaseText']
+    if msg['PreviousMessagesText']:
+        html += u'<div class="prev">%s</div>\n' % msg['PreviousMessagesText']
 
-        title = atag.text.strip()
-        if not title:
-            continue  # ignore (this is the envelope icon)
+    emsg = semail.Message(u'message', html)
+    emsg.addChild(cname)
+    emsg.setMessageID(threadId, unicode(msg["Id"]))
+    emsg.setTitle(msg['Subject'])
+    emsg.setDateTime(msg['SentReceivedDateText'])
+    emsg.setRecipient(msg['Recipients'])
+    emsg.setSender(msg['SenderName'])
+    for att in (msg['AttachmentsLinks'] or []):
+        emsg.addAttachment(att['HrefAttributeValue'], att['Text'])
+    return emsg
 
-        lurl = 'https://%s%s%s' % (config.HOSTNAME, URL_PREFIX, href)
-        mid = re.search('Id=(\\d+)', href).group(1)
 
-        if diaExamineMessage(lurl, mid):
-            newMsgFound = True
-    return newMsgFound
+def parseMessages(cname, bs):
+    # Look for a div with a very long attribute with json
+    main = bs.find('div', 'sk-l-content-wrapper')
+    conversations = None
+    for d in main.findAll('div'):
+        for a in d.attrs:
+            if 'message' not in a.lower() or len(d[a]) < 100:
+                continue
+            try:
+                jsn = json.loads(d[a])
+                if type(jsn) == dict:
+                    conversations = jsn.get('Conversations')
+                    break
+            except ValueError:
+                continue
+
+    if not conversations:
+        config.clog(cname, 'Ingen beskeder fundet?!?', -1)
+        return []
+
+    emsgs = []
+    for i, c in enumerate(conversations[::1]):
+        tid = c.get('ThreadId')
+        lmid = unicode(c.get('LatestMessageId'))
+        if not tid or not lmid:
+            config.clog(cname, 'Noget galt i tråd %d %r %r' % (i, tid, lmid), -1)
+            continue
+
+        if semail.hasSeenMessage(tid, lmid):
+            continue
+
+        # This last messages has not been seen - load the entire conversation
+        suffix = (
+            '/messages/conversations/loadmessagesforselectedconversation' +
+            '?threadId=' + tid +
+            '&takeFromRootMessageId=' + lmid +
+            '&takeToMessageId=0' +
+            '&searchRequest=' +
+            '&_=' + str(int(time.time()*1000)))
+        curl = schildren.getChildURL(cname, suffix)
+        data = surllib.skoleGetURL(curl, asSoup=False, noCache=True)
+
+        try:
+            msgs = json.loads(data)
+        except ValueError:
+            config.clog(cname, 'Kan ikke indlæse besked-listen i tråd %d %r %r' % (i, tid, lmid), -1)
+            continue
+
+        assert(type(msgs) == list)
+        for msg in msgs[::-1]:
+            mid = unicode(msg.get('Id'))
+            if semail.hasSeenMessage(tid, mid):
+                continue
+
+            # Generate new messages with this content
+            emsgs.append(msgFromJson(cname, tid, msg))
+
+    return emsgs
 
 
-def skoleDialogue():
-    surllib.skoleLogin()
-    br = surllib.getBrowser()
+def getMsgsForChild(cname):
+    url = schildren.getChildURL(cname, '/messages/conversations')
+    config.clog(cname, u'Kigger efter nye beskeder på %s' % url)
+    bs = surllib.skoleGetURL(url, asSoup=True, noCache=True)
 
-    for tray in TRAYS:
-        config.log(u'Behandler beskeder i bakken %s' % tray)
+    return parseMessages(cname, bs)
 
-        url = 'https://%s%s%s' % (config.HOSTNAME, URL_BOX_PREFIX, tray)
 
-        # Read the initial page, and search for messages
-        config.log(u'Bakke-URL: %s' % url)
-        resp = br.open(url)
-        data = resp.read()
-        # ensure that we get only mgss for the current child
-        br.select_form(name='FrontPage_Form1')
-        br['R1'] = ('klasse',)
-        resp = br.submit()
-        data = resp.read()
+def skoleDialogue(cnames):
+    msgs = collections.OrderedDict()
+    for cname in cnames:
+        for msg in getMsgsForChild(cname):
+            if msg.hasBeenSent():
+                continue
+            config.clog(cname, u'Ny besked fundet: %s' % msg.mp['title'])
+            mid = msg.getLongMessageID()
+            if mid in msgs:
+                msgs[mid].addChild(cname)
+            else:
+                msgs[mid] = msg
 
-        diaFindMessages(data)
-
-if __name__ == '__main__':
-    # test
-    skoleDialogue()
+    for mid, msg in msgs.items():
+        cname = ','.join(msg.mp['children'])
+        config.clog(cname, u'Ny besked fundet: %s' % msg.mp['title'])
+        msg.maybeSend()

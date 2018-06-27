@@ -14,6 +14,9 @@ _children = None
 def getChildren():
     '''Returns of list of "available" children in the system'''
     global _children
+
+    ckey = lambda n: tuple(n.rsplit(' ', 1)[::-1])
+
     if not _children:
         _children = dict()
         seen = set()
@@ -31,17 +34,21 @@ def getChildren():
             seen.add(url)
             name = a.text.strip() or fst
             if name not in _children:
-                config.log(u'Barn %s => %s' % (name, url), 1)
+                config.log(u'Barn %s => %s' % (name, url), 2)
                 _children[name] = url
-        config.log(u'Følgende børn blev fundet: ' + u', '.join())
+        cns = sorted(_children.keys(), key=ckey)
+        config.log(u'Følgende børn blev fundet: ' + u', '.join(cns))
 
-
-    ckey = lambda n: tuple(n.rsplit(' ', 1)[::-1])
     return sorted(_children.keys(), key=ckey)
 
 
 def getChildURLPrefix(cname):
     getChildren()
-    assert(name in _children)
+    assert(cname in _children)
 
     return surllib.absurl(_children[cname])
+
+
+def getChildURL(cname, suffix):
+    assert(suffix.startswith('/'))
+    return getChildURLPrefix(cname) + suffix

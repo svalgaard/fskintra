@@ -12,12 +12,12 @@ import skoleintra.schildren
 cnames = skoleintra.schildren.getChildren()
 
 skoleintra.pgFrontpage.skoleFrontpage(cnames)
+skoleintra.pgDialogue.skoleDialogue(cnames)
 
 for cname in cnames:
     pass
 
-    # PENDING
+    # PENDING for new design
     # skoleintra.pgContactLists.skoleContactLists()
-    # skoleintra.pgDialogue.skoleDialogue()
     # skoleintra.pgDocuments.skoleDocuments()
     # skoleintra.pgWeekplans.skoleWeekplans()
