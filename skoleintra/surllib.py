@@ -65,16 +65,22 @@ class Browser(mechanize.Browser):
             ('Accept', 'text/html,application/xhtml+xml,application/xml;'
              'q=0.9,*/*;q=0.8')]
 
-        # load browser state
+        # Browser-state (not including cookies)
+        self.state = {
+            'index': None,
+            'dialogue': None,
+        }
+
+        # Load browser state
         sfn = self._browser_state_filename()
-        self._lastIndex = ''
         if os.path.isfile(sfn):
             if not config.SKIP_CACHE:
                 config.log(u'Indlæser tidligere browsertilstand fra %s' % sfn)
                 self._cj.load(sfn, True, True)
-                lst = open(sfn).read().strip().split()
-                if len(lst) > 3 and lst[-2] == 'Index:':
-                    self._lastIndex = lst[-1]
+                for st in open(sfn).read().strip().split('\n'):
+                    if st.startswith('# fskintra:'):
+                        sp = st.split()
+                        self.state[sp[-2]] = sp[-1]
             else:
                 config.log(u'Indlæser ikke tidligere browsertilstand '
                            u'fra %s pga --skipcache' % sfn)
@@ -86,8 +92,10 @@ class Browser(mechanize.Browser):
     def save_state(self):
         sfn = self._browser_state_filename()
         self._cj.save(sfn, ignore_discard=True, ignore_expires=True)
-        if self._lastIndex:
-            open(sfn, 'a').write('# Index: %s\n' % self._lastIndex)
+        fd = open(sfn, 'a')
+        for (k, v) in sorted(self.state.items()):
+            fd.write('# fskintra: %s %s\n' % (k, v))
+        fd.close()
 
     def open(self, url, *args, **aargs):
         if type(url) in [str, unicode]:
@@ -97,12 +105,19 @@ class Browser(mechanize.Browser):
         config.log('Browser.open %s' % surl, 3)
         resp = mechanize.Browser.open(self, url, *args, **aargs)
         if re.match('.*/parent/[0-9]*/[^/]*/Index', surl):
-            self._lastIndex = surl
+            self.state['index'] = absurl(surl)
+            for a in br.links(text_regex=re.compile('Besked')):
+                dt = a.url.split('/')[-1]
+                if dt in ['conversations', 'inbox']:
+                    self.state['dialogue'] = dt
+                else:
+                    config.log(u'Ukendt beskedforsideurl %s' % a.url, 2)
+
         self.save_state()
         return resp
 
-    def get_last_index(self):
-        return self._lastIndex
+    def getState(self, key):
+        return self.state[key]
 
 
 def getBrowser():
@@ -128,12 +143,8 @@ def skoleLogin():
 
     config.log(u'Login på skoleintra')
     url = u'https://%s/Account/IdpLogin' % config.HOSTNAME
-    if br.get_last_index():
-        urlL = br.get_last_index()
-        if urlL.startswith('/'):
-            url += urlL[1:]
-        else:
-            url = urlL
+    if br.getState('index'):
+        url = br.getState('index')
         config.log(u'Genbruger sidst kendte forside URL %s' % url, 2)
     else:
         config.log(u'Logger på via %s' % url, 2)
@@ -148,7 +159,7 @@ def skoleLogin():
         if len(forms) == 1:
             br.form = forms[0]
 
-        if url == br.get_last_index() and data:
+        if url == br.getState('index') and data:
             # we are fine / logged in
             config.log(u'Succesfuldt log ind til %s' % url, 1)
             _skole_login_done = beautify(data)

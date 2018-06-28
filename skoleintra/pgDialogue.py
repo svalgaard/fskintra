@@ -96,11 +96,16 @@ def parseMessages(cname, bs):
 
 
 def getMsgsForChild(cname):
-    url = schildren.getChildURL(cname, '/messages/conversations')
-    config.clog(cname, u'Kigger efter nye beskeder på %s' % url)
-    bs = surllib.skoleGetURL(url, asSoup=True, noCache=True)
+    dtype = surllib.getBrowser().getState('dialogue')
+    if dtype == 'conversations':
+        url = schildren.getChildURL(cname, '/messages/conversations')
+        config.clog(cname, u'Kigger efter nye beskeder på %s' % url)
+        bs = surllib.skoleGetURL(url, asSoup=True, noCache=True)
 
-    return parseMessages(cname, bs)
+        return parseMessages(cname, bs)
+    else:
+        config.clog(cname, u'Beskeder-indbakke-type %r ikke understøttet'
+                    % dtype)
 
 
 def skoleDialogue(cnames):
