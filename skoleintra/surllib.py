@@ -243,7 +243,8 @@ def url2cacheFileName(url, postData):
     return cfn
 
 
-def skoleGetURL(url, asSoup=False, noCache=False, postData=None):
+def skoleGetURL(url, asSoup=False, noCache=False, postData=None,
+                addTimeSuffix=False):
     '''Returns data from url as raw string or as a beautiful soup'''
     if type(url) == unicode:
         url, uurl = url.encode('utf-8'), url
@@ -277,6 +278,11 @@ def skoleGetURL(url, asSoup=False, noCache=False, postData=None):
         config.log('skoleGetURL: %s' % unienc(lfn), 2)
         data = open(lfn, 'rb').read()
     else:
+        if addTimeSuffix:
+            if '?' in url:
+                url += '&_=' + str(int(time.time()*1000))
+            else:
+                url += '?_=' + str(int(time.time()*1000))
         qurl = urllib.quote(url, safe=':/?=&%')
         config.log(u'skoleGetURL: Prøver at hente %s' % qurl, 2)
         skoleLogin()

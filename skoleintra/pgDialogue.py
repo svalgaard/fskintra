@@ -6,7 +6,6 @@ import semail
 import json
 import collections
 import schildren
-import time
 
 
 def msgFromJson(cname, threadId, msg):
@@ -71,10 +70,10 @@ def parseMessages(cname, bs):
             '?threadId=' + tid +
             '&takeFromRootMessageId=' + lmid +
             '&takeToMessageId=0' +
-            '&searchRequest=' +
-            '&_=' + str(int(time.time()*1000)))
+            '&searchRequest=')
         curl = schildren.getChildURL(cname, suffix)
-        data = surllib.skoleGetURL(curl, asSoup=False, noCache=True)
+        data = surllib.skoleGetURL(curl, asSoup=False, noCache=True,
+                                   addTimeSuffix=True)
 
         try:
             msgs = json.loads(data)
