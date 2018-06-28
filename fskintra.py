@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import skoleintra.config
-import skoleintra.pgContactLists
-import skoleintra.pgDialogue
-import skoleintra.pgDocuments
-import skoleintra.pgFrontpage
-import skoleintra.pgWeekplans
 import skoleintra.schildren
+import skoleintra.pgFrontpage
+import skoleintra.pgDialogue
+# PENDING for new design
+# import skoleintra.pgContactLists
+# import skoleintra.pgDocuments
+# import skoleintra.pgWeekplans
 
 cnames = skoleintra.schildren.getChildren()
 
