@@ -11,19 +11,21 @@ import time
 import re
 
 #
-# Check whether our extra dependencies are here
+# Check whether our non-default dependencies are here
 #
 try:
     import bs4
 except ImportError:
-    print u'BeautifulSoup 4.x er krævet for at køre programmet. Se evt. her for hjælp'
+    print u'BeautifulSoup 4.x er krævet for at køre programmet.'
+    print u'Se evt. her for hjælp:'
     print u'    https://github.com/svalgaard/fskintra/#krav'
-    print u'Du har muligvis BeautifulSoup 3.x installeret, hvilket vil virke'
+    print u'NB: BeautifulSoup 3.x er ikke tilstrækkeligt'
     sys.exit(1)
 try:
     import mechanize
 except ImportError:
-    print u'Python mechanize er krævet for at køre programmet. Se evt. her for hjælp'
+    print u'Python mechanize er krævet for at køre programmet.'
+    print u'Se evt. her for hjælp:'
     print u'    https://github.com/svalgaard/fskintra/#krav'
     sys.exit(1)
 
@@ -100,6 +102,8 @@ def ensureDanish():
     if '?' in test or sys.version_info < (2, 6):
         sys.stderr = codecs.getwriter('UTF-8')(sys.stderr)
         sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
+
+
 ensureDanish()
 
 # Also ensure that we can parse Danish time stamps
@@ -229,7 +233,7 @@ if options.password is not None:
                 open(CONFIG_FN, 'w').write(data)
                 log(u'Nyt kodeord er skrevet til'
                     u'konfigurationsfilen %s' % CONFIG_FN, -2)
-            except:
+            except IOError:
                 log(u'Kan ikke skrive til '
                     u'konfigurationsfilen %s' % CONFIG_FN, -2)
                 log(u'Nyt kodeord bliver ikke skrevet', -2)
@@ -240,6 +244,7 @@ def softGet(cp, section, option, default=''):
         return cp.get(section, option)
     else:
         return default
+
 
 try:
     LOGINTYPE = softGet(cfg, 'default', 'logintype', 'alm')

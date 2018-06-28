@@ -11,7 +11,6 @@ import os
 import sys
 import re
 import datetime
-import hashlib
 import time
 
 
@@ -51,7 +50,7 @@ class Browser(mechanize.Browser):
 
         # Follows refresh 0 but does not hang on refresh > 0
         self.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(),
-                                            max_time=60)
+                                max_time=60)
 
         # Want debugging messages?
         if False:
@@ -77,7 +76,8 @@ class Browser(mechanize.Browser):
                 if len(lst) > 3 and lst[-2] == 'Index:':
                     self._lastIndex = lst[-1]
             else:
-                config.log(u'Indlæser ikke tidligere browsertilstand fra %s pga --skipcache' % sfn)
+                config.log(u'Indlæser ikke tidligere browsertilstand '
+                           u'fra %s pga --skipcache' % sfn)
 
     def _browser_state_filename(self):
         fn = '%s-%s.state' % (config.HOSTNAME, config.USERNAME)
@@ -87,7 +87,7 @@ class Browser(mechanize.Browser):
         sfn = self._browser_state_filename()
         self._cj.save(sfn, ignore_discard=True, ignore_expires=True)
         if self._lastIndex:
-            open(sfn,'a').write('# Index: %s\n' % self._lastIndex)
+            open(sfn, 'a').write('# Index: %s\n' % self._lastIndex)
 
     def open(self, url, *args, **aargs):
         if type(url) in [str, unicode]:
@@ -110,6 +110,7 @@ def getBrowser():
     if _browser is None:
         _browser = Browser()
     return _browser
+
 
 _browser = None
 _skole_login_done = False
@@ -138,7 +139,7 @@ def skoleLogin():
         config.log(u'Logger på via %s' % url, 2)
 
     resp = br.open(url)
-    for round in range(5): # try at most 5 times before failing
+    for round in range(5):  # try at most 5 times before failing
         url = resp.geturl()
         data = resp.read()
         config.log(u'Login næste skridt %s' % url, 3)
@@ -154,54 +155,59 @@ def skoleLogin():
             return _skole_login_done
 
         if len(forms) == 1 and (
-            '/sso/ssocomplete' in url or
-            re.search('<form[^>]*name=.relay.', data)):
+                '/sso/ssocomplete' in url or
+                re.search('<form[^>]*name=.relay.', data)):
             # One of the intermediate small pages on the way
             resp = br.submit()
             continue
 
         if url.startswith('https://login.emu.dk/'):
-            config.log(u'Bruger uni-login med brugernavn %r' % config.USERNAME, 3)
+            config.log(u'Uni-login med brugernavn %r' % config.USERNAME, 3)
             assert(config.LOGINTYPE != 'alm')  # This must be uni login
             br['user'] = 'TEST'
             br['pass'] = sys.argv[1]
             resp = br.submit()
             continue
 
-
         if '/Account/IdpLogin' in resp.geturl() \
-            and len(forms) == 1 \
-            and 'UserName' in br and 'Password' in br:
+                and len(forms) == 1 \
+                and 'UserName' in br and 'Password' in br:
 
             if 'ikke adgang' in data:
-                config.log(u'Logind giver en fejlmeddelse -- har du angivet korrekt '
-                        u'kodeord? Check konfigurationsfilen, angiv evt. nyt '
-                        u'kodeord med --password eller --config ELLER '
-                        u'prøv igen senere...', -2)
+                config.log(u'Logind giver en fejlmeddelse -- '
+                           u'har du angivet korrekt kodeord? '
+                           u'Check konfigurationsfilen, angiv evt. nyt '
+                           u'kodeord med --password eller --config ELLER '
+                           u'prøv igen senere...', -2)
                 sys.exit(1)
 
             # this is the main login page
-            config.log(u'Bruger %s-login med brugernavn %r' % (config.LOGINTYPE, config.USERNAME), 3)
             if config.LOGINTYPE != 'alm':
                 # UNI-login
-                links = br.links(url_regex=re.compile('.*RedirectToUniLogin.*'))
+                links = br.links(url_regex=re.compile(
+                    '.*RedirectToUniLogin.*'))
                 if not links:
-                    config.log(u'Kan IKKE finde LOG PÅ MED UNILOGIN linket på siden?', -1)
+                    config.log(u'Kan IKKE finde LOG PÅ MED UNILOGIN '
+                               u'linket på siden?', -1)
                     sys.exit(1)
+                config.log(u'Går videre til uni-login', 3)
                 resp = br.follow_link(links[0])
                 continue
             else:
+                config.log(u'Bruger alm. login med brugernavn %r' %
+                           config.USERNAME, 3)
                 # "Ordinary login"
                 br['UserName'] = config.USERNAME
                 br['Password'] = config.b64dec(config.PASSWORD)
                 resp = br.submit()
                 continue
-
         break
+
     config.log(u'skoleLogin: Kan ikke logge på ForældreIntra?', -1)
     config.log(u'skoleLogin: Vi var nået til flg URL', -1)
     config.log(u'skoleLogin: %s' % url, -1)
-    config.log(u'skoleLogin: Check at URLen er rigtig og prøv evt. igen senere', -1)
+    config.log(u'skoleLogin: Check at URLen er rigtig '
+               u'og prøv evt. igen senere', -1)
     sys.exit(0)
 
 

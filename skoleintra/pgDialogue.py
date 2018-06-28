@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import re
 import config
 import surllib
 import semail
-import sys
 import json
 import collections
 import schildren
@@ -60,7 +58,8 @@ def parseMessages(cname, bs):
         tid = c.get('ThreadId')
         lmid = unicode(c.get('LatestMessageId'))
         if not tid or not lmid:
-            config.clog(cname, 'Noget galt i tråd %d %r %r' % (i, tid, lmid), -1)
+            config.clog(cname, 'Noget galt i tråd %d %r %r'
+                        % (i, tid, lmid), -1)
             continue
 
         if semail.hasSeenMessage(tid, lmid):
@@ -80,7 +79,8 @@ def parseMessages(cname, bs):
         try:
             msgs = json.loads(data)
         except ValueError:
-            config.clog(cname, 'Kan ikke indlæse besked-listen i tråd %d %r %r' % (i, tid, lmid), -1)
+            config.clog(cname, 'Kan ikke indlæse besked-listen i tråd %d %r %r'
+                        % (i, tid, lmid), -1)
             continue
 
         assert(type(msgs) == list)

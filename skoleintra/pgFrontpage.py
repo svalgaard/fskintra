@@ -25,10 +25,9 @@ def parseFrontpageItem(cname, div):
         if nc > 0:
             suff = '/news/pins/%s/comments' % div['data-feed-item-id']
             url = schildren.getChildURL(cname, suff)
-            bs = surllib.skoleGetURL(url, asSoup=True, postData={'_':str(nc)})
+            bs = surllib.skoleGetURL(url, asSoup=True, postData={'_': str(nc)})
             cdiv = unicode(bs.find('div', 'sk-comments-container'))
             cdiv = u'<br>' + cdiv
-
 
     author = div.find('div', 'sk-news-item-author')
     body = div.findAll('div', 'sk-user-input')[0]
@@ -41,12 +40,12 @@ def parseFrontpageItem(cname, div):
     msg.setSender(author.span.text)
 
     # find list of reciepients
-    author.span.extract() # remove author
+    author.span.extract()  # remove author
     for tag in [
-        author.span, # remove author
-        author.find('span', 'sk-news-item-for'), # remove 'til'
-        author.find('span', 'sk-news-item-and'), # ' og '
-        author.find('a', 'sk-news-show-more-link')]:
+            author.span,  # remove author
+            author.find('span', 'sk-news-item-for'),  # remove 'til'
+            author.find('span', 'sk-news-item-and'),  # ' og '
+            author.find('a', 'sk-news-show-more-link')]:
         if tag:
             tag.extract()
     recp = re.sub(ur'\s*(,| og )\s*', ',', author.text.strip())
@@ -79,8 +78,7 @@ def parseFrontpage(cname, bs):
                     continue
                 if u'har fødselsdag' in uc:
                     today = unicode(time.strftime(u'%d. %b. %Y'))
-                    c.insert(0, u"\U0001F1E9\U0001F1F0 ")  # Unicode Danish Flag
-                    text = c.text.strip()
+                    c.insert(0, u"\U0001F1E9\U0001F1F0 ")  # Unicode DK Flag
                     c.append(bs4.Comment(' I dag er %s ' % today))
                     msg = semail.Message(u'frontpage', unicode(c))
                     msg.addChild(cname)
@@ -91,11 +89,12 @@ def parseFrontpage(cname, bs):
                 elif u'der er aktiviteter i dag' in uc:
                     continue  # ignore
                 else:
-                    config.clog(cname, u'Hopper mini-besked %r over' % c.text.strip())
+                    config.clog(cname, u'Hopper mini-besked %r over' %
+                                c.text.strip())
 
     # find interesting main front page items
     fps = bs.findAll('div', 'sk-news-item')
-    assert(len(fps) > 2)  # at least two msgs on the frontpage or something is wrong
+    assert(len(fps) > 0)  # 1+ msgs on the frontpage or something is wrong
     for div in fps[::-1]:
         msg = parseFrontpageItem(cname, div)
         msgs.append(msg)
