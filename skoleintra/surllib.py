@@ -29,13 +29,9 @@ def unienc(s):
 
 
 def beautify(data):
-    try:
-        return bs4.BeautifulSoup(data, 'lxml')
-    except ValueError:
-        # Maybe due to 'wide' unicode char, e.g., smiley &#128516;
-        # ValueError: unichr() arg not in range(0x10000) (narrow Python build)
-        # This breaks some python installs
-        return bs4.BeautifulSoup(data)
+    # Maybe due to 'wide' unicode char, e.g., smiley &#128516;
+    # ValueError: unichr() arg not in range(0x10000) (narrow Python build)
+    return bs4.BeautifulSoup(data, 'lxml')
 
 
 class Browser(mechanize.Browser):
