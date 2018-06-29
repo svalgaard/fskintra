@@ -15,16 +15,19 @@ import re
 #
 try:
     import bs4
+    if bs4.__version__ < (4, 5):
+        raise ImportError('bs4 not version 4.5.x+')
 except ImportError:
-    print u'BeautifulSoup 4.x er krævet for at køre programmet.'
+    print u'BeautifulSoup 4.5.x er krævet for at køre programmet.'
     print u'Se evt. her for hjælp:'
     print u'    https://github.com/svalgaard/fskintra/#krav'
-    print u'NB: BeautifulSoup 3.x er ikke tilstrækkeligt'
     sys.exit(1)
 try:
     import mechanize
+    if mechanize.__version__ < (0, 3):
+        raise ImportError('mechanize not version 0.3.x')
 except ImportError:
-    print u'Python mechanize er krævet for at køre programmet.'
+    print u'Python mechanize 0.3.x er krævet for at køre programmet.'
     print u'Se evt. her for hjælp:'
     print u'    https://github.com/svalgaard/fskintra/#krav'
     sys.exit(1)
