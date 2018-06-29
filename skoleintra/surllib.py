@@ -124,6 +124,7 @@ def getBrowser():
     global _browser
     if _browser is None:
         _browser = Browser()
+    _browser.set_handle_equiv(False)
     return _browser
 
 
@@ -246,12 +247,6 @@ def url2cacheFileName(url, postData):
 def skoleGetURL(url, asSoup=False, noCache=False, postData=None,
                 addTimeSuffix=False):
     '''Returns data from url as raw string or as a beautiful soup'''
-    if type(url) == unicode:
-        url, uurl = url.encode('utf-8'), url
-    else:
-        uurl = url.decode('utf-8')
-
-    # FIXME? fix urls without host names
 
     # Sometimes the URL is actually an empty string
     if not url:
@@ -262,6 +257,13 @@ def skoleGetURL(url, asSoup=False, noCache=False, postData=None,
             return data
         else:
             return data
+
+    if type(url) == unicode:
+        url, uurl = url.encode('utf-8'), url
+    else:
+        uurl = url.decode('utf-8')
+    if url.startswith('/'):
+        url = absurl(url)
 
     if type(postData) == dict:
         pd = {}
