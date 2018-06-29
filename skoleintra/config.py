@@ -15,7 +15,7 @@ import re
 #
 try:
     import bs4
-    if bs4.__version__ < (4, 5):
+    if bs4.__version__ < '4.5':
         raise ImportError('bs4 not version 4.5.x+')
 except ImportError:
     print u'BeautifulSoup 4.5.x er krævet for at køre programmet.'
