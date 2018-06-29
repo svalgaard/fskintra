@@ -7,18 +7,17 @@ import skoleintra.pgFrontpage
 import skoleintra.pgDialogue
 # PENDING for new design
 # import skoleintra.pgContactLists
-# import skoleintra.pgDocuments
+import skoleintra.pgDocuments
 # import skoleintra.pgWeekplans
 
 cnames = skoleintra.schildren.getChildren()
 
-skoleintra.pgFrontpage.skoleFrontpage(cnames)
-skoleintra.pgDialogue.skoleDialogue(cnames)
+#skoleintra.pgFrontpage.skoleFrontpage(cnames)
+#skoleintra.pgDialogue.skoleDialogue(cnames)
 
 for cname in cnames:
-    pass
+    skoleintra.pgDocuments.skoleDocuments(cname)
 
     # PENDING for new design
     # skoleintra.pgContactLists.skoleContactLists()
-    # skoleintra.pgDocuments.skoleDocuments()
     # skoleintra.pgWeekplans.skoleWeekplans()

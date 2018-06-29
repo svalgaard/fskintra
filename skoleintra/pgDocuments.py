@@ -1,100 +1,72 @@
 # -*- coding: utf-8 -*-
 
-import re
+import schildren
 import config
 import surllib
 import semail
-import datetime
-import urllib
-
-URL_PREFIX = 'http://%s/Infoweb/Fi/Dokumentarkiv/' % config.HOSTNAME
-URL_MAIN = URL_PREFIX + 'Dokliste.asp'
-URL_DOC = URL_PREFIX + 'VisDokument.asp?Id='
+import json
 
 
-def docFindDocuments(bs, foldername='Dokumentarkiv'):
-    '''Input beatifulsoup with content from a page of documents
-    Looks at this and all subfolders, and sends any new messages'''
+def docFindDocuments(cname, rootTitle, bs, title):
 
-    trs = bs.findAll('tr')
+    folder = rootTitle
+    if title:
+        folder += u' / ' + title.replace(u'>', u'/')
 
-    for line in trs:
-        if not line.has_key('class'):
-            continue
-        if not [c for c in line['class'].split() if c.startswith('linje')]:
-            continue
+    docs = bs.findAll('div', 'sk-document')
+    config.clog(cname, u'%s: %d dokumenter fundet ' %
+                (folder, len(docs)))
 
-        links = line.findAll('a')
-        assert(len(links) >= 2)
-
-        # find file type
-        ext = links[0].img['src'].split('/')[-1][2:-4].lower()
-
-        # find name of file
-        title = links[1].text
-        ltitle = foldername + ' / ' + title
-
-        # find url
-        url = links[0]['href']
-        config.log(u'Kigger på dokument url: %s' % url, 3)
-        m = re.match(r"javascript:visdokument\((\d+),'([^']+)'\).*", url)
-        if m:
-            url = m.group(2)
-        elif 'visdokument' in url.lower():
-            url = URL_DOC + re.search('.*?(\d+)', links[0]['href']).group(1)
-        elif links[0].has_key('onclick') and 'visdok' in links[0]['onclick']:
-            url = url  # href is actually the file url
+    for doc in docs:
+        docTitle = doc.find('span', 'sk-documents-document-title').text.strip()
+        docDate = doc.find('div', 'sk-documents-date-column').text.strip()
+        a = doc.find('a')
+        url = a and a['href'] or ''
+        if '.' in docTitle:
+            sfn = docTitle.rsplit(u'.', 1)[0]
         else:
-            assert('Dokliste' in url)
-        url = urllib.quote(url.encode('iso-8859-1'), safe=':/?=&%')
+            sfn = docTitle
 
-        # find date
-        dts = line.findAll('td', width='18%')
-        assert(len(dts) == 1 and dts[0].text)  # exactly one date
-        date = dts[0].text
-
-        # now do stuff
-        if 'Dokliste' in url:
-            # this is a subfolder
-
-            # first look at (potentially cached version)
-            suburl = URL_PREFIX + url
-            subbs = surllib.skoleGetURL(suburl, True)
-
-            subdate = datetime.date(*reversed(map(int, date.split('-'))))
-            if subbs.cachedate <= subdate or subbs.cacheage >= 1.9:
-                # cached version is too old - refetch
-                subbs = surllib.skoleGetURL(suburl, True, True)
-                config.log(u'Kigger på folderen %s' % title)
-            else:
-                config.log(u'Kigger på folderen %s (fra cache)' % title)
-
-            docFindDocuments(subbs, ltitle)
-        else:
-            # this is an actual document
-            config.log(u'Kigger på dokumentet %s' % ltitle)
-
+        if docTitle and docDate and url:
             # Create HTML snippet
-            html = u"<p>Nyt dokument: <a href=''>%s</a></p>" % ltitle
+            html = u"<p>Nyt dokument: <i/> / <b><i/></b>"
+            html += u"<br/>Sidst opdateret: <i/></p>"
             h = surllib.beautify(html)
-            h.a['href'] = url
-            h.a['usefilename'] = title + '.' + ext
+            h.i.replaceWith(folder)
+            h.i.replaceWith(docTitle)
+            h.i.replaceWith(docDate)
 
-            msg = semail.Message('documents', h)
-            msg.setTitle(u'%s' % title)
-            msg.setDate(date)
+            msg = semail.Message(u'doc', unicode(h))
+            msg.setTitle(sfn)
+            msg.setDateTime(docDate)
+            msg.addAttachment(url, docTitle)
+            msg.addChild(cname)
             msg.maybeSend()
 
 
-def skoleDocuments():
-    global bs
+def skoleDocuments(cname):
+    for rootTitle, folder in [('Klassens dokumenter', 'class')]:
+        config.clog(cname, u'%s: Kigger efter dokumenter' % rootTitle)
+        url = schildren.getChildURL(cname, '/documents/' + folder)
 
-    # surllib.skoleLogin()
-    config.log(u'Kigger efter nye dokumenter')
+        bs = surllib.skoleGetURL(url, True, True)
+        docFindDocuments(cname, rootTitle, bs, '')
 
-    # read the initial page
-    bs = surllib.skoleGetURL(URL_MAIN, True, True)
-    docFindDocuments(bs)
+        # look for sub folders
+        js = bs.find(id='FoldersJson')
+        if js and js.has_attr('value'):
+            sfs = json.loads(js['value'])
+
+            for sf in sfs:
+                if sf[u'Name'].startswith('$'):
+                    continue
+
+                title = sf[u'Title']
+                url = sf[u'Url']
+                bs = surllib.skoleGetURL(url, True, True, None, True)
+
+                docFindDocuments(cname, rootTitle, bs, title)
+
 
 if __name__ == '__main__':
     # test
