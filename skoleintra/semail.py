@@ -417,7 +417,7 @@ class Message:
         self.store()
 
 
-def hasSeenMessage(*lmid):
+def hasSentMessage(*lmid):
     mid = u'--'.join(lmid)
     path = os.path.join(config.MSG_DN, '*%s*' % mid)
     if glob.glob(path):

@@ -61,7 +61,7 @@ def parseMessages(cname, bs):
                         % (i, tid, lmid), -1)
             continue
 
-        if semail.hasSeenMessage(tid, lmid):
+        if semail.hasSentMessage(tid, lmid):
             continue
 
         # This last messages has not been seen - load the entire conversation
@@ -85,7 +85,7 @@ def parseMessages(cname, bs):
         assert(type(msgs) == list)
         for msg in msgs[::-1]:
             mid = unicode(msg.get('Id'))
-            if semail.hasSeenMessage(tid, mid):
+            if semail.hasSentMessage(tid, mid):
                 continue
 
             # Generate new messages with this content
