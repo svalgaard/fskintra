@@ -12,8 +12,8 @@ import skoleintra.pgDocuments
 
 cnames = skoleintra.schildren.getChildren()
 
-#skoleintra.pgFrontpage.skoleFrontpage(cnames)
-#skoleintra.pgDialogue.skoleDialogue(cnames)
+skoleintra.pgFrontpage.skoleFrontpage(cnames)
+skoleintra.pgDialogue.skoleDialogue(cnames)
 
 for cname in cnames:
     skoleintra.pgDocuments.skoleDocuments(cname)
