@@ -29,12 +29,11 @@ def docFindDocuments(cname, rootTitle, bs, title):
 
         if docTitle and docDate and url:
             # Create HTML snippet
-            html = u"<p>Nyt dokument: <i/> / <b><i/></b>"
-            html += u"<br/>Sidst opdateret: <i/></p>"
+            html = u"<p>Nyt dokument: <i/> / <b><i/></b></p>\n"
+            html += u"<!-- Sidst opdateret: %s -->" % docDate
             h = surllib.beautify(html)
             h.i.replaceWith(folder)
             h.i.replaceWith(docTitle)
-            h.i.replaceWith(docDate)
 
             msg = semail.Message(u'doc', unicode(h))
             msg.setTitle(sfn)
