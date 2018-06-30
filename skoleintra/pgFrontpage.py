@@ -90,7 +90,7 @@ def parseFrontpage(cname, bs):
                     continue  # ignore
                 else:
                     config.clog(cname, u'Hopper mini-besked %r over' %
-                                c.text.strip())
+                                c.text.strip(), 2)
 
     # find interesting main front page items
     fps = bs.findAll('div', 'sk-news-item')
@@ -116,7 +116,7 @@ def skoleFrontpage(cnames):
         for msg in getMsgsForChild(cname):
             if msg.hasBeenSent():
                 continue
-            config.clog(cname, u'Ny besked fundet: %s' % msg.mp['title'])
+            config.clog(cname, u'Ny besked fundet: %s' % msg.mp['title'], 2)
             mid = msg.getLongMessageID()
             if mid in msgs:
                 msgs[mid].addChild(cname)
@@ -125,5 +125,5 @@ def skoleFrontpage(cnames):
 
     for mid, msg in msgs.items():
         cname = ','.join(msg.mp['children'])
-        config.clog(cname, u'Ny besked fundet: %s' % msg.mp['title'])
+        config.clog(cname, u'Sender ny besked: %s' % msg.mp['title'], 2)
         msg.maybeSend()
