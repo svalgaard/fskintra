@@ -423,7 +423,3 @@ def hasSentMessage(*lmid):
     if glob.glob(path):
         return True
     return False
-
-
-def maybeEmail(msg):
-    msg.maybeSend()
