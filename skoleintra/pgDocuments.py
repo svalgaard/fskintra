@@ -6,6 +6,8 @@ import surllib
 import semail
 import json
 
+MAX_CACHE_AGE = .99
+
 
 def docFindDocuments(cname, rootTitle, bs, title):
 
@@ -29,11 +31,11 @@ def docFindDocuments(cname, rootTitle, bs, title):
 
         if docTitle and docDate and url:
             # Create HTML snippet
-            html = u"<p>Nyt dokument: <i/> / <b><i/></b></p>\n"
+            html = u"<p>Nyt dokument: <span></span> / <b></b></p>\n"
             html += u"<!-- Sidst opdateret: %s -->" % docDate
             h = surllib.beautify(html)
-            h.i.replaceWith(folder)
-            h.i.replaceWith(docTitle)
+            h.span.string = folder
+            h.b.string = docTitle
 
             msg = semail.Message(u'doc', unicode(h))
             msg.setTitle(sfn)
@@ -48,7 +50,7 @@ def skoleDocuments(cname):
         config.clog(cname, u'%s: Kigger efter dokumenter' % rootTitle)
         url = schildren.getChildURL(cname, '/documents/' + folder)
 
-        bs = surllib.skoleGetURL(url, True, True)
+        bs = surllib.skoleGetURL(url, True, MAX_CACHE_AGE)
         docFindDocuments(cname, rootTitle, bs, '')
 
         # look for sub folders
@@ -62,7 +64,7 @@ def skoleDocuments(cname):
 
                 title = sf[u'Title']
                 url = sf[u'Url']
-                bs = surllib.skoleGetURL(url, True, True, None, True)
+                bs = surllib.skoleGetURL(url, True, MAX_CACHE_AGE, None, True)
 
                 docFindDocuments(cname, rootTitle, bs, title)
 

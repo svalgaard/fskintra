@@ -275,6 +275,16 @@ def skoleGetURL(url, asSoup=False, noCache=False, postData=None,
 
     lfn = url2cacheFileName(url, postData)
 
+    if type(noCache) in [int, float] and os.path.isfile(lfn):
+        # noCache is a "max-age" in days of the file
+        age = (time.time() - os.path.getmtime(lfn))/(24. * 3600)
+        if age > noCache:
+            config.log('skoleGetURL: Bruger ikke gammel cache for %s'
+                       % uurl, 2)
+            noCache = True
+        else:
+            noCache = False
+
     if os.path.isfile(lfn) and not noCache and not config.SKIP_CACHE:
         config.log('skoleGetURL: Henter fra cache %s' % uurl, 2)
         config.log('skoleGetURL: %s' % unienc(lfn), 2)
