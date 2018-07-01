@@ -2,6 +2,7 @@
 
 import cookielib
 import urllib
+import urllib2
 import config
 import mechanize
 import bs4
@@ -150,7 +151,21 @@ def skoleLogin():
     else:
         config.log(u'Logger på via %s' % url, 2)
 
-    resp = br.open(url)
+    try:
+        resp = br.open(url)
+    except urllib2.HTTPError as e:
+        config.log(u'skoleLogin: Kan ikke logge på ForældreIntra?', -1)
+        config.log(u'skoleLogin: URL: %s' % url, -1)
+        config.log(u'skoleLogin: Fejlkode: %d' % e.code, -1)
+        if e.code == 404 and not br.getState('index'):
+            # Login tried at the default URL
+            config.log(u'skoleLogin: Bruger du det rette `hostname` til det '
+                       u'nye ForældreIntra i konfigurationsfilen?', -1)
+
+        config.log(u'skoleLogin: Check at URLen er rigtig '
+                   u'og prøv evt. igen senere', -1)
+        sys.exit(1)
+
     for round in range(5):  # try at most 5 times before failing
         url = resp.geturl()
         data = resp.read()
