@@ -65,6 +65,9 @@ def contactCard(cname, bs):
         # Either no image or image-placeholder is used
         if img:
             img.decompose()
+        div = bs.find('div', 'photo-block')
+        if div:
+            div.decompose()
 
     msg = semail.Message(u'contact', unicode(bs))
     msg.setTitle(name)
