@@ -6,9 +6,7 @@
 #
 import config
 import md5
-import re
 import socket
-import bs4
 import surllib
 import time
 import os
@@ -39,6 +37,7 @@ def headerEncodeField(f):
         return str(Header(f, 'ascii', 40))
     except UnicodeEncodeError:
         return str(Header(f, 'utf-8', 40))
+
 
 def generateMIMEAttachment(path, data, usefilename=None):
     fn = usefilename if usefilename else os.path.basename(path)
@@ -126,7 +125,7 @@ class Message:
             ts = time.strptime(dt2, '%d %b %Y %H:%M')
         except ValueError:
             config.log(u'Ukendt tidsstempel %r' % dt)
-            fixme
+            assert(False)  # FIXME We should never be here
 
         self.mp['date_string'] = dt
         self.mp['date_ts'] = ts
@@ -224,12 +223,14 @@ class Message:
         mpp = self.mp.copy()
 
         def wrapOrZap(key, title, tag=''):
-            if title: title += u': '
+            if title:
+                title += u': '
             val = mpp.get(key, None)
             if val:
                 if tag:
                     val = u'<%s>%s</%s>' % (tag, val, tag.split()[0])
-                mpp[key] = u"<span style='font-size: 15px'>%s%s</span><br>\n  " % (title, val)
+                mpp[key] = (u"<span style='font-size: 15px'>"
+                            u"%s%s</span><br>\n  ") % (title, val)
             else:
                 mpp[key] = ''
 
