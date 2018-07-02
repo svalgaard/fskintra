@@ -78,7 +78,7 @@ def parseFrontpage(cname, bs):
                     continue
                 if u'har fødselsdag' in uc:
                     today = unicode(time.strftime(u'%d. %b. %Y'))
-                    c.insert(0, u"\U0001F1E9\U0001F1F0 ")  # Unicode DK Flag
+                    c.append(u" \U0001F1E9\U0001F1F0")  # Unicode DK Flag
                     c.append(bs4.Comment(' I dag er %s ' % today))
                     msg = semail.Message(u'frontpage', unicode(c))
                     msg.addChild(cname)
