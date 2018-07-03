@@ -14,60 +14,49 @@ def contactCard(cname, bs):
     assert(name)
     name = name[0].text.strip()
 
-    # change all the divs+spans into a table
-    for span in bs.findAll('span', 'sk-labeledtext-caption'):
+    # change all the div+div+span's into a table
+    table = bs.find('div', 'text-block')
+    assert(table)  # If this fails, the design has changed drastically
+    table.name = 'table'
+
+    for span in table.select('div > span'):
         span.name = 'td'
-        span['class'] = 'caption'
-    for span in bs.findAll('span', 'sk-labeledtext-value'):
-        span.name = 'td'
-        span['class'] = 'value'
-        span['style'] = 'font-weight: bold;'
-    for div in bs.findAll('div', 'sk-labeledtext'):
-        div.name = 'tr'
-        del div['class']
-    for h2 in bs.findAll('h2', 'title'):
-        title = h2.text.strip()
-        h2.name = 'tr'
-        h2.string = ''
-        h2.append(bs.new_tag(
-            'td', colspan='2',
-            style='font-weight: bold; font-size: 18px; padding-top: 12px'))
-        h2.td.string = title
-    for div in bs.findAll('div', 'section-block'):
+        span.parent.name = 'tr'
+        span['valign'] = 'top'
+        if 'sk-labeledtext-value' in span['class']:
+            span['style'] = 'font-weight:bold;'
+
+    for div in table.findAll('div'):
         div.unwrap()
-    for div in bs.findAll('div', 'section'):
-        div.unwrap()
-    for table in bs.findAll('div', 'text-block'):
-        table.name = 'table'
-    # Insert name of
-    assert(table)  # If this fails, the design has changes drastically
+
+    for h2 in table.select('h2'):
+        h2.wrap(bs.new_tag('tr'))
+        h2.name = 'td'
+        h2['colspan'] = '2'
+        h2['style'] = 'font-weight:bold; font-size:18px; padding-top:12px'
 
     # we do now have two cases depending on whether the image is available
-    img = bs.find('img')
+    photob = bs.find('div', 'photo-block')
+    img = photob.find('img')
 
     if img and 'placeholder' not in img['src']:
         # Image is here
         img['style'] = (
-            'width: auto;'
-            'height: auto;'
-            'max-height: 200px;'
-            'max-width: 200px;')
+            'width:auto;'
+            'height:auto;'
+            'max-height:200px;'
+            'max-width:200px;')
         table.wrap(bs.new_tag('td'))
-        for div in bs.findAll('div', 'photo-block'):
-            div.name = 'td'
-            div['valign'] = 'top'
-            div['style'] = 'padding-right: 15px;'
-        body = bs.find('body')
-        body.name = 'tr'
-        body.wrap(bs.new_tag('table'))
-        bs.table.wrap(bs.new_tag('body'))
+        photob.name = 'td'
+        photob['valign'] = 'top'
+        photob['style'] = 'padding-right: 15px;'
+
+        photob.parent.name = 'tr'
+        photob.parent.wrap(bs.new_tag('table'))
     else:
         # Either no image or image-placeholder is used
-        if img:
-            img.decompose()
-        div = bs.find('div', 'photo-block')
-        if div:
-            div.decompose()
+        if photob:
+            photob.decompose()
 
     msg = semail.Message(u'contact', unicode(bs))
     msg.setTitle(name)
