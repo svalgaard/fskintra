@@ -71,8 +71,14 @@ parser.add_option(
     help=u'Brug konfigurationsfilen FILNAVN - standard: %s' % CONFIG_FN,
     metavar='FILNAVN')
 parser.add_option(
+    '--profile', '-P', dest='profile', default=None,
+    help=u'Brug afsnittet [PROFILE] dernæst [default] fra konfigurationsfilen',
+    metavar='PROFILE')
+parser.add_option(
     '--password', '-p', dest='password', default=None,
-    help=u'Opdatér kodeord. Dette skrives om muligt til konfigurationsfilen',
+    help=u'Opdatér kodeord. Dette skrives om muligt til konfigurationsfilen. '
+         u'Alternativt udskrives det "krypterede" kodeord, så du selv kan '
+         u'rette filen',
     metavar='PASSWORD')
 parser.add_option(
     '--config', dest='doconfig', default=False, action='store_true',
@@ -112,6 +118,7 @@ if options.doconfig and options.password is not None:
 
 CATCHUP = options.catchup
 SKIP_CACHE = options.skipcache
+PROFILE = options.profile or ''
 
 
 # logging levels:
@@ -211,7 +218,22 @@ if options.doconfig:
 
 
 # read configuration
-cfg = ConfigParser.ConfigParser()
+class MyConf(ConfigParser.ConfigParser):
+    def getOpt(self, option, default=None):
+        global PROFILE
+        if PROFILE and self.has_option(PROFILE, option):
+            return self.get(PROFILE, option)
+
+        if self.has_option('default', option):
+            return self.get('default', option)
+
+        if default is not None:
+            return default
+
+        raise ConfigParser.NoOptionError(option, 'default')
+
+
+cfg = MyConf()
 cfg.read(DEFAULT_FN)
 cfg.read(CONFIG_FN)
 
@@ -219,18 +241,26 @@ cfg.read(CONFIG_FN)
 # Maybe write new password to CONFIG_FN
 if options.password is not None:
     pswd = b64enc(options.password)
-    if cfg.get('default', 'password') == pswd:
+    if cfg.getOpt('password', '') == pswd:
         log(u'Nyt kodeord angivet med --password er ens med nuværende'
             u' kodeord i %s' % CONFIG_FN, -2)
     else:
-        cfg.set('default', 'password', pswd)
+        cfg.set(PROFILE or 'default', 'password', pswd)
 
         data = open(CONFIG_FN, 'r').read()
         r = re.compile(ur'(?m)^password\s*=.*$')
-        if not r.findall(data):
+        if PROFILE:
+            log(u'Du har brugt --profile sammen med --password', -2)
+            log(u'I dette tilfælde er du nødt til selv at opdatere '
+                u'konfigurationsfilen %s med' % CONFIG_FN, -2)
+            log(u'password=%s' % pswd)
+            sys.exit(1)
+        elif not r.findall(data):
             log(u'Kan ikke finde linjen med password', -2)
-            log(u'Nyt kodeord bliver ikke skrevet i '
-                u'konfigurationsfilesn %s' % CONFIG_FN, -2)
+            log(u'I dette tilfælde er du nødt til selv at opdatere '
+                u'konfigurationsfilen %s med' % CONFIG_FN, -2)
+            log(u'password=%s' % pswd)
+            sys.exit(1)
         else:
             data = r.sub('password=%s' % pswd, data)
             try:
@@ -243,28 +273,21 @@ if options.password is not None:
                 log(u'Nyt kodeord bliver ikke skrevet', -2)
 
 
-def softGet(cp, section, option, default=''):
-    if cp.has_option(section, option):
-        return cp.get(section, option)
-    else:
-        return default
-
-
 try:
-    LOGINTYPE = softGet(cfg, 'default', 'logintype', 'alm')
-    USERNAME = cfg.get('default', 'username')
-    PASSWORD = cfg.get('default', 'password')
-    HOSTNAME = cfg.get('default', 'hostname')
-    SENDER = cfg.get('default', 'senderemail')
-    EMAIL = cfg.get('default', 'email')
+    LOGINTYPE = cfg.getOpt('logintype', 'alm')
+    USERNAME = cfg.getOpt('username')
+    PASSWORD = cfg.getOpt('password')
+    HOSTNAME = cfg.getOpt('hostname')
+    SENDER = cfg.getOpt('senderemail')
+    EMAIL = cfg.getOpt('email')
     if options.configfilename:
-        CACHEPREFIX = cfg.get('default', 'cacheprefix')
+        CACHEPREFIX = cfg.getOpt('cacheprefix')
     else:
         CACHEPREFIX = ''
-    SMTPHOST = softGet(cfg, 'default', 'smtpserver')
-    SMTPPORT = softGet(cfg, 'default', 'smtpport')
-    SMTPLOGIN = softGet(cfg, 'default', 'smtplogin')
-    SMTPPASS = softGet(cfg, 'default', 'smtppassword')
+    SMTPHOST = cfg.getOpt('smtpserver', '')
+    SMTPPORT = cfg.getOpt('smtpport', '')
+    SMTPLOGIN = cfg.getOpt('smtplogin', '')
+    SMTPPASS = cfg.getOpt('smtppassword', '')
 except ConfigParser.NoOptionError, e:
     parser.error(u'''Konfigurationsfilen '%s' mangler en indstilling for %s.
 Kør først programmet med --config for at sætte det op.
