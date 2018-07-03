@@ -37,6 +37,24 @@ DEFAULT_FN = os.path.join(os.path.dirname(__file__), 'default.inf')
 CONFIG_FN = os.path.join(ROOT, 'skoleintra.txt')
 LOGIN_TYPES = ['alm', 'uni']
 
+
+def ensureDanish():
+    '''Ensure that we can do Danish letters on stderr, stdout by wrapping
+    them using codecs.getwriter if necessary'''
+
+    enc = locale.getpreferredencoding() or 'ascii'
+    test = u'\xe6\xf8\xe5\xc6\xd8\xc5\xe1'.encode(enc, 'replace')
+    if '?' in test or sys.version_info < (2, 6):
+        sys.stderr = codecs.getwriter('UTF-8')(sys.stderr)
+        sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
+
+
+ensureDanish()
+
+# Also ensure that we can parse Danish time stamps
+locale.setlocale(locale.LC_TIME, "da_DK")
+
+
 #
 # Parse command line options
 #
@@ -94,23 +112,6 @@ if options.doconfig and options.password is not None:
 
 CATCHUP = options.catchup
 SKIP_CACHE = options.skipcache
-
-
-def ensureDanish():
-    '''Ensure that we can do Danish letters on stderr, stdout by wrapping
-    them using codecs.getwriter if necessary'''
-
-    enc = locale.getpreferredencoding() or 'ascii'
-    test = u'\xe6\xf8\xe5\xc6\xd8\xc5\xe1'.encode(enc, 'replace')
-    if '?' in test or sys.version_info < (2, 6):
-        sys.stderr = codecs.getwriter('UTF-8')(sys.stderr)
-        sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
-
-
-ensureDanish()
-
-# Also ensure that we can parse Danish time stamps
-locale.setlocale(locale.LC_TIME, "da_DK")
 
 
 # logging levels:
