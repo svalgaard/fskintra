@@ -28,7 +28,10 @@ Nyeste version kan p.t. findes her:
     https://github.com/svalgaard/fskintra
 
 Når det har kørt i et stykke tid, skiftes over, så denne version bliver
-"standard versionen" og den gamle fskintra skal findes i en undermappe.
+"standard versionen".
+
+Medmindre du selv har lyst til at kigge på Python kode, bør du nok vente lidt
+med at skifte over til at bruge den nye version lidt endnu.
 
 Eksempel
 ========
