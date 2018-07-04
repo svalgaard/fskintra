@@ -10,7 +10,6 @@ MAX_CACHE_AGE = .99
 
 
 def docFindDocuments(cname, rootTitle, bs, title):
-
     folder = rootTitle
     if title:
         folder += u' / ' + title.replace(u'>', u'/')
@@ -67,8 +66,3 @@ def skoleDocuments(cname):
                 bs = surllib.skoleGetURL(url, True, MAX_CACHE_AGE, None, True)
 
                 docFindDocuments(cname, rootTitle, bs, title)
-
-
-if __name__ == '__main__':
-    # test
-    skoleDocuments()

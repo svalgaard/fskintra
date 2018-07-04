@@ -4,8 +4,6 @@ import config
 import surllib
 import re
 
-NAMES_IGNORE = [u'Skolebestyrelsen', u'Kontaktforældre']
-
 # map of children => urlPrefix
 # 'Andrea 0A' => '/parent/1234/Andrea/'
 _children = None
