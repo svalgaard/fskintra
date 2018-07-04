@@ -71,6 +71,7 @@ class Browser(mechanize.Browser):
             'index': None,
             'dialogue': None,
         }
+        self.firstPass = True
 
         # Load browser state
         sfn = self._browser_state_filename()
@@ -100,15 +101,17 @@ class Browser(mechanize.Browser):
         fd.close()
 
     def open(self, url, *args, **aargs):
+        ofp, self.firstPass = self.firstPass, False
         if type(url) in [str, unicode]:
             furl = url
         else:
             furl = url.get_full_url()
-        config.log('Browser.open == %s' % furl, 3)
+        config.log('Browser.open == %s' % furl, 4)
         resp = mechanize.Browser.open(self, url, *args, **aargs)
         surl = resp.geturl()
-        config.log('Browser.open => %s' % surl, 3)
-        if re.match('.*/parent/[0-9]*/[^/]*/Index', surl):
+        config.log('Browser.open => %s' % surl, 4)
+        self.firstPass = ofp
+        if ofp and re.match('.*/parent/[0-9]*/[^/]*/Index', surl):
             self.state['index'] = absurl(surl)
             for a in br.links(text_regex=re.compile('Besked')):
                 dt = a.url.split('/')[-1]
@@ -193,9 +196,25 @@ def skoleLogin():
 
         if url.startswith('https://login.emu.dk/'):
             config.log(u'Uni-login med brugernavn %r' % config.USERNAME, 3)
+
+            if 'forkert brugernavn' in data.lower():
+                config.log(u'Log ind giver en fejlmeddelse -- '
+                           u'har du angivet korrekt kodeord?')
+                config.log(u'Check konfigurationsfilen, angiv evt. nyt '
+                           u'kodeord med --password eller --config ELLER '
+                           u'prøv igen senere...', -2)
+                sys.exit(1)
+
             assert(config.LOGINTYPE != 'alm')  # This must be uni login
-            br['user'] = 'TEST'
-            br['pass'] = sys.argv[1]
+            for form in br.forms():
+                if form.attrs.get('id') == 'pwd':
+                    br.form = form
+                    break
+            else:
+                config.log(u'Kunne ikke finde logind formular på %s' % url, -1)
+                sys.exit(1)
+            br['user'] = config.USERNAME
+            br['pass'] = config.PASSWORD
             resp = br.submit()
             continue
 
@@ -204,9 +223,9 @@ def skoleLogin():
                 and 'UserName' in br and 'Password' in br:
 
             if 'ikke adgang' in data:
-                config.log(u'Logind giver en fejlmeddelse -- '
-                           u'har du angivet korrekt kodeord? '
-                           u'Check konfigurationsfilen, angiv evt. nyt '
+                config.log(u'Log ind giver en fejlmeddelse -- '
+                           u'har du angivet korrekt kodeord?')
+                config.log(u'Check konfigurationsfilen, angiv evt. nyt '
                            u'kodeord med --password eller --config ELLER '
                            u'prøv igen senere...', -2)
                 sys.exit(1)
@@ -214,8 +233,8 @@ def skoleLogin():
             # this is the main login page
             if config.LOGINTYPE != 'alm':
                 # UNI-login
-                links = br.links(url_regex=re.compile(
-                    '.*RedirectToUniLogin.*'))
+                links = list(br.links(url_regex=re.compile(
+                    '.*RedirectToUniLogin.*')))
                 if not links:
                     config.log(u'Kan IKKE finde LOG PÅ MED UNILOGIN '
                                u'linket på siden?', -1)
@@ -228,7 +247,7 @@ def skoleLogin():
                            config.USERNAME, 3)
                 # "Ordinary login"
                 br['UserName'] = config.USERNAME
-                br['Password'] = config.b64dec(config.PASSWORD)
+                br['Password'] = config.PASSWORD
                 resp = br.submit()
                 continue
         break

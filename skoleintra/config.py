@@ -145,8 +145,9 @@ def b64enc(pswd):
 
 
 def b64dec(pswd):
-    assert(pswd.startswith('pswd:'))
-    return pswd[5:].decode('base64')
+    if pswd.startswith('pswd:'):
+        return pswd[5:].decode('base64')
+    return pswd
 
 
 if options.doconfig:
@@ -279,7 +280,7 @@ if options.password is not None:
 try:
     LOGINTYPE = cfg.getOpt('logintype', 'alm')
     USERNAME = cfg.getOpt('username')
-    PASSWORD = cfg.getOpt('password')
+    PASSWORD = b64dec(cfg.getOpt('password'))
     HOSTNAME = cfg.getOpt('hostname')
     SENDER = cfg.getOpt('senderemail')
     EMAIL = cfg.getOpt('email')
@@ -324,8 +325,7 @@ smtpport=25.'''.strip() % (CONFIG_FN, repr(SMTPPORT)))
         SMTPPASS = ''
 
     if SMTPPASS:
-        if SMTPPASS.startswith('pswd:'):
-            SMTPPASS = b64dec(SMTPPASS)
+        SMTPPASS = b64dec(SMTPPASS)
 else:
     SMTPPORT = ''
     SMTPLOGIN = ''
