@@ -35,7 +35,6 @@ except ImportError:
     sys.exit(1)
 
 ROOT = os.path.expanduser('~/.skoleintra/')
-DEFAULT_FN = os.path.join(os.path.dirname(__file__), 'default.inf')
 CONFIG_FN = os.path.join(ROOT, 'skoleintra.txt')
 LOGIN_TYPES = ['alm', 'uni']
 
@@ -70,8 +69,8 @@ parser.add_option(
     help=u"Vis denne besked og afslut")
 parser.add_option(
     '--config-file', dest='configfilename', default=None,
-    help=u'Brug konfigurationsfilen FILNAVN - standard: %s' % CONFIG_FN,
-    metavar='FILNAVN')
+    help=u'Brug konfigurationsfilen FILENAME - standard: %s' % CONFIG_FN,
+    metavar='FILENAME')
 parser.add_option(
     '--profile', '-P', dest='profile', default=None,
     help=u'Brug afsnittet [PROFILE] dernæst [default] fra konfigurationsfilen',
@@ -103,38 +102,37 @@ parser.add_option(
 if args:
     parser.error(u'Ukendte argumenter: %s' % ' '.join(args))
 
-options.verbosity = max(sum(options.verbosity), 0)
-
-CONFIG_FN = os.path.expanduser(CONFIG_FN)
 if options.configfilename:
-    TMP = os.path.expanduser(options.configfilename)
-    if not os.path.samefile(CONFIG_FN, TMP):
-        CONFIG_FN = TMP
+    CONFIG_FN = os.path.expanduser(options.configfilename)
 if not os.path.isfile(CONFIG_FN) and not options.doconfig:
     parser.error(u'''Kan ikke finde konfigurationsfilen
 %s
 Kør først programmet med --config for at sætte det op.''' % CONFIG_FN)
 
-if options.doconfig and options.password is not None:
-    parser.error(u'''--config og --password kan ikke bruges samtidigt''')
+if options.doconfig:
+    if options.password is not None:
+        parser.error(u'--config og --password kan ikke bruges samtidigt')
+    if options.profile:
+        parser.error(u'--config og --profile kan ikke bruges samtidigt')
 
+PROFILE = options.profile or ''
 CATCHUP = options.catchup
 SKIP_CACHE = options.skipcache
-PROFILE = options.profile or ''
 
 
 # logging levels:
-#  0 some important stuff (requires -q)
-#  1 requires one         (default value)
+#  0 only important stuff (always printed)
+#  1 requires one         (default value, requires -q to ignore)
 #  2 tiny log messages    (requires -v)
-VERBOSE = options.verbosity
+#  3 micro log messages   (requires -vv)
+VERBOSE = max(sum(options.verbosity), 0)
 
 
 def log(s, level=1):
     if type(level) != int:
-        raise Exception(u'level must be an int, not %s' % repr(level))
+        raise Exception(u'level SKAL være et tal, ikke %r' % level)
     if level <= VERBOSE:
-        sys.stderr.write('%s\n' % s)
+        sys.stderr.write(u'%s\n' % s)
         sys.stderr.flush()
 
 
@@ -236,9 +234,13 @@ class MyConf(ConfigParser.ConfigParser):
 
 
 cfg = MyConf()
-cfg.read(DEFAULT_FN)
 cfg.read(CONFIG_FN)
 
+if PROFILE and not cfg.has_section(PROFILE):
+    log((u'Konfigurationsfilen %s har ikke afsnittet [%s] '
+         u'angivet med --profile') %
+        (CONFIG_FN, repr(PROFILE)[1:-1]))
+    sys.exit(1)
 
 # Maybe write new password to CONFIG_FN
 if options.password is not None:
@@ -256,13 +258,11 @@ if options.password is not None:
             log(u'I dette tilfælde er du nødt til selv at opdatere '
                 u'konfigurationsfilen %s med' % CONFIG_FN, -2)
             log(u'password=%s' % pswd)
-            sys.exit(1)
         elif not r.findall(data):
             log(u'Kan ikke finde linjen med password', -2)
             log(u'I dette tilfælde er du nødt til selv at opdatere '
                 u'konfigurationsfilen %s med' % CONFIG_FN, -2)
             log(u'password=%s' % pswd)
-            sys.exit(1)
         else:
             data = r.sub('password=%s' % pswd, data)
             try:
@@ -273,6 +273,7 @@ if options.password is not None:
                 log(u'Kan ikke skrive til '
                     u'konfigurationsfilen %s' % CONFIG_FN, -2)
                 log(u'Nyt kodeord bliver ikke skrevet', -2)
+    sys.exit(1)
 
 
 try:
