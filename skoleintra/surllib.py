@@ -79,8 +79,8 @@ class Browser(mechanize.Browser):
                 config.log(u'Indlæser tidligere browsertilstand fra %s' % sfn)
                 self._cj.load(sfn, True, True)
                 for st in open(sfn).read().strip().split('\n'):
-                    if st.startswith('# fskintra:'):
-                        sp = st.split()
+                    sp = st.split()
+                    if st.startswith('# fskintra: ') and len(sp) == 4:
                         self.state[sp[-2]] = sp[-1]
             else:
                 config.log(u'Indlæser ikke tidligere browsertilstand '
@@ -95,16 +95,19 @@ class Browser(mechanize.Browser):
         self._cj.save(sfn, ignore_discard=True, ignore_expires=True)
         fd = open(sfn, 'a')
         for (k, v) in sorted(self.state.items()):
-            fd.write('# fskintra: %s %s\n' % (k, v))
+            if v:
+                fd.write('# fskintra: %s %s\n' % (k, v))
         fd.close()
 
     def open(self, url, *args, **aargs):
         if type(url) in [str, unicode]:
-            surl = url
+            furl = url
         else:
-            surl = url.get_full_url()
-        config.log('Browser.open %s' % surl, 3)
+            furl = url.get_full_url()
+        config.log('Browser.open == %s' % furl, 3)
         resp = mechanize.Browser.open(self, url, *args, **aargs)
+        surl = resp.geturl()
+        config.log('Browser.open => %s' % surl, 3)
         if re.match('.*/parent/[0-9]*/[^/]*/Index', surl):
             self.state['index'] = absurl(surl)
             for a in br.links(text_regex=re.compile('Besked')):
@@ -169,7 +172,7 @@ def skoleLogin():
     for round in range(5):  # try at most 5 times before failing
         url = resp.geturl()
         data = resp.read()
-        config.log(u'Login næste skridt %s' % url, 3)
+        config.log(u'Login skridt %d: %s' % (round + 1, url), 3)
 
         forms = list(br.forms())
         if len(forms) == 1:
