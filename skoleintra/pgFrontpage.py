@@ -33,7 +33,9 @@ def parseFrontpageItem(cname, div):
     body = div.findAll('div', 'sk-user-input')[0]
     msg = semail.Message(cname, 'frp', unicode(body)+cdiv)
 
-    msg.setTitle(body.get_text('\n').strip().split('\n')[0].strip(), True)
+    title = body.get_text('\n').strip().split('\n')[0]
+    title = ' '.join(title.replace(u'\xa0', ' ').strip().rstrip(' .').split())
+    msg.setTitle(title, True)
     msg.setMessageID(div['data-feed-item-id'])
     msg.setSender(author.span.text)
 
