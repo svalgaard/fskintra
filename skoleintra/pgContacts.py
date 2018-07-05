@@ -58,9 +58,9 @@ def contactCard(cname, bs):
         if photob:
             photob.decompose()
 
-    msg = semail.Message(u'contact', unicode(bs))
+    msg = semail.Message(cname, 'ctc', unicode(bs))
     msg.setTitle(name)
-    msg.addChild(cname)
+    msg.setMessageID(bs.url.split('/')[-1])
     msg.maybeSend()
 
 

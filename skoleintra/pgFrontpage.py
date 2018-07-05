@@ -31,12 +31,10 @@ def parseFrontpageItem(cname, div):
 
     author = div.find('div', 'sk-news-item-author')
     body = div.findAll('div', 'sk-user-input')[0]
-    msg = semail.Message(u'frontpage', unicode(body)+cdiv)
-    msg.addChild(cname)
+    msg = semail.Message(cname, 'frp', unicode(body)+cdiv)
 
     msg.setTitle(body.get_text('\n').strip().split('\n')[0].strip(), True)
-    # Do not use the msgid as we then may not notice updates
-    # msg.setMessageID(div['data-feed-item-id'])
+    msg.setMessageID(div['data-feed-item-id'])
     msg.setSender(author.span.text)
 
     # find list of reciepients
@@ -80,8 +78,7 @@ def parseFrontpage(cname, bs):
                     today = unicode(time.strftime(u'%d. %b. %Y'))
                     c.append(u" \U0001F1E9\U0001F1F0")  # Unicode DK Flag
                     c.append(bs4.Comment(' I dag er %s ' % today))
-                    msg = semail.Message(u'frontpage', unicode(c))
-                    msg.addChild(cname)
+                    msg = semail.Message(cname, 'frp', unicode(c))
                     msg.setTitle(c.text.strip())
                     msg.setDateTime(today)
 

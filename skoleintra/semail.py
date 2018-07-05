@@ -72,15 +72,16 @@ def generateMIMEAttachment(path, data, usefilename=None):
 
 
 class Message:
-    def __init__(self, tp, html):
+    def __init__(self, cname, tp, html):
         self.mp = {}
 
-        assert(type(tp) == unicode)
-        self.mp['type'] = tp  # frontpage or ...
+        assert(type(cname) == unicode and cname)
+        self.mp['children'] = [cname]
+        assert(type(tp) == str and len(tp) == 3)
+        self.mp['type'] = tp  # msg or ...
         assert(type(html) == unicode)
         self.mp['html'] = html  # html content
 
-        self.mp['children'] = []
         self.mp['title'] = None
         self.mp['sender'] = None
         self.mp['recipient'] = None
@@ -91,13 +92,14 @@ class Message:
         self.mp['date_string'] = self.mp['date']
         self.mp['mid'] = None
         self.mp['attatchments'] = []
+        self.mp['md5'] = ''
         self._email = None
 
     def __repr__(self):
         txt = u'<semail.Message'
-        keys = 'type,mid,date,time,title,sender'.split(',')
+        keys = 'type,mid,date,title,sender'.split(',')
         for key in keys:
-            if key in self.mp and self.mp[key]:
+            if self.mp.get(key):
                 txt += u' %s=%s' % (key, repr(self.mp[key]))
         txt += u'>'
         return txt
@@ -109,7 +111,7 @@ class Message:
         self.mp['title'] = title
 
     def addChild(self, cname):
-        assert(type(cname) == unicode)
+        assert(type(cname) == unicode and cname)
         if cname not in self.mp['children']:
             self.mp['children'].append(cname)
 
@@ -124,7 +126,7 @@ class Message:
             # 25. jun. 2018 16:26
             ts = time.strptime(dt2, '%d %b %Y %H:%M')
         except ValueError:
-            config.log(u'Ukendt tidsstempel %r' % dt)
+            config.log(u'Ukendt tidsstempel %r' % dt, -1)
             assert(False)  # FIXME We should never be here
 
         self.mp['date_string'] = dt
@@ -154,8 +156,9 @@ class Message:
         self.mp['cc'] = cc
 
     def setMessageID(self, *mid):
-        assert(type(mid) == tuple)
-        self.mp['mid'] = u'--'.join(mid)
+        assert(mid)
+        self.mp['mid'] = '--'.join(str(m) for m in mid)
+        assert(type(self.mp['mid']) == str)  # mid must be ascii
 
     def addAttachment(self, url, text):
         assert(type(url) in [str, unicode])
@@ -167,27 +170,35 @@ class Message:
         if not self.mp.get('md5', None):
             keys = 'type,date,title,html'.split(',')
             txt = u' '.join([self.mp[x] for x in keys if self.mp.get(x, None)])
-            self.mp['md5'] = unicode(md5.md5(txt.encode('utf-8')).hexdigest())
+            self.mp['md5'] = md5.md5(txt.encode('utf-8')).hexdigest()
 
     def getMessageID(self):
+        '''Format: type--md5(--mid), e.g.,
+frp--625922d86ffef60cfef5efc7822a7cff
+msg--625922d86ffef60cfef5efc7822a7cff--123456'''
+
+        # ensure that md5 has been calculated
         self.prepareMessage()
+
+        m = '%(type)s--%(md5)s' % self.mp
         if self.mp.get('mid', None):
-            return self.mp['md5'] + '--' + self.mp['mid']
-        else:
-            return self.mp['md5']
+            m += '--%(mid)s' % self.mp
+        assert(type(m) == str)
+        assert('/' not in m)
+
+        return m
 
     def getLongMessageID(self):
+        '''Format: 'date--' + short MessageID'''
+
         return '%s--%s' % (self.mp['date'], self.getMessageID())
 
     def hasBeenSent(self):
         ''' Tests whether this email has previously been sent'''
         self.prepareMessage()
-        path = os.path.join(config.MSG_DN, '%s%s%s')
-        if glob.glob(path % ('*--', self.mp['md5'], '*')):
-            return True
-        if self.mp.get('mid', None):
-            return bool(glob.glob(path % ('*', '--', self.mp['mid'])))
-        return False
+
+        # Check only type and md5
+        return hasSentMessage(tp=self.mp['type'], md5=self.mp['md5'])
 
     def store(self):
         mid = self.getMessageID()
@@ -418,9 +429,27 @@ class Message:
         self.store()
 
 
-def hasSentMessage(*lmid):
-    mid = u'--'.join(lmid)
-    path = os.path.join(config.MSG_DN, '*%s*' % mid)
-    if glob.glob(path):
-        return True
-    return False
+def hasSentMessage(date='', tp='', md5='', mid=''):
+
+    if not date:
+        date = '?' * 10
+    if not tp:
+        tp = '?' * 3
+    if not md5:
+        md5 = '?' * 32
+    if type(mid) in [list, tuple]:
+        mid = str('--'.join(mid))
+
+    spath = '--'.join((date, tp, md5))
+
+    if mid:
+        spath += '--' + mid
+    else:
+        spath += '*'
+
+    path = os.path.join(config.MSG_DN, spath)
+
+    assert(type(path) == str)
+    assert('/' not in spath)
+
+    return bool(glob.glob(path))

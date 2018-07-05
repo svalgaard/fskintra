@@ -20,9 +20,8 @@ Output is an semail.Message ready to be sent'''
     if msg['PreviousMessagesText']:
         html += u'<div class="prev">%s</div>\n' % msg['PreviousMessagesText']
 
-    emsg = semail.Message(u'message', html)
-    emsg.addChild(cname)
-    emsg.setMessageID(threadId, unicode(msg["Id"]))
+    emsg = semail.Message(cname, 'msg', html)
+    emsg.setMessageID(threadId, str(msg["Id"]))
     emsg.setTitle(msg['Subject'])
     emsg.setDateTime(msg['SentReceivedDateText'])
     emsg.setRecipient(msg['Recipients'])
@@ -61,7 +60,7 @@ def parseMessages(cname, bs):
                         % (i, tid, lmid), -1)
             continue
 
-        if semail.hasSentMessage(tid, lmid):
+        if semail.hasSentMessage(tp='msg', mid=(tid, lmid)):
             continue
 
         # This last messages has not been seen - load the entire conversation
@@ -85,7 +84,7 @@ def parseMessages(cname, bs):
         assert(type(msgs) == list)
         for msg in msgs[::-1]:
             mid = unicode(msg.get('Id'))
-            if semail.hasSentMessage(tid, mid):
+            if semail.hasSentMessage(tp='msg', mid=(tid, mid)):
                 continue
 
             # Generate new messages with this content

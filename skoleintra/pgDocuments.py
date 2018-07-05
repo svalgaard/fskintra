@@ -36,11 +36,11 @@ def docFindDocuments(cname, rootTitle, bs, title):
             h.span.string = folder
             h.b.string = docTitle
 
-            msg = semail.Message(u'doc', unicode(h))
+            msg = semail.Message(cname, 'doc', unicode(h))
             msg.setTitle(sfn)
             msg.setDateTime(docDate)
             msg.addAttachment(url, docTitle)
-            msg.addChild(cname)
+            msg.setMessageID(url.split('/')[-1])
             msg.maybeSend()
 
 
