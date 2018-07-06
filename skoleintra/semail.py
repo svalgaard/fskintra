@@ -90,6 +90,7 @@ class Message:
         self.mp['date_ts'] = time.localtime()
         self.mp['date'] = time.strftime('%Y-%m-%d', self.mp['date_ts'])
         self.mp['date_string'] = self.mp['date']
+        self.mp['date-set'] = False
         self.mp['mid'] = None
         self.mp['attatchments'] = []
         self.mp['md5'] = ''
@@ -132,6 +133,7 @@ class Message:
         self.mp['date_string'] = dt
         self.mp['date_ts'] = ts
         self.mp['date'] = time.strftime('%Y-%m-%d', ts)
+        self.mp['date-set'] = True
 
     def setSender(self, sender):
         assert(type(sender) == unicode)
@@ -169,6 +171,8 @@ class Message:
         # add missing fields, if any
         if not self.mp.get('md5', None):
             keys = 'type,date,title,html'.split(',')
+            if not self.mp['date-set']:
+                keys.remove('date')
             txt = u' '.join([self.mp[x] for x in keys if self.mp.get(x, None)])
             self.mp['md5'] = md5.md5(txt.encode('utf-8')).hexdigest()
 
