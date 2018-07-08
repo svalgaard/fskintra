@@ -73,20 +73,24 @@ Krav
 * Python 2.7.x (ikke 3.x!)
 * Pythonpakker: mechanize (0.3.x), BeautifulSoup (4.x), lxml (4.x)
 
-Du kan få de krævede pythonpakker i Ubuntu 18.04 ved at køre
+Pythonpakkerne findes i de fleste linux distributioner, men pt ikke i
+versioner der er nye nok, fx findes Mechanize pakken i Ubuntu 18.04 kun i
+version 0.2.x.
 
-    user@sputnik:~$ sudo apt install python python-pip python-lxml python-bs4
-    user@sputnik:~$ sudo pip2 install mechanize
+Den bedste løsning er derfor at bruge Python PIP, hvor selve pip nok findes
+i dit Linux/Mac pakkesystem:
 
-NB: Mechanize pakken findes i Ubuntu, men kun i version 0.2.x.
-
-Alternativt kan du bruge pip:
-
-    # Check først at det er pip til Python 2.x du bruger:
+    # Check først at det er pip til Python 2.x du bruger,
+    # muligvis hedder programmet pip2 eller lignende:
     user@sputnik:~$ pip -V
     pip 10.0.1 from /.../pip (python 2.7)
 
     user@sputnik:~$ sudo pip install lxml beautifulsoup4 mechanize
+
+Pakkerne kan installeres i dit hjemmekatalog, så de ikke forstyrer  de python pakker der er installeret via dit
+rigtige pakkesystem (apt/npm/yum):
+
+    user@sputnik:~$ sudo pip install --user lxml beautifulsoup4 mechanize
 
 
 HOWTO
