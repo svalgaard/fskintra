@@ -44,6 +44,7 @@ def headerEncodeField(f):
 def generateMIMEAttachment(path, data, usefilename=None):
     fn = usefilename if usefilename else os.path.basename(path)
     fn = urllib.unquote(fn)
+    fn = fn.replace('.asp', '.asp.html')
     ctype, encoding = mimetypes.guess_type(fn)
     if ctype is None or encoding is not None:
         # No guess could be made, or the file is encoded (compressed), so
