@@ -4,20 +4,22 @@
 # email validator
 # http://tools.ietf.org/tools/msglint/
 #
-import config
-import md5
-import socket
-import surllib
-import time
-import os
-import glob
+
 import codecs
+import glob
+import imghdr
+import md5
+import mimetypes
+import os
 import shutil
 import smtplib
-import mimetypes
+import socket
 import urllib
 import urllib2
-import imghdr
+import time
+
+import config
+import surllib
 
 import email
 from email import encoders

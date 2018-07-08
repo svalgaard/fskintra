@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
-import os
-import sys
-import ConfigParser
 import codecs
-import locale
+import ConfigParser
 import getpass
+import locale
 import optparse
-import time
+import os
 import re
+import sys
+import time
 
 #
 # Check whether our non-default dependencies are here

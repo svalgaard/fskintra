@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 
+import bs4
+import cgi
 import cookielib
+import datetime
+import mechanize
+import os
+import re
+import sys
+import time
 import urllib
 import urllib2
-import config
-import mechanize
-import bs4
 import urlparse
-import cgi
-import os
-import sys
-import re
-import datetime
-import time
+
+import config
 
 
 def absurl(url):

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import re
+
 import config
 import surllib
-import re
 
 # map of children => urlPrefix
 # 'Andrea 0A' => '/parent/1234/Andrea/'
