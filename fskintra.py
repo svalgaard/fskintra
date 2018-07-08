@@ -8,11 +8,17 @@ import skoleintra.pgContacts
 import skoleintra.pgDialogue
 import skoleintra.pgDocuments
 
-cnames = skoleintra.schildren.getChildren()
 
-skoleintra.pgFrontpage.skoleFrontpage(cnames)
-skoleintra.pgDialogue.skoleDialogue(cnames)
+def main():
+    cnames = skoleintra.schildren.getChildren()
 
-for cname in cnames:
-    skoleintra.pgContacts.skoleContacts(cname)
-    skoleintra.pgDocuments.skoleDocuments(cname)
+    skoleintra.pgFrontpage.skoleFrontpage(cnames)
+    skoleintra.pgDialogue.skoleDialogue(cnames)
+
+    for cname in cnames:
+        skoleintra.pgContacts.skoleContacts(cname)
+        skoleintra.pgDocuments.skoleDocuments(cname)
+
+
+if __name__ == '__main__':
+    main()
