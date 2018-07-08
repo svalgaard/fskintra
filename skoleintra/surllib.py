@@ -115,10 +115,8 @@ class Browser(mechanize.Browser):
             self.state['index'] = absurl(surl)
             for a in br.links(text_regex=re.compile('Besked')):
                 dt = a.url.split('/')[-1]
-                if dt in ['conversations', 'inbox']:
+                if dt:
                     self.state['dialogue'] = dt
-                else:
-                    config.log(u'Ukendt beskedforsideurl %s' % a.url, 2)
 
         self.save_state()
         return resp
