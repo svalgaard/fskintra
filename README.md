@@ -71,7 +71,7 @@ Krav
 ====
 
 * Python 2.7.x (ikke 3.x!)
-* Pythonpakker: mechanize (0.3.x), BeautifulSoup (4.x), lxml (4.x)
+* Pythonpakker: mechanize (0.3.6), BeautifulSoup (4.5.x), lxml (4.2.x)
 
 Pythonpakkerne findes i de fleste linux distributioner, men pt ikke i
 versioner der er nye nok, fx findes Mechanize pakken i Ubuntu 18.04 kun i
