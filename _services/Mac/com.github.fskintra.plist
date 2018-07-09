@@ -10,7 +10,10 @@
 ====   nano ~/Library/LaunchAgents/com.github.fskintra.plist
 ==== Sæt launchd til at køre scriptet
 ====   launchctl load -w ~/Library/LaunchAgents/com.github.fskintra.plist
+==== Stop launchd i at køre scriptet
+====   launchctl unload -w ~/Library/LaunchAgents/com.github.fskintra.plist
 ====
+==== Husk at tjekke indholdet i /tmp/fskintra.log og /tmp/fskintra-error.log
 =================================================================== -->
 <dict>
     <key>Label</key>
@@ -27,5 +30,6 @@
     <key>StandardOutPath</key>
     <string>/tmp/fskintra.log</string>
     <key>StandardErrorPath</key>
-    <string>/tmp/fskintra-error.log</string></dict>
+    <string>/tmp/fskintra-error.log</string>
+</dict>
 </plist>
