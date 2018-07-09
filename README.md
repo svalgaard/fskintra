@@ -74,7 +74,7 @@ Krav
 * Pythonpakker: mechanize (0.3.6), BeautifulSoup (4.5.x), lxml (4.2.x)
 
 Pythonpakkerne findes i de fleste linux distributioner, men pt ikke i
-versioner der er nye nok, fx findes Mechanize pakken i Ubuntu 18.04 kun i
+versioner der er nye nok. Fx findes Mechanize pakken i Ubuntu 18.04 kun i
 version 0.2.x.
 
 Den bedste løsning er derfor at bruge Python PIP, hvor selve pip nok findes
@@ -82,15 +82,15 @@ i dit Linux/Mac pakkesystem:
 
     # Check først at det er pip til Python 2.x du bruger,
     # muligvis hedder programmet pip2 eller lignende:
-    user@sputnik:~$ pip -V
+    user@sputnik:~/path/to/fsk$ pip -V
     pip 10.0.1 from /.../pip (python 2.7)
 
-    user@sputnik:~$ sudo pip install lxml beautifulsoup4 mechanize
+    user@sputnik:~/path/to/fsk$ sudo pip install -r requirements.txt
 
-Pakkerne kan installeres i dit hjemmekatalog, så de ikke forstyrer  de python pakker der er installeret via dit
-rigtige pakkesystem (apt/npm/yum):
+Pakkerne kan installeres i dit hjemmekatalog, så de ikke forstyrer de
+pythonpakker der er installeret via dit rigtige pakkesystem (apt/npm/yum):
 
-    user@sputnik:~$ sudo pip install --user lxml beautifulsoup4 mechanize
+    user@sputnik:~/path/to/fsk$ sudo pip install --user -r requirements.txt
 
 
 HOWTO
