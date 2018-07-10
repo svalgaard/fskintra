@@ -91,6 +91,9 @@ parser.add_option(
     '--catchup', '-c', dest='catchup', default=False, action='store_true',
     help=u'Hent & marker alt indhold som set uden at sende nogen e-mails')
 parser.add_option(
+    '--quick', '-Q', dest='full_update', default=True, action='store_false',
+    help=u'Kør ikke fuld check af alle sider medmindre der forventes nyt')
+parser.add_option(
     '-v', '--verbose', action='append_const', const=1, dest='verbosity',
     help=u'Skriv flere log-linjer', default=[1])
 parser.add_option(
@@ -117,6 +120,7 @@ if options.doconfig:
 
 PROFILE = options.profile or ''
 CATCHUP = options.catchup
+FULL_UPDATE = options.full_update
 SKIP_CACHE = options.skipcache
 
 

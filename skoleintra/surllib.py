@@ -71,6 +71,8 @@ class Browser(mechanize.Browser):
         self.state = {
             'index': None,
             'dialogue': None,
+            'lastUpdateTime': None,
+            'lastUpdateURL': None,
         }
         self.firstPass = True
 
@@ -92,7 +94,7 @@ class Browser(mechanize.Browser):
         fn = '%s-%s.state' % (config.HOSTNAME, config.USERNAME)
         return os.path.join(config.CACHE_DN, fn)
 
-    def save_state(self):
+    def saveState(self):
         sfn = self._browser_state_filename()
         self._cj.save(sfn, ignore_discard=True, ignore_expires=True)
         fd = open(sfn, 'a')
@@ -119,11 +121,17 @@ class Browser(mechanize.Browser):
                 if dt:
                     self.state['dialogue'] = dt
 
-        self.save_state()
+        self.saveState()
         return resp
 
     def getState(self, key):
-        return self.state[key]
+        return self.state.get(key)
+
+    def setState(self, key, value):
+        assert(type(value) == str)
+        self.state[key] = value.strip()
+        if not self.state[key]:
+            del self.state[key]
 
 
 def getBrowser():
