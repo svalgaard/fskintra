@@ -207,7 +207,7 @@ def getMsgsForChild(cname):
 
 def skoleDialogue(cnames):
     msgs = collections.OrderedDict()
-    for cname in cnames[:1]:
+    for cname in cnames:
         for msg in getMsgsForChild(cname):
             if msg.hasBeenSent():
                 continue
