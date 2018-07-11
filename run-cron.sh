@@ -7,4 +7,4 @@
 ROOT="$(dirname "$0")"
 cd "$ROOT"
 
-python ./fskintra.py
+python ./fskintra.py --quick
