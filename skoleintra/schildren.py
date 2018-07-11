@@ -14,7 +14,7 @@ def getChildren():
     '''Returns of list of "available" children in the system'''
     global _children
 
-    def ckey(n): tuple(n.rsplit(' ', 1)[::-1])
+    def ckey(n): return tuple(n.rsplit(' ', 1)[::-1])
 
     if not _children:
         _children = dict()
