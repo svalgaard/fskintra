@@ -80,7 +80,7 @@ class Browser(mechanize.Browser):
         sfn = self._browser_state_filename()
         if os.path.isfile(sfn):
             if not config.SKIP_CACHE:
-                config.log(u'Indlæser tidligere browsertilstand fra %s' % sfn)
+                config.log(u'Henter tidligere browsertilstand fra %s' % sfn, 2)
                 self._cj.load(sfn, True, True)
                 for st in open(sfn).read().strip().split('\n'):
                     sp = st.split()
@@ -156,7 +156,7 @@ def skoleLogin():
     br = getBrowser()
     config.log(u'Login', 2)
 
-    config.log(u'Login på skoleintra')
+    config.log(u'Log ind på ForældreIntra')
     url = u'https://%s/Account/IdpLogin' % config.HOSTNAME
     if br.getState('index'):
         url = br.getState('index')
@@ -179,10 +179,11 @@ def skoleLogin():
                    u'og prøv evt. igen senere', -1)
         sys.exit(1)
 
-    for round in range(5):  # try at most 5 times before failing
+    N = 5
+    for round in range(N):  # try at most N times before failing
         url = resp.geturl()
         data = resp.read()
-        config.log(u'Login skridt %d: %s' % (round + 1, url), 3)
+        config.log(u'Log ind skridt %d/%d: %s' % (round + 1, N, url), 3)
 
         forms = list(br.forms())
         if len(forms) == 1:
@@ -190,7 +191,7 @@ def skoleLogin():
 
         if url == br.getState('index') and data:
             # we are fine / logged in
-            config.log(u'Succesfuldt log ind til %s' % url, 1)
+            config.log(u'Succesfuldt log ind til %s' % url, 2)
             _skole_login_done = beautify(data)
             return _skole_login_done
 
