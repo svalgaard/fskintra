@@ -3,17 +3,7 @@
 <plist version="1.0">
 <!-- =================================================================
 ==== Denne fil kan bruges til at køre fskintra som et Mac cron job.
-====
-==== Installation:
-====   cp _services/Mac/com.github.fskintra.plist ~/Library/LaunchAgents/
-==== Ret filen til så stien til run-cron.sh (se nedenfor) passer
-====   nano ~/Library/LaunchAgents/com.github.fskintra.plist
-==== Sæt launchd til at køre scriptet
-====   launchctl load -w ~/Library/LaunchAgents/com.github.fskintra.plist
-==== Stop launchd i at køre scriptet
-====   launchctl unload -w ~/Library/LaunchAgents/com.github.fskintra.plist
-====
-==== Husk at tjekke indholdet i /tmp/fskintra.log og /tmp/fskintra-error.log
+==== Se yderligere information i doc/cron.md
 =================================================================== -->
 <dict>
     <key>Label</key>
@@ -23,9 +13,9 @@
         <!-- Opdater med den fulde sti til hvor run-cron.sh kan findes -->
         <string>/Users/USERNAME/sti/til/fskintra/run-cron.sh</string>
     </array>
-    <!-- Kør programmet hver 1/2 time, dva. 1800 sekunder -->
+    <!-- Kør programmet hver 2. time, dvs. 7200 sekunder -->
     <key>StartInterval</key>
-    <integer>1800</integer>
+    <integer>7200</integer>
     <!-- Ret evt. hvor output + fejl skal skrives -->
     <key>StandardOutPath</key>
     <string>/tmp/fskintra.log</string>
