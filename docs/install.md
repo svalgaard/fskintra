@@ -45,9 +45,15 @@ Kør følgende kommando, og besvar spørgsmålene
 
     user@sputnik:~/fskintra$ ./fskintra.py --config
 
-Til slut testes programmet ved at køre det
+Ved den første rigtige kørsel kan det være en fordel at køre med ```--catchup```: I så fald hentes og markeres alt indhold som set uden faktisk at sende nogen e-mails; uden ```--catchup```får du måske mere end 100 emails per barn, da alt indhold på ForældreIntra er nyt:
+
+    user@sputnik:~/fskintra$ ./fskintra.py --catchup
+
+Fremadrettet køres uden parametre, alternativt med ```--quick```:
 
     user@sputnik:~/fskintra$ ./fskintra.py
+    # eller
+    user@sputnik:~/fskintra$ ./fskintra.py --quick
 
 Din opsætning gemmes i ```~/.skoleintra/skoleintra.txt```. Såfremt du
 kun skal rette lidt, er det oftest smartest at rette direkte i filen i stedet for at køre --config igen.
