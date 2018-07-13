@@ -10,14 +10,16 @@
 
 Hent de krævede pythonpakker (se ovenfor). Dernæst hentes nyeste version af programmet fra nedenstående side - fx ved at hente zip-filen og pakke den ud, eller endnu bedre ved at bruge git:
 
-    user@sputnik:~$ git clone https://github.com/svalgaard/fskintra.git
-    Cloning into 'fskintra'...
-    remote: Counting objects: 415, done.
-    remote: Total 415 (delta 0), reused 0 (delta 0), pack-reused 415
-    Receiving objects: 100% (415/415), 102.68 KiB | 370.00 KiB/s, done.
-    Resolving deltas: 100% (273/273), done.
-    user@sputnik:~$ cd fskintra/
-    user@sputnik:~/fskintra$   # ./fskintra.py ligger nu her
+```console
+user@sputnik:~$ git clone https://github.com/svalgaard/fskintra.git
+Cloning into 'fskintra'...
+remote: Counting objects: 415, done.
+remote: Total 415 (delta 0), reused 0 (delta 0), pack-reused 415
+Receiving objects: 100% (415/415), 102.68 KiB | 370.00 KiB/s, done.
+Resolving deltas: 100% (273/273), done.
+user@sputnik:~$ cd fskintra/
+user@sputnik:~/fskintra$ # ./fskintra.py ligger nu her
+```
 
 I det nedenstående går vi ud fra at ```fskintra```er installeret i ```~/fskintra```. Du kan naturligvis lægge programmet et andet sted.
 
@@ -28,32 +30,42 @@ De tre krævede ekstra pythonpakker findes i de fleste linux distributioner, men
 Den bedste løsning er derfor at bruge Python PIP, hvor selve pip nok findes
 i dit Linux/Mac pakkesystem. Ellers kan du hente [PIP her](https://pypi.org/project/pip/).
 
-    # Check først at det er pip til Python 2.x du bruger,
-    # muligvis hedder programmet pip2 eller lignende:
-    user@sputnik:~/fskintra$ pip -V
-    pip 10.0.1 from /.../pip (python 2.7)
+```console
+# Check først at det er pip til Python 2.x du bruger,
+# muligvis hedder programmet pip2 eller lignende:
+user@sputnik:~/fskintra$ pip -V
+pip 10.0.1 from /.../pip (python 2.7)
 
-    user@sputnik:~/fskintra$ sudo pip install -r requirements.txt
+user@sputnik:~/fskintra$ sudo pip install -r requirements.txt
+```
 
 Pakkerne kan installeres i dit hjemmekatalog, så de ikke forstyrer de pythonpakker der er installeret via dit rigtige pakkesystem (apt/npm/yum/port/osv):
 
-    user@sputnik:~/fskintra$ pip install --user -r requirements.txt
+```console
+user@sputnik:~/fskintra$ pip install --user -r requirements.txt
+```
 
 ## 3. Sæt fskintra op ##
 
 Kør følgende kommando, og besvar spørgsmålene
 
-    user@sputnik:~/fskintra$ ./fskintra.py --config
+```console
+user@sputnik:~/fskintra$ ./fskintra.py --config
+```
 
 Ved den første rigtige kørsel kan det være en fordel at køre med ```--catchup```: I så fald hentes og markeres alt indhold som set uden faktisk at sende nogen e-mails; uden ```--catchup```får du måske mere end 100 emails per barn, da alt indhold på ForældreIntra er nyt:
 
-    user@sputnik:~/fskintra$ ./fskintra.py --catchup
+```console
+user@sputnik:~/fskintra$ ./fskintra.py --catchup
+```
 
 Fremadrettet køres uden parametre, alternativt med ```--quick```:
 
-    user@sputnik:~/fskintra$ ./fskintra.py
-    # eller
-    user@sputnik:~/fskintra$ ./fskintra.py --quick
+```console
+user@sputnik:~/fskintra$ ./fskintra.py
+# eller
+user@sputnik:~/fskintra$ ./fskintra.py --quick
+```
 
 Din opsætning gemmes i ```~/.skoleintra/skoleintra.txt```. Såfremt du
 kun skal rette lidt, er det oftest smartest at rette direkte i filen i stedet for at køre --config igen.
