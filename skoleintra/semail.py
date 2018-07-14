@@ -52,8 +52,7 @@ def generateMIMEAttachment(path, data, usefilename=None):
     fn = niceFilename(usefilename or path)
     ctype, encoding = mimetypes.guess_type(fn)
     if fn.lower().endswith('.asp'):
-        ext = mimetypes.guess_extension(ctype) or '.html'
-        fn = os.path.splitext(fn)[0] + ext
+        fn = os.path.splitext(fn)[0] + '.html'
     if ctype is None or encoding is not None:
         # No guess could be made, or the file is encoded (compressed), so
         # use a generic bag-of-bits type.
