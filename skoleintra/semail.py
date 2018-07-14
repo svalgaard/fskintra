@@ -460,4 +460,5 @@ def hasSentMessage(date='', tp='', md5='', mid=''):
     assert(type(path) == str)
     assert('/' not in spath)
 
-    return bool(glob.glob(path))
+    fns = list(fn for fn in glob.glob(path) if not fn.endswith('.tmp'))
+    return bool(fns)
