@@ -1,15 +1,37 @@
 # Problemer? #
 
+## Python 2 ? ##
+
+Hvis man prøver at køre ```fskintra``` med Python version 3.x - fx. hvis ens standard Python version netop er version 3 - får man en lidt misvidense fejl lignende følgende:
+
+```python
+user@sputnik:~/fskintra$ ./fskintra.py
+Traceback (most recent call last):
+  File "fskintra.py", line 4, in <module>
+    import skoleintra.config
+  File "/Users/user/fskintra/skoleintra/config.py", line 19
+    print u'BeautifulSoup %s er installeret.' % bs4.__version__
+                                           ^
+SyntaxError: Missing parentheses in call to 'print'. Did you mean print(u'BeautifulSoup %s er installeret.' % bs4.__version__)?
+```
+
+Løsningen er først at sikre at man har Python 2.7.x installeret og dernæst eksplicit vælge den når man kører ```fskintra```, fx:
+
+```console
+user@sputnik:~/fskintra$ python2 fskintra.py
+```
+
+
 ## UnicodeEncodeError ##
 I nogle situationer giver Python desværre en unicode-fejl lignende følgende
 
 ```python
 Traceback (most recent call last):
-  File "/home/user/fsk/fskintra.py", line 12, in <module>
+  File "/Users/user/fskintra/fskintra.py", line 12, in <module>
     cnames = skoleintra.schildren.skoleGetChildren()
-  File "/home/user/fsk/skoleintra/schildren.py", line 22, in skoleGetChildren
+  File "/Users/user/fskintra/skoleintra/schildren.py", line 22, in skoleGetChildren
     config.log(u'Henter liste af bM-CM-8rn')
-  File "/home/user/fsk/skoleintra/config.py", line 185, in log
+  File "/Users/user/fskintra/skoleintra/config.py", line 185, in log
     sys.stderr.write(u'%s\n' % s)
 UnicodeEncodeError: 'ascii' codec can't encode character u'\xf8' in position 17: ordinal not in range(128)
 ```
@@ -21,27 +43,22 @@ du sikkert).
 
 ```console
 export PYTHONIOENCODING=UTF-8
-/sti/til/fskintra
+/sti/til/fskintra.py
 ```
 
 Hvis du bruger tcsh eller lignende:
 
 ```console
 setenv PYTHONIOENCODING UTF-8
-/sti/til/fskintra
+/sti/til/fskintra.py
 ```
 
 ## HTTP/HTML fejl ##
 
-Den nuværende version af fskintra er ikke altid god til at håndtere
-http/html fejl. Hvis der sker en fejl, kan du for det meste løse
-problemet ved at køre fskintra igen. Hvis det ikke er nok, kan du
-evt. tilføje parameteren -v for muligvis at se mere om, hvad der går
-galt:
+Den nuværende version af fskintra er ikke altid god til at håndtere http/html fejl. Hvis der sker en fejl, kan du for det meste løse problemet ved at køre fskintra igen. Hvis det ikke er nok, kan du evt. tilføje parameteren ```-v``` for muligvis at se mere om, hvad der går galt:
 
 ```console
 fskintra.py -v
 ```
 
-Du er evt. også velkommen til at lave et ["issue"](https://github.com/svalgaard/fskintra/issues) på Github. Såfremt det ikke
-virker, er det meget smart at vedhæfte / kopiere teksten af fra en kørsel med ```fskintra -v -v```.
+Du er evt. også velkommen til at lave et ["issue"](https://github.com/svalgaard/fskintra/issues) på Github. Såfremt det ikke virker, er det meget smart at vedhæfte / kopiere den *relevante del* af teksten fra en kørsel med ```fskintra -v -v``` (fjern i så fald altid navne på børn osv).
