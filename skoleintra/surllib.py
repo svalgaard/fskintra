@@ -284,6 +284,7 @@ def url2cacheFileName(url, postData):
             parts[-1] += '_' + '-'.join(xs)
 
     cfn = os.path.join(*parts)
+    cfn = cfn.replace('\\', '/')
     if type(cfn) == unicode and not os.path.supports_unicode_filenames:
         cfn = cfn.encode('utf-8')
     return cfn
@@ -331,8 +332,8 @@ def skoleGetURL(url, asSoup=False, noCache=False, postData=None,
             noCache = False
 
     if os.path.isfile(lfn) and not noCache and not config.SKIP_CACHE:
-        config.log('skoleGetURL: Henter fra cache %s' % uurl, 2)
-        config.log('skoleGetURL: %s' % unienc(lfn), 2)
+        config.log(u'skoleGetURL: Henter fra cache %s' % uurl, 2)
+        config.log(u'skoleGetURL: %r' % lfn, 2)
         data = open(lfn, 'rb').read()
     else:
         if addTimeSuffix:

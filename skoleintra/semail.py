@@ -41,9 +41,15 @@ def headerEncodeField(f):
         return str(Header(f, 'utf-8', 40))
 
 
+def niceFilename(fn):
+    fn = urllib.unquote(fn).replace('\\', '/')
+    fn = os.path.basename(fn)
+    fn = fn.split('?')[0]
+    return fn
+
+
 def generateMIMEAttachment(path, data, usefilename=None):
-    fn = usefilename if usefilename else os.path.basename(path)
-    fn = urllib.unquote(fn)
+    fn = niceFilename(usefilename or path)
     ctype, encoding = mimetypes.guess_type(fn)
     if fn.lower().endswith('.asp'):
         ext = mimetypes.guess_extension(ctype) or '.html'
@@ -362,7 +368,7 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
             for (url, (cid, data)) in iimgs.items():
                 m = MIMEImage(data)
                 m.add_header('Content-ID', '<%s>' % cid)
-                fn = os.path.basename(url).encode('utf-8')
+                fn = niceFilename(url).encode('utf-8')
                 m.add_header('Content-Disposition', 'inline',
                              filename=('utf-8', '', fn))
 
@@ -460,5 +466,4 @@ def hasSentMessage(date='', tp='', md5='', mid=''):
     assert(type(path) == str)
     assert('/' not in spath)
 
-    fns = list(fn for fn in glob.glob(path) if not fn.endswith('.tmp'))
-    return bool(fns)
+    return list(fn for fn in glob.glob(path) if not fn.endswith('.tmp'))
