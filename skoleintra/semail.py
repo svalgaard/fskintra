@@ -105,6 +105,8 @@ class Message:
         self.mp['mid'] = None
         self.mp['attatchments'] = []
         self.mp['md5'] = ''
+        # Some email types need to save extra data
+        self.mp['data'] = None
         self._email = None
 
     def __repr__(self):
@@ -177,6 +179,12 @@ class Message:
         assert(type(url) in [str, unicode])
         assert(type(text) == unicode)
         self.mp['attatchments'].append((surllib.absurl(url), text))
+
+    def setData(self, data):
+        self.mp['data'] = data
+
+    def getData(self):
+        return self.mp['data']
 
     def prepareMessage(self):
         # add missing fields, if any
@@ -368,7 +376,9 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
             for (url, (cid, data)) in iimgs.items():
                 m = MIMEImage(data)
                 m.add_header('Content-ID', '<%s>' % cid)
-                fn = niceFilename(url).encode('utf-8')
+                fn = niceFilename(url)
+                if not type(fn) == str:
+                    fn = fn.encode('utf-8')
                 m.add_header('Content-Disposition', 'inline',
                              filename=('utf-8', '', fn))
 

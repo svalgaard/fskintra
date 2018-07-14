@@ -1,22 +1,77 @@
 # -*- coding: utf-8 -*-
 
+import glob
+import json
+import md5
+import os
+
 import config
 import schildren
 import semail
 import surllib
 
 MAX_CACHE_AGE = .99
+PHOTOS_PER_EMAIL = 50
 
 
-def findPhotosInFolder(cname, bs):
+def sendPhotos(cname, title, mid, photos):
+    #
+    # First determine if any of the photos were sent earlier
+    #
+    previouslySent = set()
+    for dn in semail.hasSentMessage(tp='pht', mid=mid):
+        for fn in glob.glob(os.path.join(dn, '*.json')):
+            try:
+                jsn = json.load(open(fn))
+            except ValueError:
+                continue  # simply ignore files with wrong JSON
+            data = jsn.get('data')
+            if data:
+                previouslySent.update(data)
+
+    pending = list(url for url in photos if url not in previouslySent)
+
+    if not pending:
+        return
+
+    if len(photos) - len(pending) < 5:
+        # at most 5 pictures has been sent earlier - send them all again
+        pending = photos
+
+    # Send the photos in e-mails of PHOTOS_PER_EMAIL pictures
+    ecount = (len(pending)-1) / PHOTOS_PER_EMAIL + 1
+
+    for ei in range(ecount):
+        pics = pending[:PHOTOS_PER_EMAIL]
+        del pending[:PHOTOS_PER_EMAIL]
+
+        # Create HTML snippet
+        itag = u'<img style="width: 100%">'
+        ebs = surllib.beautify(u'<h2></h2><p>%s</p>' %
+                               u'<br/>'.join([itag] * len(pics)))
+        ebs.h2.string = title
+        for i, img in enumerate(ebs.select('img')):
+            img['src'] = pics[i]
+
+        msg = semail.Message(cname, 'pht', unicode(ebs))
+        if ecount > 1:
+            msg.setTitle(u'Billeder: %s (%d/%d)' % (title, ei+1, ecount))
+        else:
+            msg.setTitle(u'Billeder: %s' % title)
+        msg.setMessageID(mid)
+        msg.setData(pics)
+        msg.maybeSend()
+
+
+def findPhotosInFolder(cname, url, bs):
     title = bs.h2.text.strip()
+    mid = md5.md5(url.encode('utf-8')).hexdigest()[::2]
     photos = []
 
     for img in bs.select('img'):
         if not img.has_attr('src'):
             continue
         url = surllib.absurl(img['src'])
-
         photos.append(url)
 
     ptext = u'%d billeder' % len(photos) if len(photos) != 1 else '1 billede'
@@ -26,17 +81,7 @@ def findPhotosInFolder(cname, bs):
     if not photos:
         return
 
-    # Create HTML snippet
-    itag = u'<img style="width: 100%">'
-    ebs = surllib.beautify(u'<h2></h2><p>%s</p>' %
-                           u'<br/>'.join([itag] * len(photos)))
-    ebs.h2.string = title
-    for i, img in enumerate(ebs.select('img')):
-        img['src'] = photos[i]
-
-    msg = semail.Message(cname, 'pht', unicode(ebs))
-    msg.setTitle(u'Billeder: %s' % title)
-    msg.maybeSend()
+    sendPhotos(cname, title, mid, photos)
 
 
 def findPhotos(cname, bs):
@@ -53,7 +98,7 @@ def findPhotos(cname, bs):
             continue
 
         bs2 = surllib.skoleGetURL(url, True, MAX_CACHE_AGE)
-        findPhotosInFolder(cname, bs2)
+        findPhotosInFolder(cname, url, bs2)
 
 
 def skolePhotos(cname):
