@@ -5,9 +5,9 @@
 # http://tools.ietf.org/tools/msglint/
 #
 
-import codecs
 import glob
 import imghdr
+import json
 import md5
 import mimetypes
 import os
@@ -217,8 +217,8 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
             return False
         tdn = dn + '.tmp'
         if os.path.isdir(tdn):
-            config.log('Removing previous temporary directory %s' %
-                       repr(tdn), 2)
+            config.log(u'Fjerner tidligere midlertidigt bibliotek %r' %
+                       tdn, 2)
             shutil.rmtree(tdn)  # Remove stuff
         os.mkdir(tdn)
 
@@ -226,9 +226,8 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
         fd.write(str(self.asEmail()))
         fd.close()
 
-        mpp = [(unicode(k), unicode(v)) for (k, v) in self.mp.items()]
-        fd = codecs.open(os.path.join(tdn, mid + '.txt'), 'wb', 'utf-8')
-        fd.write(repr(mpp))
+        fd = open(os.path.join(tdn, mid + '.json'), 'wb')
+        json.dump(self.mp, fd, sort_keys=True, indent=2, default=unicode)
         fd.close()
 
         os.rename(tdn, dn)
