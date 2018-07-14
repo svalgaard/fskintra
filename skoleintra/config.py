@@ -15,9 +15,9 @@ import time
 #
 try:
     import bs4
-    if bs4.__version__ < '4.3':
+    if bs4.__version__ < '4.5':
         print u'BeautifulSoup %s er installeret.' % bs4.__version__
-        raise ImportError('bs4 not version 4.3+')
+        raise ImportError('bs4 not version 4.5+')
 except ImportError:
     print u'BeautifulSoup 4.5.x er krævet for at køre programmet.'
     print u'Se evt. her for hjælp:'
