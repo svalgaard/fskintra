@@ -9,6 +9,7 @@ import skoleintra.pgContacts
 import skoleintra.pgDialogue
 import skoleintra.pgDocuments
 import skoleintra.pgPhotos
+import skoleintra.pgSignup
 
 
 def main():
@@ -25,6 +26,7 @@ def main():
         skoleintra.pgContacts.skoleContacts(cname)
         skoleintra.pgDocuments.skoleDocuments(cname)
         skoleintra.pgPhotos.skolePhotos(cname)
+        skoleintra.pgSignup.skoleSignup(cname)
 
     # save updated state
     skoleintra.snotifications.saveState(state)

@@ -4,9 +4,10 @@ ForældreIntra til Email
 ForældreIntra er en del af SkoleIntra, der brugers af næsten alle danske folkeskoler til kommunikation mellem skole og hjem. ```fskintra``` logger på ForældreIntra og konverterer indholdet til almindelige emails. Du vil bl.a. modtage en email, hver gang der kommer nyt et af flg. steder:
 
 * Forsiden: Nyheder på opslagstavlen inkl. fødselsdage
-* Dialog/beskeder: Nye beskeder (både sendt og modtaget)
-* Dokumenter: Nye dokumenter
-* Billeder: Nye billeder
+* Beskeder (både sendt og modtaget)
+* Dokumenter
+* Billeder
+* Samtaler
 
 Alle emails bliver gemt, dvs. du får kun en email, såfremt der faktisk er kommet nyt.
 
