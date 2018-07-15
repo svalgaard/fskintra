@@ -19,7 +19,7 @@ def findEvents(cname, bs):
         key = ''
         kv, kvl = {}, []
         for li in ul.select('li'):
-            # Kill a tags inside if any
+            # Kill a tags inside, if any
             for a in (li.findAll('a') or []):
                 a.unwrap()
             s = li.text.strip()
@@ -36,7 +36,7 @@ def findEvents(cname, bs):
 
         if list(k for k, v in kv.items() if k.startswith(u'status')
                 and v.lower().startswith(u'lukket')):
-            continue  # ignore
+            continue  # Ignore this line
 
         msg = semail.Message(cname, 'sgn', unicode(ebs))
         msg.setTitle(u'%s: %s' % kvl[0])

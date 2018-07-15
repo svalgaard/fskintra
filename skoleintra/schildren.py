@@ -5,7 +5,7 @@ import re
 import config
 import surllib
 
-# map of children => urlPrefix
+# Map of children => urlPrefix
 # 'Andrea 0A' => '/parent/1234/Andrea/'
 _children = None
 

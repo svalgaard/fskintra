@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import config
-
 import schildren
 import semail
 import surllib
@@ -15,7 +14,7 @@ def contactCard(cname, bs):
     assert(name)
     name = name[0].text.strip()
 
-    # change all the div+div+span's into a table
+    # Change all the div+div+span's into a table
     table = bs.find('div', 'text-block')
     assert(table)  # If this fails, the design has changed drastically
     table.name = 'table'
@@ -36,7 +35,7 @@ def contactCard(cname, bs):
         h2['colspan'] = '2'
         h2['style'] = 'font-weight:bold; font-size:18px; padding-top:12px'
 
-    # we do now have two cases depending on whether the image is available
+    # We do now have two cases depending on whether the image is available
     photob = bs.find('div', 'photo-block')
     img = photob.find('img')
 

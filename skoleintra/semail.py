@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
 
-#
-# email validator
-# http://tools.ietf.org/tools/msglint/
-#
-
 import glob
 import imghdr
 import json
@@ -29,7 +24,7 @@ from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
-# set quoted-printable as default (instead of base64)
+# Set quoted-printable as default (instead of base64)
 email.Charset.add_charset('utf-8', email.Charset.QP, email.Charset.QP, 'utf-8')
 
 
@@ -130,7 +125,7 @@ class Message:
 
     def setDateTime(self, dt):
         assert(type(dt) == unicode)
-        ts = time.localtime()  # use "NOW" by default
+        ts = time.localtime()  # Use NOW by default
 
         dt2 = dt.split(',')[-1].strip().replace('.', '')
         if ':' not in dt2:
@@ -199,7 +194,7 @@ class Message:
 frp--625922d86ffef60cfef5efc7822a7cff
 msg--625922d86ffef60cfef5efc7822a7cff--123456'''
 
-        # ensure that md5 has been calculated
+        # Ensure that md5 has been calculated
         self.prepareMessage()
 
         m = '%(type)s--%(md5)s' % self.mp
@@ -226,7 +221,7 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
         mid = self.getMessageID()
         dn = os.path.join(config.MSG_DN, self.getLongMessageID())
         if os.path.isdir(dn):
-            # already stored - ignore!
+            # Already stored - ignore!
             return False
         tdn = dn + '.tmp'
         if os.path.isdir(tdn):
@@ -289,7 +284,7 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
 </html>''' % mpp
         html = surllib.beautify(html)
 
-        # first look for inline images (if any)
+        # First look for inline images, if any
         # iimags: mapping from URL to (cid, binary string contents)
         iimgs = {}
         for imgtag in html.findAll('img'):
@@ -317,7 +312,7 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
 
             imgtag['src'] = 'cid:' + cid
 
-        # next, handle attachments
+        # Next, handle attachments
         # attachments: email attachments ready for attachment :)
         attachments = []
         for atag in html.findAll('a'):
@@ -347,14 +342,14 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
             eatt = generateMIMEAttachment(url, data, text)
             attachments.append(eatt)
 
-        # now, put the pieces together
+        # Now, put the pieces together
         html = html.prettify()
         msgHtml = MIMEText(html, 'html', 'utf-8')
         if not iimgs and not attachments:
             # pure HTML version
             msg = msgHtml
         else:
-            # inline images but no attachments
+            # Inline images but no attachments
             #   multipart/related
             #     text/html with html text
             #     image/xxx with inline images
@@ -371,7 +366,7 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
             del msgHtml['MIME-Version']
             msg.attach(msgHtml)
 
-            # attach images if any
+            # Attach images if any
             for (url, (cid, data)) in iimgs.items():
                 m = MIMEImage(data)
                 m.add_header('Content-ID', '<%s>' % cid)
@@ -382,12 +377,12 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
                 del m['MIME-Version']
                 msg.attach(m)
 
-            # attach attachments if any
+            # Attach attachments if any
             for attachment in attachments:
                 del attachment['MIME-Version']
                 msg.attach(attachment)
 
-        # now for the general headers
+        # Now, for the general headers
         dt = email.utils.formatdate(time.mktime(self.mp['date_ts']), True)
         msg['Received'] = ('from %s ([127.0.0.1] helo=%s) '
                            'by %s with smtp (fskintra) for %s; %s'
@@ -406,7 +401,7 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
         msg['From'] = sender
         msg['To'] = config.EMAIL
 
-        # other tags just for ourselves
+        # Other tags just for ourselves
         keys = 'mid,md5'.split(',')
         for key in keys:
             if self.mp.get(key, None):
@@ -431,7 +426,7 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
             return self.store()
 
         msg = self.asEmail()
-        # open smtp connection
+        # Open smtp connection
         if config.SMTPHOST:
             server = smtplib.SMTP(config.SMTPHOST, config.SMTPPORT)
         else:
@@ -446,7 +441,7 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
         server.sendmail(config.SENDER, config.EMAIL, msg.as_string())
         server.quit()
 
-        # ensure that we only send once
+        # Ensure that we only send once
         self.store()
 
 

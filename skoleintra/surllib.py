@@ -238,7 +238,7 @@ def skoleLogin():
                            u'prøv igen senere...', -2)
                 sys.exit(1)
 
-            # this is the main login page
+            # This is the main login page
             if config.LOGINTYPE != 'alm':
                 # UNI-login
                 links = list(br.links(url_regex=re.compile(

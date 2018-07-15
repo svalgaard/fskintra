@@ -13,7 +13,7 @@ import surllib
 
 def parseFrontpageItem(cname, div):
 
-    # do we have any comments
+    # Do we have any comments?
     comments = div.find('div', 'sk-news-item-comments')
     cdiv = u''
     if comments:
@@ -40,12 +40,12 @@ def parseFrontpageItem(cname, div):
     msg.setMessageID(div['data-feed-item-id'])
     msg.setSender(author.span.text)
 
-    # find list of reciepients
-    author.span.extract()  # remove author
+    # Find list of recipients
+    author.span.extract()  # Remove author
     for tag in [
-            author.span,  # remove author
-            author.find('span', 'sk-news-item-for'),  # remove 'til'
-            author.find('span', 'sk-news-item-and'),  # ' og '
+            author.span,  # Remove author
+            author.find('span', 'sk-news-item-for'),  # Remove 'til'
+            author.find('span', 'sk-news-item-and'),  # Remove ' og '
             author.find('a', 'sk-news-show-more-link')]:
         if tag:
             tag.extract()
@@ -55,7 +55,7 @@ def parseFrontpageItem(cname, div):
 
     msg.setDateTime(div.find('div', 'sk-news-item-timestamp').text)
 
-    # do we have any attachments?
+    # Do we have any attachments?
     divA = div.find('div', 'sk-attachments-list')
     if divA:
         for att in (divA.findAll('a') or []):
@@ -92,7 +92,7 @@ def parseFrontpage(cname, bs):
                     config.clog(cname, u'Hopper mini-besked %r over' %
                                 c.text.strip(), 2)
 
-    # find interesting main front page items
+    # Find interesting main front page items
     fps = bs.findAll('div', 'sk-news-item')
     assert(len(fps) > 0)  # 1+ msgs on the frontpage or something is wrong
     for div in fps[::-1]:

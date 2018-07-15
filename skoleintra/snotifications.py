@@ -15,7 +15,7 @@ def checkForUpdates():
     bs = surllib.skoleGetURL(
         '/notifications/v1?useNewerThan=False&pageSize=10', True, True)
 
-    # find lastUpdateURL
+    # Find lastUpdateURL
     links = bs.select('.sk-notifications-list li a')
     if links and links[0].has_attr('href'):
         updateURL = links[0]['href']

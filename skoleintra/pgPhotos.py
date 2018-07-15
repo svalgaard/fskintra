@@ -15,16 +15,15 @@ PHOTOS_PER_EMAIL = 50
 
 
 def sendPhotos(cname, title, mid, photos):
-    #
+
     # First determine if any of the photos were sent earlier
-    #
     previouslySent = set()
     for dn in semail.hasSentMessage(tp='pht', mid=mid):
         for fn in glob.glob(os.path.join(dn, '*.json')):
             try:
                 jsn = json.load(open(fn))
             except ValueError:
-                continue  # simply ignore files with wrong JSON
+                continue  # Simply ignore files with wrong JSON
             data = jsn.get('data')
             if data:
                 previouslySent.update(data)
@@ -35,7 +34,7 @@ def sendPhotos(cname, title, mid, photos):
         return
 
     if len(photos) - len(pending) < 5:
-        # at most 5 pictures has been sent earlier - send them all again
+        # At most 5 pictures has been sent earlier - send them all again
         pending = photos
 
     # Send the photos in e-mails of PHOTOS_PER_EMAIL pictures
