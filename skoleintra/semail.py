@@ -29,6 +29,12 @@ email.Charset.add_charset('utf-8', email.Charset.QP, email.Charset.QP, 'utf-8')
 
 
 def headerEncodeField(f):
+    if type(f) == str:
+        try:
+            f = f.decode('utf-8')
+        except UnicodeDecodeError:
+            # Probably iso-8859-1
+            f = f.decode('iso-8859-1')
     try:
         f.encode('ascii')
         return str(Header(f, 'ascii', 40))
