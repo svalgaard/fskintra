@@ -50,9 +50,9 @@ def niceFilename(fn):
 
 def generateMIMEAttachment(path, data, usefilename=None):
     fn = niceFilename(usefilename or path)
-    ctype, encoding = mimetypes.guess_type(fn)
     if fn.lower().endswith('.asp'):
         fn = os.path.splitext(fn)[0] + '.html'
+    ctype, encoding = mimetypes.guess_type(fn)
     if ctype is None or encoding is not None:
         # No guess could be made, or the file is encoded (compressed), so
         # use a generic bag-of-bits type.
@@ -376,10 +376,8 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
                 m = MIMEImage(data)
                 m.add_header('Content-ID', '<%s>' % cid)
                 fn = niceFilename(url)
-                if not type(fn) == str:
-                    fn = fn.encode('utf-8')
                 m.add_header('Content-Disposition', 'inline',
-                             filename=('utf-8', '', fn))
+                             filename=headerEncodeField(fn))
 
                 del m['MIME-Version']
                 msg.attach(m)
