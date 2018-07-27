@@ -10,30 +10,6 @@ import re
 import sys
 import time
 
-#
-# Check whether our non-default dependencies are here
-#
-try:
-    import bs4
-    if bs4.__version__ < '4.5':
-        print u'BeautifulSoup %s er installeret.' % bs4.__version__
-        raise ImportError('bs4 not version 4.5+')
-except ImportError:
-    print u'BeautifulSoup 4.5.x er krævet for at køre programmet.'
-    print u'Se evt. her for hjælp:'
-    print u'    https://github.com/svalgaard/fskintra/#krav'
-    sys.exit(1)
-try:
-    import mechanize
-    if mechanize.__version__ < (0, 3):
-        print u'Mechanize %d.%d.%d er installeret.' % mechanize.__version__[:3]
-        raise ImportError('mechanize not version 0.3.x')
-except ImportError:
-    print u'Mechanize 0.3.x er krævet for at køre programmet.'
-    print u'Se evt. her for hjælp:'
-    print u'    https://github.com/svalgaard/fskintra/#krav'
-    sys.exit(1)
-
 ROOT = os.path.expanduser('~/.skoleintra/')
 CONFIG_FN = os.path.join(ROOT, 'skoleintra.txt')
 LOGIN_TYPES = ['alm', 'uni']
