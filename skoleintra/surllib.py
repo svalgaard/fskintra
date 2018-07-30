@@ -14,6 +14,7 @@ import urllib2
 import urlparse
 
 import config
+import pgConfirm
 
 
 def absurl(url):
@@ -179,7 +180,7 @@ def skoleLogin():
                    u'og prøv evt. igen senere', -1)
         sys.exit(1)
 
-    N = 5
+    N = 6
     for round in range(N):  # try at most N times before failing
         url = resp.geturl()
         data = resp.read()
@@ -188,6 +189,22 @@ def skoleLogin():
         forms = list(br.forms())
         if len(forms) == 1:
             br.form = forms[0]
+
+        if url.endswith('/ConfirmContacts'):
+            # Confirm contact details
+            config.log(u'Bekræfter kontaktoplysninger på %s' % url, 1)
+            pgConfirm.skoleConfirm(beautify(data))
+            # Click "Bekræft"
+            for form in br.forms():
+                if form.attrs.get('action').endswith('/Confirm'):
+                    br.form = form
+                    break
+            else:
+                config.log(u'Kunne ikke bekræfte kontaktoplysninger på %s'
+                           % url, -1)
+                sys.exit(1)
+            resp = br.submit()
+            continue
 
         if url == br.getState('index') and data:
             # we are fine / logged in
