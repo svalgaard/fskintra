@@ -36,7 +36,7 @@ def checkForUpdates():
 
     try:
         lut_ = br.getState('lastUpdateTime')
-        lut = datetime.datetime.strptime(lut_, DT_FORMAT)
+        lut = datetime.datetime.strptime(lut_, DT_FORMAT) if lut_ else None
     except ValueError:
         lut = None
 
