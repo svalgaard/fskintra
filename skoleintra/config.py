@@ -267,7 +267,7 @@ try:
     if options.configfilename:
         CACHEPREFIX = cfg.getOpt('cacheprefix')
     else:
-        CACHEPREFIX = ''
+        CACHEPREFIX = cfg.getOpt('cacheprefix', '')
     SMTPHOST = cfg.getOpt('smtpserver', '')
     SMTPPORT = cfg.getOpt('smtpport', '')
     SMTPLOGIN = cfg.getOpt('smtplogin', '')
