@@ -28,7 +28,7 @@ from email.mime.image import MIMEImage
 email.Charset.add_charset('utf-8', email.Charset.QP, email.Charset.QP, 'utf-8')
 
 
-def headerEncodeField(f):
+def headerEncodeField(f, maxlinelen=40):
     if type(f) == str:
         try:
             f = f.decode('utf-8')
@@ -37,9 +37,9 @@ def headerEncodeField(f):
             f = f.decode('iso-8859-1')
     try:
         f.encode('ascii')
-        return str(Header(f, 'ascii', 40))
+        return str(Header(f, 'ascii', maxlinelen))
     except UnicodeEncodeError:
-        return str(Header(f, 'utf-8', 40))
+        return str(Header(f, 'utf-8', maxlinelen))
 
 
 def niceFilename(fn):
@@ -398,7 +398,7 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
         title = self.mp['title']
         if self.mp['children']:
             title = u'[%s] %s' % (', '.join(self.mp['children']), title)
-        msg['Subject'] = Header(title, 'utf-8', 60)
+        msg['Subject'] = headerEncodeField(title, 60)
         if 'sender' in self.mp and self.mp['sender']:
             sender = u'Skoleintra - %s' % self.mp['sender']
         else:
@@ -412,7 +412,7 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
         for key in keys:
             if self.mp.get(key, None):
                 kkey = 'X-skoleintra-%s' % key
-                msg[kkey] = Header(self.mp[key], 'utf-8', header_name=kkey)
+                msg[kkey] = headerEncodeField(self.mp[key], 60)
 
         self._email = msg
         return msg
