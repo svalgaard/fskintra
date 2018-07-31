@@ -48,11 +48,11 @@ parser.add_option(
     help=u'Brug konfigurationsfilen FILENAME - standard: %s' % CONFIG_FN,
     metavar='FILENAME')
 parser.add_option(
-    '--profile', '-P', dest='profile', default=None,
+    '--profile', '-p', dest='profile', default=None,
     help=u'Brug afsnittet [PROFILE] dernæst [default] fra konfigurationsfilen',
     metavar='PROFILE')
 parser.add_option(
-    '--password', '-p', dest='password', default=None,
+    '--password', dest='password', default=None,
     help=u'Opdatér kodeord. Dette skrives om muligt til konfigurationsfilen. '
          u'Alternativt udskrives det "krypterede" kodeord, så du selv kan '
          u'rette filen',
