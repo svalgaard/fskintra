@@ -268,6 +268,7 @@ try:
         CACHEPREFIX = cfg.getOpt('cacheprefix')
     else:
         CACHEPREFIX = cfg.getOpt('cacheprefix', '')
+    CACHEPREFIX = CACHEPREFIX.rstrip('-') + '-' if CACHEPREFIX else ''
     SMTPHOST = cfg.getOpt('smtpserver', '')
     SMTPPORT = cfg.getOpt('smtpport', '')
     SMTPLOGIN = cfg.getOpt('smtplogin', '')
