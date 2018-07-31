@@ -64,7 +64,7 @@ parser.add_option(
     '--skip-cache', dest='skipcache', default=False, action='store_true',
     help=u'Brug ikke tidligere hentet indhold/cache')
 parser.add_option(
-    '--catchup', '-c', dest='catchup', default=False, action='store_true',
+    '--catch-up', '-c', dest='catch_up', default=False, action='store_true',
     help=u'Hent & marker alt indhold som set uden at sende nogen e-mails')
 parser.add_option(
     '--quick', '-Q', dest='full_update', default=True, action='store_false',
@@ -95,7 +95,7 @@ if options.doconfig:
         parser.error(u'--config og --profile kan ikke bruges samtidigt')
 
 PROFILE = options.profile or ''
-CATCHUP = options.catchup
+CATCH_UP = options.catch_up
 FULL_UPDATE = options.full_update
 SKIP_CACHE = options.skipcache
 

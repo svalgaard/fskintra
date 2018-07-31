@@ -29,11 +29,11 @@ user@sputnik:~/fskintra$ git pull
 Såfremt måden indhold hentes eller formatet af e-mails ændret i den nye
 version, kan du risikere at modtage en masse e-mails om noget der faktisk
 ikke er en opdatering.
-Det er derfor smart at køre ```fskintra``` med ```--catchup``` for at
+Det er derfor smart at køre ```fskintra``` med ```--catch-up``` for at
 nulstille at alt indhold er hentet.
 
 ```console
-user@sputnik:~/fskintra$ ./fskintra.py --catchup
+user@sputnik:~/fskintra$ ./fskintra.py --catch-up
 ```
 
 Bemærk at indhold der er kommet ind på ForældreIntra i tidsrummet mellem

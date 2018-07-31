@@ -74,12 +74,12 @@ I ```~/.skoleintra/``` gemmes også alt hentet indhold og alle sendte
 emails.
 
 Ved den første rigtige kørsel kan det være en fordel at
-køre med ```--catchup```: I så fald hentes og markeres alt indhold som set
-uden faktisk at sende nogen e-mails; uden ```--catchup``` får du måske mere
+køre med ```--catch-up```: I så fald hentes og markeres alt indhold som set
+uden faktisk at sende nogen e-mails; uden ```--catch-up``` får du måske mere
 end 100 emails per barn, da alt indhold på ForældreIntra er nyt:
 
 ```console
-user@sputnik:~/fskintra$ ./fskintra.py --catchup
+user@sputnik:~/fskintra$ ./fskintra.py --catch-up
 ```
 
 Fremadrettet køres uden parametre, alternativt med ```--quick```:

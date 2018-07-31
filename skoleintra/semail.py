@@ -427,8 +427,8 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
     def send(self):
         config.log(u'Sender email %s' %
                    (self.mp['title'] if self.mp['title'] else self))
-        if config.CATCHUP:
-            config.log(u'(sendes faktisk ikke pga --catchup)')
+        if config.CATCH_UP:
+            config.log(u'(sendes faktisk ikke pga --catch-up)')
             return self.store()
 
         msg = self.asEmail()
