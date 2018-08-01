@@ -80,7 +80,7 @@ def parseFrontpage(cname, bs):
                 if u'har fødselsdag' in uc:
                     today = unicode(time.strftime(u'%d. %b. %Y'))
                     c.append(u" \U0001F1E9\U0001F1F0")  # Unicode DK Flag
-                    c.append(bs4.Comment(' I dag er %s ' % today))
+                    c.append(surllib.todayComment())
                     msg = semail.Message(cname, 'frp', unicode(c))
                     msg.setTitle(c.text.strip())
                     msg.setDateTime(today)

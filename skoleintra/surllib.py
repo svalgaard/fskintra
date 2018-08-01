@@ -30,10 +30,47 @@ def unienc(s):
         return s
 
 
+def todayComment():
+    '''Return bs4 comment 'Tag' with today's date'''
+    return bs4.Comment(u' I dag er %s ' % time.strftime(u'%Y-%m-%d'))
+
+
 def beautify(data):
     # Maybe due to 'wide' unicode char, e.g., smiley &#128516;
     # ValueError: unichr() arg not in range(0x10000) (narrow Python build)
     return bs4.BeautifulSoup(data, 'lxml')
+
+
+def deobfuscate(s):
+    'Deobfuscate an e-mail address. Return the address if possible o.w. None'
+    if len(s) % 2 or not s:
+        # Not with a length divible by 2
+        return
+    try:
+        # Check that this is a hex string
+        int(s, 16)
+    except ValueError:
+        # Not hex string somewhere
+        return
+    key = int(s[:2], 16)
+    mail = ''.join(chr(int(s[i:i+2], 16) ^ key) for i in range(2, len(s), 2))
+    if '@' not in mail:
+        return  # not an e-mail
+    return mail
+
+
+def deobfuscateSoup(bs):
+    '''Replace all "encrypted" e-mail addresses with a deobfuscated version'''
+    DATA = 'data-cfemail'
+    for tag in bs.select('.__cf_email__'):
+        if not tag.has_attr(DATA):
+            continue
+        email = deobfuscate(tag[DATA])
+        if email:
+            del tag[DATA]
+            tag.string = email
+            if tag.name == 'a':
+                tag['href'] = 'mailto:' + email
 
 
 class Browser(mechanize.Browser):
