@@ -13,9 +13,6 @@ def skoleConfirm(bs):
     '''Send e-mail wrt confirmation of your own contact details
 Do not actually click the confirm link'''
 
-    # 'decrypt' e-mail addresses
-    surllib.deobfuscateSoup(bs)
-
     forms = bs.select('.sk-l-content-wrapper form')
     assert(forms)
     form = forms[0]

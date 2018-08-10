@@ -36,12 +36,12 @@ def todayComment():
 
 
 def beautify(data):
-    # Maybe due to 'wide' unicode char, e.g., smiley &#128516;
-    # ValueError: unichr() arg not in range(0x10000) (narrow Python build)
-    return bs4.BeautifulSoup(data, 'lxml')
+    bs = bs4.BeautifulSoup(data, 'lxml')
+    cleanupSoup(bs)
+    return bs
 
 
-def deobfuscate(s):
+def deobfuscateEmail(s):
     'Deobfuscate an e-mail address. Return the address if possible o.w. None'
     if len(s) % 2 or not s:
         # Not with a length divible by 2
@@ -59,18 +59,44 @@ def deobfuscate(s):
     return mail
 
 
-def deobfuscateSoup(bs):
-    '''Replace all "encrypted" e-mail addresses with a deobfuscated version'''
+def cleanupSoup(bs):
+    '''Cleanup/deobfuscate the soup'''
+
+    # deobfuscate content/spans with email addresses
+    CLASS = '__cf_email__'
     DATA = 'data-cfemail'
-    for tag in bs.select('.__cf_email__'):
-        if not tag.has_attr(DATA):
-            continue
-        email = deobfuscate(tag[DATA])
+    for tag in bs.find_all(**{'class': CLASS, DATA: re.compile('.')}):
+        email = deobfuscateEmail(tag[DATA])
         if email:
             del tag[DATA]
+            tag['class'].remove(CLASS)
             tag.string = email
-            if tag.name == 'a':
-                tag['href'] = 'mailto:' + email
+            if tag.name == 'span' and tag.attrs == {}:
+                tag.unwrap()
+
+    # deobfuscate href's with email links
+    HREF_PREFIX = '/cdn-cgi/l/email-protection#'
+    for tag in bs.find_all('a', href=re.compile('^%s.*' % HREF_PREFIX)):
+        href = tag['href']
+        email = deobfuscateEmail(href[len(HREF_PREFIX):])
+        if email:
+            tag['href'] = 'mailto:' + email
+
+    BLOCKED = 'blocked::'
+    for tag in bs.find_all('a', title=re.compile('^%s.*' % BLOCKED)):
+        tag['title'] = tag['title'][len(BLOCKED):]
+        if tag.has_attr('href') and tag['title'] == tag['href']:
+            del tag['title']
+
+    # Remove imgs without an actual image - probably copied into ForældreIntra
+    # from e.g., Outlook.
+    rec = re.compile('^(%s).*' % '|'.join(['cid']))
+    for img in bs.find_all('img', src=rec):
+        img.extract()
+
+    # Remove empty class attributes
+    for tag in bs.find_all(**{'class': ''}):
+        del tag['class']
 
 
 class Browser(mechanize.Browser):
