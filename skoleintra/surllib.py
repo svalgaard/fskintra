@@ -20,7 +20,7 @@ import pgConfirm
 def absurl(url):
     if url and url[0] != '/':
         return url
-    return 'https://%s%s' % (config.HOSTNAME, url)
+    return 'https://%s%s' % (config.options.hostname, url)
 
 
 def unienc(s):
@@ -143,7 +143,7 @@ class Browser(mechanize.Browser):
         # Load browser state
         sfn = self._browser_state_filename()
         if os.path.isfile(sfn):
-            if not config.SKIP_CACHE:
+            if not config.options.skipcache:
                 config.log(u'Henter tidligere browsertilstand fra %s' % sfn, 2)
                 self._cj.load(sfn, True, True)
                 for st in open(sfn).read().strip().split('\n'):
@@ -155,8 +155,8 @@ class Browser(mechanize.Browser):
                            u'fra %s pga --skipcache' % sfn)
 
     def _browser_state_filename(self):
-        fn = '%s-%s.state' % (config.HOSTNAME, config.USERNAME)
-        return os.path.join(config.CACHE_DN, fn)
+        fn = '%s-%s.state' % (config.options.hostname, config.options.username)
+        return os.path.join(config.options.cachedir, fn)
 
     def saveState(self):
         sfn = self._browser_state_filename()
@@ -221,7 +221,7 @@ def skoleLogin():
     config.log(u'Login', 2)
 
     config.log(u'Log ind på ForældreIntra')
-    url = u'https://%s/Account/IdpLogin' % config.HOSTNAME
+    url = absurl('/Account/IdpLogin')
     if br.getState('index'):
         url = br.getState('index')
         config.log(u'Genbruger sidst kendte forside URL %s' % url, 2)
@@ -283,7 +283,8 @@ def skoleLogin():
             continue
 
         if url.startswith('https://login.emu.dk/'):
-            config.log(u'Uni-login med brugernavn %r' % config.USERNAME, 3)
+            config.log(u'Uni-login med brugernavn %r' %
+                       config.options.username, 3)
 
             if 'forkert brugernavn' in data.lower():
                 config.log(u'Log ind giver en fejlmeddelse -- '
@@ -293,7 +294,7 @@ def skoleLogin():
                            u'prøv igen senere...', -2)
                 sys.exit(1)
 
-            assert(config.LOGINTYPE != 'alm')  # This must be uni login
+            assert(config.options.logintype != 'alm')  # This must be uni login
             for form in br.forms():
                 if form.attrs.get('id') == 'pwd':
                     br.form = form
@@ -301,8 +302,8 @@ def skoleLogin():
             else:
                 config.log(u'Kunne ikke finde logind formular på %s' % url, -1)
                 sys.exit(1)
-            br['user'] = config.USERNAME
-            br['pass'] = config.PASSWORD
+            br['user'] = config.options.username
+            br['pass'] = config.options.password
             resp = br.submit()
             continue
 
@@ -319,7 +320,7 @@ def skoleLogin():
                 sys.exit(1)
 
             # This is the main login page
-            if config.LOGINTYPE != 'alm':
+            if config.options.logintype != 'alm':
                 # UNI-login
                 links = list(br.links(url_regex=re.compile(
                     '.*RedirectToUniLogin.*')))
@@ -332,10 +333,10 @@ def skoleLogin():
                 continue
             else:
                 config.log(u'Bruger alm. login med brugernavn %r' %
-                           config.USERNAME, 3)
+                           config.options.username, 3)
                 # "Ordinary login"
-                br['UserName'] = config.USERNAME
-                br['Password'] = config.PASSWORD
+                br['UserName'] = config.options.username
+                br['Password'] = config.options.password
                 resp = br.submit()
                 continue
         break
@@ -353,7 +354,7 @@ def url2cacheFileName(url, postData):
     if postData:
         url += postData
     up = urlparse.urlparse(url)
-    parts = [config.CACHE_DN,
+    parts = [config.options.cachedir,
              up.scheme,
              up.netloc,
              urllib.url2pathname(up.path)[1:] + '.cache']
@@ -411,7 +412,7 @@ def skoleGetURL(url, asSoup=False, noCache=False, postData=None,
         else:
             noCache = False
 
-    if os.path.isfile(lfn) and not noCache and not config.SKIP_CACHE:
+    if os.path.isfile(lfn) and not noCache and not config.options.skipcache:
         config.log(u'skoleGetURL: Henter fra cache %s' % uurl, 2)
         config.log(u'skoleGetURL: %r' % lfn, 2)
         data = open(lfn, 'rb').read()

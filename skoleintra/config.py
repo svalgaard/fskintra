@@ -1,18 +1,56 @@
 # -*- coding: utf-8 -*-
 
+import argparse
 import codecs
 import ConfigParser
 import getpass
 import locale
-import optparse
 import os
 import re
 import sys
-import time
 
+# Default location of configuraion files
 ROOT = os.path.expanduser('~/.skoleintra/')
 CONFIG_FN = os.path.join(ROOT, 'skoleintra.txt')
-LOGIN_TYPES = ['alm', 'uni']
+options = argparse.Namespace(verbosity=1)
+
+# Options that must/can be set in the CONFIG file
+CONFIG_OPTIONS = (
+    (u'logintype',
+     re.compile(ur'^(alm|uni)$'),
+     u"Logintype - enten 'alm' (almindeligt) eller 'uni' (UNI-Login)"),
+    (u'username',
+     re.compile(ur'^[-.a-zA-Z0-9]+$'),
+     u'Brugernavn, fx. petjen'),
+    (u'password',
+     re.compile(ur'^.+$'),
+     u'Kodeord fx kaTTx24'),
+    (u'hostname',
+     re.compile(ur'^[-.a-zA-Z0-9]+$'),
+     u'Skoleintra domæne fx aaskolen.m.skoleintra.dk'),
+    (u'cacheprefix',
+     re.compile(ur''),
+     u'Præfix til cache+msg katalogerne (evt. \'-\' hvis du blot vil bruge '
+     u'../cache hhv. ../msg)'),
+    (u'email',
+     re.compile(ur'^.+$'),
+     u'Modtageremailadresse (evt. flere adskilt med komma)'),
+    (u'senderemail',
+     re.compile(ur'^.+$'),
+     u'Afsenderemailadresse (evt. samme adresse) som ovenover)'),
+    (u'smtphostname',
+     re.compile(ur'^[-.a-zA-Z0-9]+$'),
+     u'SMTP servernavn (evt. localhost hvis du kører din egen server)'
+     u' fx smtp.gmail.com eller asmtp.mail.dk'),
+    (u'smtpport',
+     re.compile(ur'^[0-9]+$'),
+     u'SMTP serverport fx 25 (localhost), 587 (gmail, tdc)'),
+    (u'smtpusername',
+     re.compile(ur''),
+     u'SMTP Login (evt. tom hvis login ikke påkrævet)'),
+    (u'smtppassword',
+     re.compile(ur''),
+     u'SMTP password (evt. tom hvis login ikke påkrævet)'))
 
 
 def ensureDanish():
@@ -32,86 +70,15 @@ ensureDanish()
 locale.setlocale(locale.LC_TIME, "da_DK")
 
 
-#
-# Parse command line options
-#
-parser = optparse.OptionParser(usage=u'''%prog [options]
-
-Se flg. side for flere detaljer:
-   https://github.com/svalgaard/fskintra/''', add_help_option=False)
-
-parser.add_option(
-    '--help', '-h', action='help',
-    help=u"Vis denne besked og afslut")
-parser.add_option(
-    '--config-file', dest='configfilename', default=None,
-    help=u'Brug konfigurationsfilen FILENAME - standard: %s' % CONFIG_FN,
-    metavar='FILENAME')
-parser.add_option(
-    '--profile', '-p', dest='profile', default=None,
-    help=u'Brug afsnittet [PROFILE] dernæst [default] fra konfigurationsfilen',
-    metavar='PROFILE')
-parser.add_option(
-    '--password', dest='password', default=None,
-    help=u'Opdatér kodeord. Dette skrives om muligt til konfigurationsfilen. '
-         u'Alternativt udskrives det "krypterede" kodeord, så du selv kan '
-         u'rette filen',
-    metavar='PASSWORD')
-parser.add_option(
-    '--config', dest='doconfig', default=False, action='store_true',
-    help=u'Opsæt skoleintra')
-parser.add_option(
-    '--skip-cache', dest='skipcache', default=False, action='store_true',
-    help=u'Brug ikke tidligere hentet indhold/cache')
-parser.add_option(
-    '--catch-up', '-c', dest='catch_up', default=False, action='store_true',
-    help=u'Hent & marker alt indhold som set uden at sende nogen e-mails')
-parser.add_option(
-    '--quick', '-Q', dest='full_update', default=True, action='store_false',
-    help=u'Kør ikke fuld check af alle sider medmindre der forventes nyt')
-parser.add_option(
-    '-v', '--verbose', action='append_const', const=1, dest='verbosity',
-    help=u'Skriv flere log-linjer', default=[1])
-parser.add_option(
-    '-q',  '--quiet', action='append_const', const=-1, dest='verbosity',
-    help=u'Skriv færre log-linjer')
-
-(options, args) = parser.parse_args()
-
-if args:
-    parser.error(u'Ukendte argumenter: %s' % ' '.join(args))
-
-if options.configfilename:
-    CONFIG_FN = os.path.expanduser(options.configfilename)
-if not os.path.isfile(CONFIG_FN) and not options.doconfig:
-    parser.error(u'''Kan ikke finde konfigurationsfilen
-%s
-Kør først programmet med --config for at sætte det op.''' % CONFIG_FN)
-
-if options.doconfig:
-    if options.password is not None:
-        parser.error(u'--config og --password kan ikke bruges samtidigt')
-    if options.profile:
-        parser.error(u'--config og --profile kan ikke bruges samtidigt')
-
-PROFILE = options.profile or ''
-CATCH_UP = options.catch_up
-FULL_UPDATE = options.full_update
-SKIP_CACHE = options.skipcache
-
-
 # logging levels:
 #  0 only important stuff (always printed)
 #  1 requires one         (default value, requires -q to ignore)
 #  2 tiny log messages    (requires -v)
 #  3 micro log messages   (requires -vv)
-VERBOSE = max(sum(options.verbosity), 0)
-
-
 def log(s, level=1):
     if type(level) != int:
         raise Exception(u'level SKAL være et tal, ikke %r' % level)
-    if level <= VERBOSE:
+    if level <= options.verbosity:
         sys.stderr.write(u'%s\n' % s)
         sys.stderr.flush()
 
@@ -120,194 +87,270 @@ def clog(cname, s, level=1):
     return log(u'[%s] %s' % (cname, s), level)
 
 
-def b64enc(pswd):
-    return 'pswd:' + pswd.encode('base64')
+class ProfileConf(ConfigParser.ConfigParser):
+    def __init__(self, profile):
+        ConfigParser.ConfigParser.__init__(self)
+        self.profile = profile
+        # Add 'default' section
+        self._sections['default'] = self._dict()
+
+    def writeTo(self, filename):
+        dn = os.path.dirname(filename)
+        if dn and not os.path.isdir(dn):
+            os.makedirs(dn)
+        with open(filename, 'w') as fp:
+            self.write(fp)
+
+    def __getitem__(self, option):
+        option = str(option)  # Ensure this is a 8-bit string
+        for section in [self.profile, 'default']:
+            try:
+                value = self.get(section, option)
+                if option.startswith('password'):
+                    value = self.b64dec(value)
+                return value.decode('utf-8')
+            except ConfigParser.Error:
+                continue
+        return ''
+
+    def __setitem__(self, option, value):
+        option = str(option)  # Ensure this is a 8-bit string
+        value = value.encode('utf-8') if type(value) == unicode else str(value)
+
+        if option.startswith('password'):
+            value = self.b64enc(value)
+        if self.profile != 'default' and not self.has_section(self.profile):
+            self.add_section(self.profile)
+
+        self.set(self.profile, option, value)
+
+    def b64enc(self, pswd):
+        return ('pswd:' + pswd.encode('base64')).strip() if pswd else ''
+
+    def b64dec(self, pswd):
+        if pswd.startswith('pswd:'):
+            return pswd[5:].decode('base64')
+        return pswd
 
 
-def b64dec(pswd):
-    if pswd.startswith('pswd:'):
-        return pswd[5:].decode('base64')
-    return pswd
+def configure(configfilename, profile):
+    cfg = ProfileConf(profile)
+    print u'Din nye opsætning gemmes her:', configfilename
+    if os.path.isfile(configfilename):
+        if cfg.read(configfilename):
+            if cfg.sections() == [profile]:
+                print u'Din tidligere opsætning bliver helt nulstillet'
+            else:
+                print u'Tidligere opsætning indlæst fra konfigurationsfilen'
+                print u'Opsætning i afsnittet [%s] bliver nulstillet' % profile
+        else:
+            print u'Kunne IKKE læse tidligere indhold fra konfigurationsfilen'
+            print u'Din opsætning bliver HELT nulstillet,'
 
+    print u'Tryk CTRL-C for evt. at stoppe undervejs'
 
-if options.doconfig:
-    if os.path.isfile(CONFIG_FN):
-        print u'Din opsætning bliver nulstillet,',
-        print u'når du har besvareret nedenstående spørgsmål'
-    print u'Din nye opsætning gemmes her:', CONFIG_FN
-
-    details = {}
-    opts = [
-        ('logintype',
-         u"Logintype - enten 'alm' (almindeligt) eller 'uni' (UNI-Login)"),
-        ('username',
-         u'Brugernavn, fx. petjen:'),
-        ('password',
-         u'Kodeord fx kaTTx24:'),
-        ('hostname',
-         u'Skoleintra domæne fx aaskolen.m.skoleintra.dk:'),
-        ('email',
-         u'Modtageremailadresse (evt. flere adskilt med komma):'),
-        ('senderemail',
-         u'Afsenderemailadresse (evt. samme adresse(r) som ovenover):'),
-        ('smtpserver',
-         u'SMTP servernavn (evt. tom hvis localhost skal bruges) '
-         u'fx smtp.gmail.com eller asmtp.mail.dk:'),
-        ('smtpport',
-         u'SMTP serverport fx 25 (localhost), 587 (gmail, tdc):'),
-        ('smtplogin',
-         u'SMTP Login (tom hvis login ikke påkrævet):'),
-        ('smtppassword',
-         u'SMTP password (tom hvis login ikke påkrævet):')]
-    for (var, question) in opts:
+    for (key, check, question) in CONFIG_OPTIONS:
+        if key == 'cacheprefix':
+            cfg['cacheprefix'] = cfg['hostname'].split('.')[0]
+            question += ', default: ' + cfg['cacheprefix']
         while True:
             print
-            print question
-            if var.endswith('password'):
-                a = getpass.getpass('').strip().decode(sys.stdin.encoding)
-            else:
-                a = raw_input().strip().decode(sys.stdin.encoding)
-            if var == 'logintype' and a not in LOGIN_TYPES:
-                print u"Angiv venligst en af flg.: %s" % ', '.join(LOGIN_TYPES)
-            if a or var.startswith('smtp'):
+            print question + u':'
+            try:
+                if key.endswith('password'):
+                    a = getpass.getpass('')
+                else:
+                    a = raw_input()
+                a = a.decode(sys.stdin.encoding).strip()
+            except KeyboardInterrupt:
+                print u'\nOpsætning afbrydes!'
+                sys.exit(1)
+            if check.match(a):
+                if a or key != 'cacheprefix':
+                    cfg[key] = a
                 break
-            print u'Angiv venligst en værdi'
-        details[var] = a
+            else:
+                if a:
+                    print u'Angiv venligst en lovlig værdi'
+                else:
+                    print u'Angiv venligst en værdi'
 
-    # "encrypt" the password
-    details['password'] = b64enc(details['password'])
-    # "encrypt" smtp password
-    if details['smtppassword']:
-        details['smtppassword'] = b64enc(details['smtppassword'])
-
-    # if not using standard CONFIG_FN, setup prefix for cache and msg
-    if options.configfilename:
-        opts.append(('cacheprefix', ''))
-        details['cacheprefix'] = hex(int(time.time()))[2:] + '-'
-
-    config = u'[default]\n'
-    for opt, _ in opts:
-        config += u'%s=%s\n' % (opt, details[opt])
-
-    if not os.path.isdir(ROOT):
-        os.makedirs(ROOT)
-    open(CONFIG_FN, 'w').write(config.encode('utf-8'))
+    cfg.writeTo(configfilename)
 
     print
     print u'Din nye opsætning er klar -- kør nu programmet uden --config'
-    sys.exit(1)
+    sys.exit(0)
 
 
-# read configuration
-class MyConf(ConfigParser.ConfigParser):
-    def getOpt(self, option, default=None):
-        global PROFILE
-        if PROFILE and self.has_option(PROFILE, option):
-            return self.get(PROFILE, option)
+def parseArgs(argv):
+    '''Parse command line options. Fails if one or more errors are found'''
+    global parser
 
-        if self.has_option('default', option):
-            return self.get('default', option)
+    parser = argparse.ArgumentParser(
+        usage=u'''%(prog)s [options]
 
-        if default is not None:
-            return default
+Hent nyt fra ForældreIntra og send det som e-mails.
 
-        raise ConfigParser.NoOptionError(option, 'default')
+Se flg. side for flere detaljer:
+https://github.com/svalgaard/fskintra/
+''', add_help=False)
 
+    group = parser.add_argument_group(u'Vælg konfigurationsfil og profil')
+    group.add_argument(
+        '--config-file', metavar='FILENAME',
+        dest='configfilename', default=CONFIG_FN,
+        help=u'Brug konfigurationsfilen FILENAME - standard: %s' % CONFIG_FN)
+    group.add_argument(
+        '-p', '--profile', metavar='PROFILE',
+        dest='profile', default='default',
+        help=u'Brug afsnittet [PROFILE] dernæst [default] fra '
+             u'konfigurationsfilen')
 
-cfg = MyConf()
-cfg.read(CONFIG_FN)
+    group = parser.add_argument_group(u'Opsætning')
+    group.add_argument(
+        '--config',
+        dest='doconfig', default=False, action='store_true',
+        help=u'Opsæt fskintra')
+    group.add_argument(
+        '--password', dest='password', metavar='PASSWORD',
+        default=None,
+        help=u'Opdatér kodeord til ForældreIntra i konfigurationsfilen')
+    group.add_argument(
+        '--smtppassword', dest='smtppassword', metavar='PASSWORD',
+        default=None,
+        help=u'Opdatér kodeord til SMTP (smtppassword) i konfigurationsfilen')
 
-if PROFILE and not cfg.has_section(PROFILE):
-    log((u'Konfigurationsfilen %s har ikke afsnittet [%s] '
-         u'angivet med --profile') %
-        (CONFIG_FN, repr(PROFILE)[1:-1]))
-    sys.exit(1)
+    group = parser.add_argument_group(u'Hvodan/hvor meget skal hentes')
+    group.add_argument(
+        '-Q', '--quick',
+        dest='fullupdate', default=True,
+        action='store_false',
+        help=u'Kør ikke fuld check af alle sider medmindre der forventes nyt')
+    group.add_argument(
+        '-c', '--catch-up',
+        dest='catchup', default=False,
+        action='store_true',
+        help=u'Hent & marker alt indhold som set uden at sende nogen e-mails')
+    group.add_argument(
+        '--skip-cache',
+        dest='skipcache', default=False,
+        action='store_true',
+        help=u'Brug ikke tidligere hentet indhold/cache')
 
-# Maybe write new password to CONFIG_FN
-if options.password is not None:
-    pswd = b64enc(options.password)
-    if cfg.getOpt('password', '') == pswd:
-        log(u'Nyt kodeord angivet med --password er ens med nuværende'
-            u' kodeord i %s' % CONFIG_FN, -2)
-    else:
-        cfg.set(PROFILE or 'default', 'password', pswd)
+    group = parser.add_argument_group('Diverse')
+    group.add_argument(
+        '-h', '--help',
+        action='help',
+        help=u"Vis denne hjælpetekst og afslut")
+    group.add_argument(
+        '-v', '--verbose',
+        dest='verbosity', default=[1],
+        action='append_const', const=1,
+        help=u'Skriv flere log-linjer')
+    group.add_argument(
+        '-q', '--quiet',
+        dest='verbosity',  # See --verbose above
+        action='append_const', const=-1,
+        help=u'Skriv færre log-linjer')
 
-        data = open(CONFIG_FN, 'r').read()
-        r = re.compile(ur'(?m)^password\s*=.*$')
-        if PROFILE:
-            log(u'Du har brugt --profile sammen med --password', -2)
-            log(u'I dette tilfælde er du nødt til selv at opdatere '
-                u'konfigurationsfilen %s med' % CONFIG_FN, -2)
-            log(u'password=%s' % pswd)
-        elif not r.findall(data):
-            log(u'Kan ikke finde linjen med password', -2)
-            log(u'I dette tilfælde er du nødt til selv at opdatere '
-                u'konfigurationsfilen %s med' % CONFIG_FN, -2)
-            log(u'password=%s' % pswd)
+    args, other = parser.parse_known_args(argv)
+
+    # Extra checks that we have a valid set of options
+    if other:
+        parser.error(u'Ugyldige flag/argumenter: %r' % ' '.join(other))
+    if not re.match('^[-_.a-z0-9]+$', args.profile):
+        parser.error(u'PROFILE må kun indeholde a til z, 0-9, _, . og -')
+    if args.doconfig and args.password:
+        parser.error(u'--config og --password kan ikke bruges samtidigt')
+    if args.doconfig and args.smtppassword:
+        parser.error(u'--config og --smtppassword kan ikke bruges samtidigt')
+
+    # Setup (default) values
+    args.verbosity = max(sum(args.verbosity), 0)
+
+    if args.doconfig:
+        configure(args.configfilename, args.profile)
+        sys.exit(0)
+
+    cfg = ProfileConf(args.profile)
+    if os.path.isfile(args.configfilename):
+        if cfg.read(args.configfilename):
+            err = ''  # Everything ok
         else:
-            data = r.sub('password=%s' % pswd, data)
-            try:
-                open(CONFIG_FN, 'w').write(data)
-                log(u'Nyt kodeord er skrevet til'
-                    u'konfigurationsfilen %s' % CONFIG_FN, -2)
-            except IOError:
-                log(u'Kan ikke skrive til '
-                    u'konfigurationsfilen %s' % CONFIG_FN, -2)
-                log(u'Nyt kodeord bliver ikke skrevet', -2)
-    sys.exit(1)
-
-
-try:
-    LOGINTYPE = cfg.getOpt('logintype', 'alm')
-    USERNAME = cfg.getOpt('username')
-    PASSWORD = b64dec(cfg.getOpt('password'))
-    HOSTNAME = cfg.getOpt('hostname')
-    SENDER = cfg.getOpt('senderemail')
-    EMAIL = cfg.getOpt('email')
-    if options.configfilename:
-        CACHEPREFIX = cfg.getOpt('cacheprefix')
+            err = u"Konfigurationsfilen %s kan ikke læses korrekt."
     else:
-        CACHEPREFIX = cfg.getOpt('cacheprefix', '')
-    CACHEPREFIX = CACHEPREFIX.rstrip('-') + '-' if CACHEPREFIX else ''
-    SMTPHOST = cfg.getOpt('smtpserver', '')
-    SMTPPORT = cfg.getOpt('smtpport', '')
-    SMTPLOGIN = cfg.getOpt('smtplogin', '')
-    SMTPPASS = cfg.getOpt('smtppassword', '')
-except ConfigParser.NoOptionError, e:
-    parser.error(u'''Konfigurationsfilen '%s' mangler en indstilling for %s.
-Kør først programmet med --config for at sætte det op.
-Eller ret direkte i '%s'.''' % (CONFIG_FN, e.option, CONFIG_FN))
+        err = u"Kan ikke finde konfigurationsfilen '%s'."
+    if err:
+        parser.error(
+            err % args.configfilename +
+            '\nKør evt fskintra med --config for at sætte det op.')
 
-# setup cache and msg directories, and ensure that they exist
-CACHE_DN = os.path.join(ROOT, CACHEPREFIX + 'cache')
-MSG_DN = os.path.join(ROOT, CACHEPREFIX + 'msg')
-for dn in (CACHE_DN, MSG_DN):
-    if not os.path.isdir(dn):
-        os.makedirs(dn)
+    if not cfg.has_section(args.profile):
+        parser.error((u'Konfigurationsfilen %s har ikke afsnittet [%s] '
+                      u'angivet med --profile') %
+                     (args.configfilename, args.profile))
 
-#
-# Ensure that SMTP options are sane
-#
-if SMTPHOST:
-    try:
-        SMTPPORT = int(SMTPPORT)
-    except ValueError:
-        parser.error(u'''
-Konfigurationsfilen '%s' mangler en korrekt indstilling for smtpport.
-Nuværende indstilling er %s - en korrekt værdi kunne være fx. 25 eller 587.
-Ret evt direkte i konfigurationsfilen ved at tilføje en linje svarende til
-smtpport=25.'''.strip() % (CONFIG_FN, repr(SMTPPORT)))
+    # Do we actaully want to set a password/smtppassword
+    if args.password is not None or args.smtppassword is not None:
+        if args.password is not None:
+            cfg['password'] = args.password
+            print u'Kodeord opdateret'
+        if args.smtppassword is not None:
+            cfg['smtppassword'] = args.smtppassword
+            print u'SMTP-kodeord opdateret'
+        cfg.writeTo(args.configfilename)
+        print u"Konfigurationsfilen '%s' opdateret" % args.configfilename
+        sys.exit(0)
 
-        log(u'Ugyldigt SMTP portnummer angivet %s - bruger 587' %
-            repr(SMTPPORT))
-        SMTPPORT = 587
+    # Check that the configuration in cfg is sane
+    for (key, check, question) in CONFIG_OPTIONS:
+        val = cfg[key]
+        setattr(args, key, val)  # Copy the (possibly empty) value to args
+        extraErr = u''
+        if check.match(val):
+            if key == 'hostname':
+                args.hostname = str(args.hostname)
+            if key == 'smtpport':
+                args.smtpport = int(args.smtpport, 10)
 
-    if not SMTPLOGIN:
-        SMTPPASS = ''
+            if key == 'smtpusername' and val and not cfg['smtppassword']:
+                extraErr = (u'\nsmtpusername må ikke angives uden at '
+                            u'smtppassword også er angivet.')
+            elif key == 'smtppassword' and val and not cfg['smtpusername']:
+                extraErr = u'\nsmtppassword kræves da smtpusername er angivet.'
+            else:
+                continue
 
-    if SMTPPASS:
-        SMTPPASS = b64dec(SMTPPASS)
-else:
-    SMTPPORT = ''
-    SMTPLOGIN = ''
-    SMTPPASS = ''
+        msg = u'''
+Konfigurationsfilen mangler en lovlig indstilling for %s.%s
+
+Konfig.fil     : %s
+Profil         : %s
+Indstilling    : %s
+Forklaring     : %s
+Nuværende værdi: %s
+
+Ret direkte i konfigurationsfilen ved at tilføje en linje/rette linjen med
+%s = NY_VÆRDI
+Eller kør fskintra med --config'''.strip() + '\n'
+        msg %= (key, extraErr, args.configfilename, args.profile,
+                key, question, cfg[key] if cfg[key] else '[TOM]', key)
+        if key.endswith('password'):
+            msg += u'Eller kør fskintra med --%s\n' % key
+        if key.endswith('smtpusername'):
+            msg += u'Eller kør fskintra med --smtppassword\n'
+        sys.stderr.write(msg)
+        sys.exit(1)
+
+    # Setup cache and msg directories, and ensure that they exist
+    args.cacheprefix = args.cacheprefix.strip('-')
+    if args.cacheprefix:
+        args.cacheprefix += '-'
+    args.cachedir = os.path.join(ROOT, args.cacheprefix + 'cache')
+    args.msgdir = os.path.join(ROOT, args.cacheprefix + 'msg')
+    for dn in (args.cachedir, args.msgdir):
+        if not os.path.isdir(dn):
+            os.makedirs(dn)
+
+    global options
+    options = args

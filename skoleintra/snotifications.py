@@ -57,7 +57,7 @@ def checkForUpdates():
         return (True, state)
 
     # Did we NOT run this with the --quick parameter
-    if config.FULL_UPDATE:
+    if config.options.fullupdate:
         config.log(u'Kører fuld opdatering selvom der ikke forventes '
                    u'nyt. Du bør bruge --quick', 1)
         return (True, state)

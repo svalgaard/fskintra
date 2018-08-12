@@ -12,7 +12,9 @@ import skoleintra.pgPhotos
 import skoleintra.pgSignup
 
 
-def main():
+def main(argv=None):
+    skoleintra.config.parseArgs(argv)
+
     (full, state) = skoleintra.snotifications.checkForUpdates()
     if not full:
         return

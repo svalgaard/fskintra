@@ -225,7 +225,7 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
 
     def store(self):
         mid = self.getMessageID()
-        dn = os.path.join(config.MSG_DN, self.getLongMessageID())
+        dn = os.path.join(config.options.msgdir, self.getLongMessageID())
         if os.path.isdir(dn):
             # Already stored - ignore!
             return False
@@ -328,7 +328,7 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
                 atag.replaceWithChildren()  # kill the "broken" link
                 continue
             url = atag['href']
-            if url.startswith('/') or config.HOSTNAME in url:  # onsite!
+            if url.startswith('/') or config.options.hostname in url:  # onsite
                 data = None
                 try:
                     data = surllib.skoleGetURL(url, False)
@@ -392,7 +392,8 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
         dt = email.utils.formatdate(time.mktime(self.mp['date_ts']), True)
         msg['Received'] = ('from %s ([127.0.0.1] helo=%s) '
                            'by %s with smtp (fskintra) for %s; %s'
-                           ) % (hostname, hostname, hostname, config.EMAIL, dt)
+                           ) % (hostname, hostname, hostname,
+                                config.options.email, dt)
         msg['Date'] = dt
 
         title = self.mp['title']
@@ -403,9 +404,10 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
             sender = u'Skoleintra - %s' % self.mp['sender']
         else:
             sender = u'Skoleintra'
-        sender = headerEncodeField(sender) + u' <%s>' % config.SENDER
+        sender = headerEncodeField('%s <%s>' %
+                                   (sender, config.options.senderemail))
         msg['From'] = sender
-        msg['To'] = config.EMAIL
+        msg['To'] = config.options.email
 
         # Other tags just for ourselves
         keys = 'mid,md5'.split(',')
@@ -427,27 +429,31 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
     def send(self):
         config.log(u'Sender email %s' %
                    (self.mp['title'] if self.mp['title'] else self))
-        if config.CATCH_UP:
+        if config.options.catchup:
             config.log(u'(sendes faktisk ikke pga --catch-up)')
             return self.store()
 
         msg = self.asEmail()
         # Open smtp connection
-        if config.SMTPHOST:
-            if config.SMTPPORT == 465:
-                server = smtplib.SMTP_SSL(config.SMTPHOST, config.SMTPPORT)
+        if config.options.smtphostname:
+            if config.options.smtpport == 465:
+                server = smtplib.SMTP_SSL(config.options.smtphostname,
+                                          config.options.smtpport)
             else:
-                server = smtplib.SMTP(config.SMTPHOST, config.SMTPPORT)
+                server = smtplib.SMTP(config.options.smtphostname,
+                                      config.options.smtpport)
         else:
             server = smtplib.SMTP('localhost')
         # server.set_debuglevel(1)
-        if config.SMTPLOGIN:
+        if config.options.smtpusername:
             try:
                 server.starttls()
             except smtplib.SMTPException:
                 pass  # ok, but we tried...
-            server.login(config.SMTPLOGIN, config.SMTPPASS)
-        server.sendmail(config.SENDER, config.EMAIL, msg.as_string())
+            server.login(config.options.smtpusername,
+                         config.options.smtppassword)
+        server.sendmail(config.options.senderemail,
+                        config.options.email, msg.as_string())
         server.quit()
 
         # Ensure that we only send once
@@ -472,9 +478,8 @@ def hasSentMessage(date='', tp='', md5='', mid=''):
     else:
         spath += '*'
 
-    path = os.path.join(config.MSG_DN, spath)
+    path = os.path.join(config.options.msgdir, spath)
 
-    assert(type(path) == str)
     assert('/' not in spath)
 
     return list(fn for fn in glob.glob(path) if not fn.endswith('.tmp'))
