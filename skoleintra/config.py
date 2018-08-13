@@ -4,6 +4,7 @@ import argparse
 import codecs
 import ConfigParser
 import getpass
+import inspect
 import locale
 import os
 import re
@@ -12,6 +13,11 @@ import sys
 # Default location of configuraion files
 ROOT = os.path.expanduser('~/.skoleintra/')
 CONFIG_FN = os.path.join(ROOT, 'skoleintra.txt')
+
+# Sections / different types of sections/pages (Section)
+PAGE_SECTIONS = []
+
+# Default value
 options = argparse.Namespace(verbosity=1)
 
 # Options that must/can be set in the CONFIG file
@@ -222,6 +228,13 @@ https://github.com/svalgaard/fskintra/
 
     group = parser.add_argument_group(u'Hvodan/hvor meget skal hentes')
     group.add_argument(
+        '-s', '--section', metavar='SECTION',
+        dest='sections', default=[],
+        action='append',
+        help=u'Kommasepareret liste af et eller flere afsnit/dele af '
+             u'hjemmesiden der skal hentes nyt fra. '
+             u"Brug '--section list' for at få en liste over mulige afsnit.")
+    group.add_argument(
         '-Q', '--quick',
         dest='fullupdate', default=True,
         action='store_false',
@@ -267,6 +280,49 @@ https://github.com/svalgaard/fskintra/
 
     # Setup (default) values
     args.verbosity = max(sum(args.verbosity), 0)
+
+    # Check that the --section SECTION setup is sane
+    assert(PAGE_SECTIONS)  # at least one section must be defined earlier
+    defsecs = set(s.section for s in PAGE_SECTIONS)
+
+    if not args.sections:
+        # Run everything by default
+        args.sections = defsecs.copy()
+    else:
+        secs = filter(None, u','.join(args.sections).lower().split(u','))
+        args.sections = defsecs.copy()
+
+        if u'list' in secs:
+            msg = u'''
+Det er muligt at angive følgende mulige afsnit som argument til --section:
+
+%s
+
+Brug fx. --section frp,doc for kun at se efter nyt fra forsiden og beskeder.
+Eller --section ,-pht,-doc for at se efter nyt på alle sider undtagen billeder
+og dokumenter. Det ekstra komma er nødvendig for at -pht ikke bliver set som
+om du har kaldt fskintra med argumenterne -p, -h og -t.
+''' % u'\n'.join(u'  %-5s %s' % (s.section, s.desc) for s in PAGE_SECTIONS)
+            sys.stderr.write(msg.lstrip())
+            sys.exit(0)
+
+        # check that all sections are valid
+        if secs and not secs[0].startswith(u'-'):
+            args.sections.clear()
+        illegal = []
+        for sec in secs:
+            if sec in defsecs:
+                args.sections.add(sec)
+            elif sec.startswith('-') and sec[1:] in defsecs:
+                args.sections.discard(sec[1:])
+            else:
+                illegal.append(sec)
+
+        if illegal:
+            illegal = u', '.join(repr(i) for i in illegal)
+            parser.error((u'Ugyldig(e) navne på afsnit angivet: %s\nBrug '
+                          u'--section LIST for at få en liste over lovlige '
+                          u'lovlige nane') % illegal)
 
     if args.doconfig:
         configure(args.configfilename, args.profile)
@@ -354,3 +410,41 @@ Eller kør fskintra med --config'''.strip() + '\n'
 
     global options
     options = args
+
+
+class Section:
+    def __init__(self, section):
+        assert(len(section) == 3)
+        self.section = section
+
+    def __call__(self, f):
+        self.f = f
+        self.name = name = f.__name__
+        self.desc = f.__doc__
+        if not self.desc:
+            raise TypeError('%s.__doc__ cannot be empty!' % name)
+        self.args = inspect.getargspec(f).args
+        if self.args not in [['cname'], ['cnames']]:
+            raise TypeError('%s must take one parameter with name cname/cnames'
+                            % name)
+        self.multi = self.args == ['cnames']
+        PAGE_SECTIONS.append(self)
+
+        return self
+
+    def maybeRun(self, cnames):
+        if self.section in options.sections:
+            self.run(cnames)
+        else:
+            log(u'Kører ikke %s da dette afsnit er fravalgt via --section'
+                % self, 1)
+
+    def run(self, cnames):
+        if self.multi:
+            self.f(cnames)
+        else:
+            for cname in cnames:
+                self.f(cname)
+
+    def __str__(self):
+        return u'%s (%s)' % (self.section, self.desc)

@@ -21,14 +21,9 @@ def main(argv=None):
 
     cnames = skoleintra.schildren.getChildren()
 
-    skoleintra.pgFrontpage.skoleFrontpage(cnames)
-    skoleintra.pgDialogue.skoleDialogue(cnames)
-
-    for cname in cnames:
-        skoleintra.pgContacts.skoleContacts(cname)
-        skoleintra.pgDocuments.skoleDocuments(cname)
-        skoleintra.pgPhotos.skolePhotos(cname)
-        skoleintra.pgSignup.skoleSignup(cname)
+    # Sections/pages are considered in the order they were imported
+    for sf in skoleintra.config.PAGE_SECTIONS:
+        sf.maybeRun(cnames)
 
     # save updated state
     skoleintra.snotifications.saveState(state)

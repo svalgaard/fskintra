@@ -5,6 +5,8 @@ import schildren
 import semail
 import surllib
 
+SECTION = 'sgn'
+
 
 def findEvents(cname, bs):
     toptitle = bs.select('.sk-grid-top-header li')
@@ -38,12 +40,14 @@ def findEvents(cname, bs):
                 and v.lower().startswith(u'lukket')):
             continue  # Ignore this line
 
-        msg = semail.Message(cname, 'sgn', unicode(ebs))
+        msg = semail.Message(cname, SECTION, unicode(ebs))
         msg.setTitle(u'%s: %s' % kvl[0])
         msg.maybeSend()
 
 
+@config.Section(SECTION)
 def skoleSignup(cname):
+    'Tilmeldinger/samtaler'
     config.clog(cname, u'Kigger efter nye samtaler')
     url = schildren.getChildURL(cname, '/signup/conversation')
     bs = surllib.skoleGetURL(url, True)

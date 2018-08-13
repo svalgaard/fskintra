@@ -10,6 +10,8 @@ import schildren
 import semail
 import surllib
 
+SECTION = 'msg'
+
 
 def find1orFail(bs, selector, asText=False):
     hits = bs.select(selector)
@@ -38,7 +40,7 @@ Output is an semail.Message ready to be sent'''
     if jsn['PreviousMessagesText']:
         html += u'<div class="prev">%s</div>\n' % jsn['PreviousMessagesText']
 
-    msg = semail.Message(cname, 'msg', html)
+    msg = semail.Message(cname, SECTION, html)
     if threadId:
         msg.setMessageID(threadId, str(jsn["Id"]))
     else:
@@ -107,7 +109,7 @@ def parseTrayMessages(cname, bs):
         # We could also get the title
         title = div.find('div', 'sk-message-title').text.strip()
 
-        if semail.hasSentMessage(tp='msg', mid=mid):
+        if semail.hasSentMessage(tp=SECTION, mid=mid):
             continue
 
         config.clog(cname, u'Henter ny besked: %s - %s' % (sender, title), 2)
@@ -148,7 +150,7 @@ def parseMessages(cname, bs):
                         % (i, tid, lmid), -1)
             continue
 
-        if semail.hasSentMessage(tp='msg', mid=(tid, lmid)):
+        if semail.hasSentMessage(tp=SECTION, mid=(tid, lmid)):
             continue
 
         # This last messages has not been seen - load the entire conversation
@@ -172,7 +174,7 @@ def parseMessages(cname, bs):
         assert(type(msgs) == list)
         for jsn in msgs[::-1]:
             mid = unicode(jsn.get('Id'))
-            if semail.hasSentMessage(tp='msg', mid=(tid, mid)):
+            if semail.hasSentMessage(tp=SECTION, mid=(tid, mid)):
                 continue
 
             # Generate new messages with this content
@@ -205,7 +207,9 @@ def getMsgsForChild(cname):
         return []
 
 
+@config.Section(SECTION)
 def skoleDialogue(cnames):
+    'Beskeder'
     msgs = collections.OrderedDict()
     for cname in cnames:
         for msg in getMsgsForChild(cname):

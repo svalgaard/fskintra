@@ -10,6 +10,8 @@ import schildren
 import semail
 import surllib
 
+SECTION = 'frp'
+
 
 def parseFrontpageItem(cname, div):
 
@@ -32,7 +34,7 @@ def parseFrontpageItem(cname, div):
 
     author = div.find('div', 'sk-news-item-author')
     body = div.findAll('div', 'sk-user-input')[0]
-    msg = semail.Message(cname, 'frp', unicode(body)+cdiv)
+    msg = semail.Message(cname, SECTION, unicode(body)+cdiv)
 
     title = body.get_text('\n').strip().split('\n')[0]
     title = ' '.join(title.replace(u'\xa0', ' ').strip().rstrip(' .').split())
@@ -81,7 +83,7 @@ def parseFrontpage(cname, bs):
                     today = unicode(time.strftime(u'%d. %b. %Y'))
                     c.append(u" \U0001F1E9\U0001F1F0")  # Unicode DK Flag
                     c.append(surllib.todayComment())
-                    msg = semail.Message(cname, 'frp', unicode(c))
+                    msg = semail.Message(cname, SECTION, unicode(c))
                     msg.setTitle(c.text.strip())
                     msg.setDateTime(today)
 
@@ -110,7 +112,9 @@ def getMsgsForChild(cname):
     return parseFrontpage(cname, bs)
 
 
+@config.Section(SECTION)
 def skoleFrontpage(cnames):
+    'Forside inkl. opslagstavle'
     msgs = collections.OrderedDict()
     for cname in cnames:
         for msg in getMsgsForChild(cname):

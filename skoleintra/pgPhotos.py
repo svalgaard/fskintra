@@ -10,6 +10,7 @@ import schildren
 import semail
 import surllib
 
+SECTION = 'pht'
 MAX_CACHE_AGE = .99
 PHOTOS_PER_EMAIL = 50
 
@@ -18,7 +19,7 @@ def sendPhotos(cname, title, mid, photos):
 
     # First determine if any of the photos were sent earlier
     previouslySent = set()
-    for dn in semail.hasSentMessage(tp='pht', mid=mid):
+    for dn in semail.hasSentMessage(tp=SECTION, mid=mid):
         for fn in glob.glob(os.path.join(dn, '*.json')):
             try:
                 jsn = json.load(open(fn))
@@ -52,7 +53,7 @@ def sendPhotos(cname, title, mid, photos):
         for i, img in enumerate(ebs.select('img')):
             img['src'] = pics[i]
 
-        msg = semail.Message(cname, 'pht', unicode(ebs))
+        msg = semail.Message(cname, SECTION, unicode(ebs))
         if ecount > 1:
             msg.setTitle(u'Billeder: %s (%d/%d)' % (title, ei+1, ecount))
         else:
@@ -100,7 +101,9 @@ def findPhotos(cname, bs):
         findPhotosInFolder(cname, url, bs2)
 
 
+@config.Section(SECTION)
 def skolePhotos(cname):
+    'Billeder'
     url = schildren.getChildURL(cname, '/photos/archives')
     bs = surllib.skoleGetURL(url, True, MAX_CACHE_AGE)
 

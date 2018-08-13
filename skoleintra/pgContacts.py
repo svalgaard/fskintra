@@ -5,6 +5,7 @@ import schildren
 import semail
 import surllib
 
+SECTION = 'ctc'
 MAX_CACHE_AGE = 6.9
 
 
@@ -58,13 +59,15 @@ def contactCard(cname, bs):
         if photob:
             photob.decompose()
 
-    msg = semail.Message(cname, 'ctc', unicode(bs))
+    msg = semail.Message(cname, SECTION, unicode(bs))
     msg.setTitle(name)
     msg.setMessageID(bs.url.split('/')[-1])
     msg.maybeSend()
 
 
+@config.Section('ctc')
 def skoleContacts(cname):
+    'Kontaktinformation'
     config.clog(cname, u'Kigger efter ny kontaktinformation')
     url = schildren.getChildURL(cname, '/contacts/students/cards')
 

@@ -7,6 +7,7 @@ import schildren
 import semail
 import surllib
 
+SECTION = 'doc'
 MAX_CACHE_AGE = .99
 
 
@@ -37,7 +38,7 @@ def docFindDocuments(cname, rootTitle, bs, title):
             h.span.string = folder
             h.b.string = docTitle
 
-            msg = semail.Message(cname, 'doc', unicode(h))
+            msg = semail.Message(cname, SECTION, unicode(h))
             msg.setTitle(sfn)
             msg.setDateTime(docDate)
             msg.addAttachment(url, docTitle)
@@ -45,7 +46,9 @@ def docFindDocuments(cname, rootTitle, bs, title):
             msg.maybeSend()
 
 
+@config.Section(SECTION)
 def skoleDocuments(cname):
+    'Dokumenter'
     for rootTitle, folder in [('Klassens dokumenter', 'class')]:
         config.clog(cname, u'%s: Kigger efter dokumenter' % rootTitle)
         url = schildren.getChildURL(cname, '/documents/' + folder)
