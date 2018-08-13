@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import bs4
 import collections
 import re
 import time
