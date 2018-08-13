@@ -65,7 +65,7 @@ def contactCard(cname, bs):
     msg.maybeSend()
 
 
-@config.Section('ctc')
+@config.Section(SECTION)
 def skoleContacts(cname):
     'Kontaktinformation'
     config.clog(cname, u'Kigger efter ny kontaktinformation')
