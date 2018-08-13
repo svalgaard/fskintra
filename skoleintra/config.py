@@ -226,7 +226,7 @@ https://github.com/svalgaard/fskintra/
         default=None,
         help=u'Opdatér kodeord til SMTP (smtppassword) i konfigurationsfilen')
 
-    group = parser.add_argument_group(u'Hvodan/hvor meget skal hentes')
+    group = parser.add_argument_group(u'Hvad/hvor meget skal hentes')
     group.add_argument(
         '-s', '--section', metavar='SECTION',
         dest='sections', default=[],
