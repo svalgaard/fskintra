@@ -266,7 +266,7 @@ def skoleLogin():
                 config.log(u'Kunne ikke bekræfte kontaktoplysninger på %s'
                            % url, -1)
                 sys.exit(1)
-            resp = br.submit()
+            resp = br.submit(nr=0)
             continue
 
         if url == br.getState('index') and data:

@@ -2,7 +2,8 @@
 #
 # The special page with
 #     Bekræft kontaktoplysninger
-# is only shown at first login
+# is only shown rarely, e.g., at first login, every N months
+#
 # skoleConfirm is called from surllib
 
 import semail
