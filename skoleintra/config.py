@@ -10,7 +10,7 @@ import os
 import re
 import sys
 
-# Default location of configuraion files
+# Default location of configuration files
 ROOT = os.path.expanduser('~/.skoleintra/')
 CONFIG_FN = os.path.join(ROOT, 'skoleintra.txt')
 
