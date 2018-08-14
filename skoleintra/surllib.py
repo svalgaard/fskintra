@@ -96,7 +96,12 @@ def cleanupSoup(bs):
 
     # Remove empty class attributes
     for tag in bs.find_all(**{'class': ''}):
-        del tag['class']
+        if not tag.has_attr('class'):
+            continue
+        if '' in tag['class']:
+            tag['class'].remove('')
+        if not tag['class']:
+            del tag['class']
 
 
 class Browser(mechanize.Browser):
