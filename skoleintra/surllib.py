@@ -354,10 +354,12 @@ def url2cacheFileName(url, postData):
     if postData:
         url += postData
     up = urlparse.urlparse(url)
+    p = urllib.url2pathname(up.path)
+    p = p.decode('utf-8', 'replace').replace(u'\ufffd', '_')
     parts = [config.options.cachedir,
              up.scheme,
              up.netloc,
-             urllib.url2pathname(up.path)[1:] + '.cache']
+             p[1:] + '.cache']
     if up.query:
         az = re.compile(r'[^0-9a-zA-Z]')
         for (k, vs) in sorted(cgi.parse_qs(up.query).items()):
