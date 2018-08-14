@@ -129,6 +129,9 @@ class Message:
         if cname not in self.mp['children']:
             self.mp['children'].append(cname)
 
+    def getChildren(self):
+        return self.mp['children'][:]
+
     def setDateTime(self, dt):
         assert(type(dt) == unicode)
         ts = time.localtime()  # Use NOW by default

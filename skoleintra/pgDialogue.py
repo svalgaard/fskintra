@@ -51,6 +51,7 @@ Output is an semail.Message ready to be sent'''
     msg.setSender(jsn['SenderName'])
     for att in (jsn['AttachmentsLinks'] or []):
         msg.addAttachment(att['HrefAttributeValue'], att['Text'])
+    msg.setData({'unread': jsn.get('ShowUnreadIndication', False)})
     return msg
 
 
@@ -119,6 +120,15 @@ def parseTrayMessages(cname, bs):
         msgs.append(msg)
 
     return msgs
+
+
+def markMessageAsRead(cname, mid, isRead=True):
+    assert(type(mid) in [str, unicode])
+    isRead = 'true' if isRead else 'false'
+    url = schildren.getChildURL(cname, '/messages/UpdateMessagesReadState')
+    data = {'selectionState[MessageIds][]': mid, 'isRead': isRead}
+    config.clog(cname, u'Markerer besked #%s som læst' % mid, 3)
+    surllib.skoleGetURL(url, noCache=True, postData=data)
 
 
 def parseMessages(cname, bs):
@@ -215,7 +225,6 @@ def skoleDialogue(cnames):
         for msg in getMsgsForChild(cname):
             if msg.hasBeenSent():
                 continue
-            config.clog(cname, u'Ny besked fundet: %s' % msg.mp['title'])
             mid = msg.getLongMessageID()
             if mid in msgs:
                 msgs[mid].addChild(cname)
@@ -226,3 +235,7 @@ def skoleDialogue(cnames):
         cname = ','.join(msg.mp['children'])
         config.clog(cname, u'Ny besked fundet: %s' % msg.mp['title'])
         msg.maybeSend()
+        if msg.mp['data']['unread']:
+            for cn in msg.getChildren():
+                smid = msg.getMessageID().split('--')[-1]
+                markMessageAsRead(cn, smid)
