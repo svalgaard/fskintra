@@ -142,6 +142,7 @@ class Browser(mechanize.Browser):
             'dialogue': None,
             'lastUpdateTime': None,
             'lastUpdateURL': None,
+            'header': [],
         }
         self.firstPass = True
 
@@ -155,6 +156,12 @@ class Browser(mechanize.Browser):
                     sp = st.split()
                     if st.startswith('# fskintra: ') and len(sp) == 4:
                         self.state[sp[-2]] = sp[-1]
+                    if st.startswith('# fskintra-header: '):
+                        _, header = st.split(': ', 1)
+                        k, v = header.split(': ')
+                        self.state['header'].append((k, v))
+                if self.state['header']:
+                    self.addheaders = self.state['header']
             else:
                 config.log(u'Indlæser ikke tidligere browsertilstand '
                            u'fra %s pga --skipcache' % sfn)
@@ -169,7 +176,12 @@ class Browser(mechanize.Browser):
         fd = open(sfn, 'a')
         for (k, v) in sorted(self.state.items()):
             if v:
-                fd.write('# fskintra: %s %s\n' % (k, v))
+                if k == 'header':
+                    for k, v in v:
+                        fd.write('# fskintra-header: %s: %s\n' % (k, v))
+                    pass
+                else:
+                    fd.write('# fskintra: %s %s\n' % (k, v))
         fd.close()
 
     def open(self, url, *args, **aargs):
