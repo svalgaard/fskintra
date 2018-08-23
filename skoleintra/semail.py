@@ -407,8 +407,8 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
             sender = u'Skoleintra - %s' % self.mp['sender']
         else:
             sender = u'Skoleintra'
-        sender = headerEncodeField('%s <%s>' %
-                                   (sender, config.options.senderemail))
+        sender = '%s <%s>' % (headerEncodeField(sender),
+                              config.options.senderemail)
         msg['From'] = sender
         msg['To'] = config.options.email
 
