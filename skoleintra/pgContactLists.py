@@ -33,10 +33,9 @@ def listsCheckList(postData, listtype):
     else:
         tbl = tbl[2]
 
-    if listtype == 'V6':
-        # Remove links to pictures of parents
-        for a in tbl.findAll('a'):
-            a.replaceWithChildren()
+    # Remove links to pictures of parents/kids
+    for a in tbl.findAll('a'):
+        a.replaceWithChildren()
 
     tr = tbl.find('tr')
     if tr.find('h2'):
