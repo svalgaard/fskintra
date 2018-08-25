@@ -1,21 +1,24 @@
-# ForældreIntra in a box
-
-## Prerequisites
+# fskintra i Docker
 
 [Docker](https://www.docker.com/)
 
-## Setup
+Hvis du bruger Docker, kan dette også forholdsvist nemt sættes op.
 
-    python fskintra.py --config
-    docker-machine start
     docker build -t fskintra .
 
-## Start
+Dernæst konfigurerer og kører du fskintra ligesom du plejer bortset fra at du
+bruger `docker-run.sh` i stedet for `fskintra.py`, fx.
 
-    docker run -v ~/.skoleintra:/root/.skoleintra -t fskintra
+    docker-run.sh --config
 
-## PanicButton
+Eller blot
 
-Stop all docker containers:
+    docker-run.sh --config
+
+Data m.v. gemmes stadigvæk i `~/.skoleintra`.
+
+## Panik?
+
+Stop alle docker containere, hvis noget går galt:
 
     docker stop $(docker ps -a -q)
