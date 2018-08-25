@@ -200,7 +200,9 @@ def skoleGetURL(url, asSoup=False, noCache=False, perChild=True,
     else:
         uurl = url.decode('utf-8')
 
-    # FIXME? fix urls without host names
+    # Fix urls without a hostname
+    if url.startswith('/'):
+        url = 'https://%s%s' % (config.HOSTNAME, url)
 
     # Sometimes the URL is actually an empty string
     if not url:
