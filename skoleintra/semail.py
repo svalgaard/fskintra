@@ -434,11 +434,14 @@ class Message:
         msg = self.asEmail()
         # open smtp connection
         if config.SMTPHOST:
-            server = smtplib.SMTP(config.SMTPHOST, config.SMTPPORT)
+            if config.SMTPPORT == 465:
+                server = smtplib.SMTP_SSL(config.SMTPHOST, config.SMTPPORT)
+            else:
+                server = smtplib.SMTP(config.SMTPHOST, config.SMTPPORT)
         else:
             server = smtplib.SMTP('localhost')
         # server.set_debuglevel(1)
-        if config.SMTPLOGIN:
+        if config.SMTPLOGIN and not config.SMTPPORT == 465:
             try:
                 server.starttls()
             except smtplib.SMTPException:
