@@ -155,8 +155,11 @@ def parseMessages(cname, bs):
     for i, c in enumerate(conversations[::1]):
         tid = c.get('ThreadId')
         lmid = unicode(c.get('LatestMessageId'))
-        if not tid or not lmid:
-            config.clog(cname, 'Noget galt i tråd %d %r %r'
+        if not tid:
+            # ThreadId can be empty if this is a msg to all students
+            tid = ''
+        if not lmid:
+            config.clog(cname, u'Noget galt i tråd #%d %r %r'
                         % (i, tid, lmid), -1)
             continue
 
@@ -164,22 +167,29 @@ def parseMessages(cname, bs):
             continue
 
         # This last messages has not been seen - load the entire conversation
-        suffix = (
-            '/messages/conversations/loadmessagesforselectedconversation' +
-            '?threadId=' + tid +
-            '&takeFromRootMessageId=' + lmid +
-            '&takeToMessageId=0' +
-            '&searchRequest=')
+        if tid:
+            suffix = (
+                '/messages/conversations/loadmessagesforselectedconversation' +
+                '?threadId=' + tid +
+                '&takeFromRootMessageId=' + lmid +
+                '&takeToMessageId=0' +
+                '&searchRequest=')
+        else:
+            suffix = (
+                '/messages/conversations/getmessageforthreadlessconversation' +
+                '?messageId=' + lmid)
         curl = schildren.getChildURL(cname, suffix)
         data = surllib.skoleGetURL(curl, asSoup=False, noCache=True,
                                    addTimeSuffix=True)
 
         try:
-            msgs = json.loads(data)
+            jsn = json.loads(data)
         except ValueError:
             config.clog(cname, 'Kan ikke indlæse besked-listen i tråd %d %r %r'
                         % (i, tid, lmid), -1)
             continue
+
+        msgs = jsn if tid else [jsn]
 
         assert(type(msgs) == list)
         for jsn in msgs[::-1]:
