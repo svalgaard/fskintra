@@ -65,6 +65,7 @@ def cleanupSoup(bs):
     # deobfuscate content/spans with email addresses
     CLASS = '__cf_email__'
     DATA = 'data-cfemail'
+    HREF_PREFIX = '/cdn-cgi/l/email-protection'
     for tag in bs.find_all(**{'class': CLASS, DATA: re.compile('.')}):
         email = deobfuscateEmail(tag[DATA])
         if email:
@@ -73,14 +74,18 @@ def cleanupSoup(bs):
             tag.string = email
             if tag.name == 'span' and tag.attrs == {}:
                 tag.unwrap()
+            if tag.name == 'a' and tag.has_attr('href') and \
+                    tag['href'].startswith(HREF_PREFIX):
+                tag['href'] = 'mailto:' + email
 
     # deobfuscate href's with email links
-    HREF_PREFIX = '/cdn-cgi/l/email-protection#'
-    for tag in bs.find_all('a', href=re.compile('^%s.*' % HREF_PREFIX)):
+    for tag in bs.find_all('a', href=re.compile('^%s.*' % (HREF_PREFIX))):
         href = tag['href']
-        email = deobfuscateEmail(href[len(HREF_PREFIX):])
+        email = deobfuscateEmail(href[len(HREF_PREFIX):].strip('#'))
         if email:
             tag['href'] = 'mailto:' + email
+        else:
+            tag.unwrap()
 
     BLOCKED = 'blocked::'
     for tag in bs.find_all('a', title=re.compile('^%s.*' % BLOCKED)):
