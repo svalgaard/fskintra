@@ -35,7 +35,7 @@ python ./fskintra.py --quiet --quick
 ```
 
 Linjen med ```PYTHONIOENCODING=UTF-8``` er ikke altid nødvendig
-(se [evt denne side](troubleshooting)) men er næsten altid en god idé ift at
+(se [evt denne side](troubleshooting.md)) men er næsten altid en god idé ift at
 Python ellers nemt kan give problemer med danske bogstaver.
 
 Ved at tilføje ```--quiet``` skriver ```fskintra``` kun noget ud, hvis der er

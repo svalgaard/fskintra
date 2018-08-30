@@ -8,7 +8,7 @@ Byg et image med følgende kommando:
 docker build -t fskintra .
 ```
 
-Lav en konfig, enten som beskrevet i [Installationsvejledningen](install) 
+Lav en konfig, enten som beskrevet i [Installationsvejledningen](install.md) 
 eller ved at køre følgende docker kommando :
 
 ```bash
@@ -24,7 +24,7 @@ Docker containeren bliver automatisk slettet (`--rm`) efter hverkørsel, men din
 opæstning cache osv ligger stadig lokalt i `~/.skoleintra`, så du starter bare
 en ny container hver gang du vil hente nyt.
 
-Du kan evt sætte docker kommandoen i [cron](cron):
+Du kan evt sætte docker kommandoen i [cron](cron.md):
 
 ```bash
 15 6,17 * * * /usr/bin/docker run --rm -v ~/.skoleintra:/root/.skoleintra fskintra
