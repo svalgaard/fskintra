@@ -5,11 +5,6 @@ RUN mkdir -p /fskintra
 WORKDIR /fskintra
 
 COPY requirements.txt /fskintra
-#RUN apk add --update \
-#    build-base \
-#    libxml2-dev \
-#    libxslt-dev \
-#    && rm -rf /var/cache/apk/*
 
 RUN  apt-get update && \
              apt-get install -y build-essential locales && \
