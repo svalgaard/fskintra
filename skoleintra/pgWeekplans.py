@@ -5,7 +5,9 @@ import surllib
 import schildren
 import semail
 
+
 SECTION = 'pln'
+
 
 def formatWeekplan(bs):
     """Format the weekplan nicely for email"""
@@ -14,7 +16,7 @@ def formatWeekplan(bs):
     table = weekplan.div
     table.name = 'table'
     # Remove a couple of unneeded tags
-    for div in weekplan.find_all('div','sk-weekly-plan-grid'):
+    for div in weekplan.find_all('div', 'sk-weekly-plan-grid'):
         div.unwrap()
     for ul in weekplan.find_all('ul', 'sk-weekly-plan-grid-row'):
         ul.unwrap()
@@ -53,7 +55,6 @@ def getWeekplan(cname, url):
     return formatWeekplan(bs)
 
 
-
 @config.Section(SECTION)
 def skoleWeekplans(cname):
     'Ugeplaner'
@@ -65,7 +66,7 @@ def skoleWeekplans(cname):
     for a in ul.find_all('a', href=True):
         url = a['href']
         plan = getWeekplan(cname, url)
-        wid = url.split('/')[-1] # e.g. 35-2018
+        wid = url.split('/')[-1]  # e.g. 35-2018
         title = plan.find('h3').text.strip()
 
         if semail.hasSentMessage(tp=SECTION, mid=wid):
@@ -75,4 +76,3 @@ def skoleWeekplans(cname):
             msg.setTitle(title)
             msg.setMessageID(wid)
             msg.maybeSend()
-
