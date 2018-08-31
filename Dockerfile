@@ -1,22 +1,21 @@
 FROM python:2-slim
-MAINTAINER askeolsson@gmail.dk
+LABEL description='https://github.com/svalgaard/fskintra'
+
+ENV PYTHONUNBUFFERED 1
+ENV PYTHONIOENCODING UTF-8
 
 RUN mkdir -p /fskintra
 WORKDIR /fskintra
 
-COPY requirements.txt /fskintra
+COPY . /fskintra
 
-RUN  apt-get update && \
-             apt-get install -y build-essential locales && \
-             pip install --no-cache-dir -r requirements.txt && \
-             localedef -i da_DK -c -f UTF-8 -A /usr/share/locale/locale.alias da_DK && \
-             apt-get remove -y --purge build-essential && \
-             apt-get clean && \
-            rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y locales && \
+    localedef -i da_DK -c -f UTF-8 -A /usr/share/locale/locale.alias da_DK && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . /fskintra
 
 VOLUME /root/.skoleintra
 
