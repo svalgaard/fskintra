@@ -28,6 +28,7 @@ def formatWeekplan(bs):
         # li.sk-weekly-plan-grid-cell
         li.attrs = {}
         li.div.wrap(bs.new_tag('td'))
+        li.div.wrap(bs.new_tag('b'))
 
     # li -> tr + wrap ul content in td
     for li in weekplan.select('.sk-weekly-plan-grid-cell'):
@@ -62,17 +63,20 @@ def skoleWeekplans(cname):
     url = schildren.getChildURL(cname, 'item/weeklyplansandhomework/list/')
 
     bs = surllib.skoleGetURL(url, True, noCache=True)
-    ul = bs.find('ul', 'sk-weekly-plans-list-container')
-    for a in ul.find_all('a', href=True):
-        url = a['href']
-        plan = getWeekplan(cname, url)
-        wid = url.split('/')[-1]  # e.g. 35-2018
-        title = plan.find('h3').text.strip()
 
-        if semail.hasSentMessage(tp=SECTION, mid=wid):
-            continue
-        else:
+    ul = bs.find('ul', 'sk-weekly-plans-list-container')
+    if ul:
+        for a in ul.find_all('a', href=True):
+            url = a['href']
+            plan = getWeekplan(cname, url)
+            wid = url.split('/')[-1]  # e.g. 35-2018
+            title = plan.find('h3').text.strip()
+
             msg = semail.Message(cname, SECTION, unicode(plan))
             msg.setTitle(title)
             msg.setMessageID(wid)
             msg.maybeSend()
+    else:
+        if u'ikke autoriseret' in bs.text:
+            config.clog(cname, u'Din skole bruger ikke ugeplaner. '
+                        u"Du bør bruge '--section ,-%s'" % SECTION)
