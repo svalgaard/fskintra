@@ -103,16 +103,17 @@ Helt almindelig konfigurationfil oprettet via ```--config```:
 
 ```
 [default]
-logintype=alm
-username=peter42
-password=pswd:a2FUVHgyNA==
-hostname=aaskolen.m.skoleintra.dk
-email=example@example.net
-senderemail=example@example.net
-smtpserver=smtp.gmail.com
-smtpport=587
-smtplogin=example@gmail.com
-smtppassword=pswd:a2FUVHgyNA==
+logintype = alm
+username = peter42
+password = pswd:a2FUVHgyNA==
+hostname = aaskolen.m.skoleintra.dk
+cacheprefix = -
+email = example@example.net
+senderemail = example@example.net
+smtphostname = smtp.gmail.com
+smtpport = 587
+smtpusername = example@example.net
+smtppassword = pswd:ZnNraW50cmE=
 ```
 
 ### To brugere på samme skole ###
@@ -122,26 +123,28 @@ kan man lave underprofiler:
 
 ```
 [default]
-hostname=aaskolen.m.skoleintra.dk
-email=example@example.net
-senderemail=example@example.net
-smtpserver=smtp.gmail.com
-smtpport=587
-smtplogin=example@gmail.com
-smtppassword=pswd:a2FUVHgyNA==
+hostname = aaskolen.m.skoleintra.dk
+cacheprefix = -
+email = example@example.net
+senderemail = example@example.net
+smtphostname = smtp.gmail.com
+smtpport = 587
+smtpusername = example@example.net
+smtppassword = pswd:ZnNraW50cmE=
 
 [peter]
-logintype=uni
-username=peter42
-password=pswd:a2FUVHgyNA==
+logintype = uni
+username = peter42
+password = pswd:a2FUVHgyNA==
 
 [ida]
-logintype=uni
-username=ida42
-password=pswd:a2FUVHgyNA==
+logintype = uni
+username = ida42
+password = pswd:QW5kZW5Lb2RlNA==
 ```
 
-Beskeder sendt til begge forældre vil dernæst kun blive udsendt én gang.
+Da samme `cacheprefix` er brugt til de to profiler, bliver beskeder sendt til
+begge forældre kun udsendt én gang.
 Bemærk at man i så fald skal køre ```fskintra``` 2 gange:
 en gang med ```--profile peter``` og en gang med ```--profile ida```.
 
@@ -155,24 +158,24 @@ indhold), kun bliver udsendt én gang:
 
 ```
 [default]
-email=example@example.net
-senderemail=example@example.net
-smtpserver=smtp.gmail.com
-smtpport=587
-smtplogin=example@gmail.com
-smtppassword=pswd:a2FUVHgyNA==
+email = example@example.net
+senderemail = example@example.net
+smtphostname = smtp.gmail.com
+smtpport = 587
+smtpusername = example@example.net
+smtppassword = pswd:ZnNraW50cmE=
 
-[aaskolen]
-hostname=aaskolen.m.skoleintra.dk
-cacheprefix=aaskolen-
-logintype=uni
-username=peter42
-password=pswd:a2FUVHgyNA==
+[peter.skole1]
+hostname = aaskolen.m.skoleintra.dk
+cacheprefix = aaskolen-
+logintype = uni
+username = peter42
+password = pswd:a2FUVHgyNA==
 
-[soeskolen]
-hostname=soeskolen.m.skoleintra.dk
-cacheprefix=soeskolen-
-logintype=alm
-username=peter42
-password=pswd:a2Fa2FUVHgyNA==
+[peter.skole2]
+hostname = soeskolen.m.skoleintra.dk
+cacheprefix = soeskolen-
+logintype = uni
+username = peter42
+password = pswd:a2FUVHgyNA==
 ```

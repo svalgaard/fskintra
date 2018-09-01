@@ -7,21 +7,21 @@ ForældreIntra er en del af SkoleIntra, der brugers af næsten alle danske folke
 * Beskeder (både sendt og modtaget)
 * Dokumenter
 * Billeder
-* Samtaler
+* Tilmeldinger til samtaler og arrangementer
 
 Alle emails bliver gemt, dvs. du får kun en email, såfremt der faktisk er kommet nyt.
 
 NB: Ny version
 --------------
 
-Juli/August 2018: Denne version af fskintra bruger (modsat den tidligere) det nye design af ForældreIntra hjemmesiden. Endvidere kan man bruge uni-login til at logge ind og ikke kun "skole-specifikt/almindeligt" logind.
+August/September 2018: Denne version af fskintra bruger (modsat den tidligere) det nye design af ForældreIntra hjemmesiden. Endvidere kan man bruge uni-login til at logge ind og ikke kun "skole-specifikt/almindeligt" logind.
 
 Nyeste version kan p.t. findes her:
 
     # Til ForældreIntra med nyt design
     https://github.com/svalgaard/fskintra/tree/nyt.design
     # Til ForældreIntra Classic
-    https://github.com/svalgaard/fskintra
+    https://github.com/svalgaard/fskintra/tree/classic
 
 Når det har kørt i et stykke tid, skiftes over, så denne version bliver "standardversionen".
 
@@ -72,6 +72,7 @@ fskintra er skrevet/opdateres af
 [Jens Svalgaard kohrt](http://svalgaard.net/jens/) - github AT svalgaard.net
 
 Ændringer og forslag er bl.a. kommet fra
+* [Aske Olsson](https://github.com/dvaske)
 * [Jacob Kjeldahl](https://github.com/kjeldahl)
 * [Michael Legart](https://github.com/legart)
 * Kasper Lund
