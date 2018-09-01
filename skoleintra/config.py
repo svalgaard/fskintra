@@ -43,7 +43,7 @@ CONFIG_OPTIONS = (
      u'Modtageremailadresse (evt. flere adskilt med komma)'),
     (u'senderemail',
      re.compile(ur'^.+$'),
-     u'Afsenderemailadresse (evt. samme adresse) som ovenover)'),
+     u'Afsenderemailadresse (evt. samme adresse som ovenover)'),
     (u'smtphostname',
      re.compile(ur'^[-.a-zA-Z0-9]+$'),
      u'SMTP servernavn (evt. localhost hvis du kører din egen server)'
@@ -112,7 +112,7 @@ class ProfileConf(ConfigParser.ConfigParser):
         for section in [self.profile, 'default']:
             try:
                 value = self.get(section, option)
-                if option.startswith('password'):
+                if 'password' in option:
                     value = self.b64dec(value)
                 return value.decode('utf-8')
             except ConfigParser.Error:
@@ -123,7 +123,7 @@ class ProfileConf(ConfigParser.ConfigParser):
         option = str(option)  # Ensure this is a 8-bit string
         value = value.encode('utf-8') if type(value) == unicode else str(value)
 
-        if option.startswith('password'):
+        if 'password' in option:
             value = self.b64enc(value)
         if self.profile != 'default' and not self.has_section(self.profile):
             self.add_section(self.profile)
