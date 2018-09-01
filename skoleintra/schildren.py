@@ -49,5 +49,7 @@ def getChildURLPrefix(cname):
 
 
 def getChildURL(cname, suffix):
-    assert(suffix.startswith('/'))
+    # Guessing a bug in forældre intra as weekplan urls have the following
+    # format: parent/CHILD_ID/CHILD_NAMEitem/weeklyplansandhomework/list
+    assert(suffix.startswith('/') or suffix.startswith('item/'))
     return getChildURLPrefix(cname) + suffix

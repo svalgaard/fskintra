@@ -92,7 +92,7 @@ user@sputnik:~/fskintra$ ./fskintra.py --quick
 
 ## 4. Automatisk kørsel ##
 
-Se siden om [automatisk kørsel/cron jobs](cron) for detaljer om
+Se siden om [automatisk kørsel/cron jobs](cron.md) for detaljer om
 hvordan du sætter dette op.
 
 

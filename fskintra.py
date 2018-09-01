@@ -10,6 +10,7 @@ import skoleintra.pgDialogue
 import skoleintra.pgDocuments
 import skoleintra.pgPhotos
 import skoleintra.pgSignup
+import skoleintra.pgWeekplans
 
 
 def main(argv=None):
