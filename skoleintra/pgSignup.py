@@ -36,8 +36,8 @@ def findEvents(cname, bs):
                 kv[key.lower()] = s
             dl.append(li)
 
-        if list(k for k, v in kv.items() if k.startswith(u'status')
-                and v.lower().startswith(u'lukket')):
+        if list(k for k, v in kv.items() if k.startswith(u'status') and
+                v.lower().startswith(u'lukket')):
             continue  # Ignore this line
 
         msg = semail.Message(cname, SECTION, unicode(ebs))
@@ -47,8 +47,9 @@ def findEvents(cname, bs):
 
 @config.Section(SECTION)
 def skoleSignup(cname):
-    'Tilmeldinger/samtaler'
-    config.clog(cname, u'Kigger efter nye samtaler')
-    url = schildren.getChildURL(cname, '/signup/conversation')
-    bs = surllib.skoleGetURL(url, True)
-    findEvents(cname, bs)
+    'Tilmelding til samtaler/arrangementer'
+    config.clog(cname, u'Kigger efter nye samtaler/arrangementer')
+    for suffix in ('conversation', 'event'):
+        url = schildren.getChildURL(cname, '/signup/' + suffix)
+        bs = surllib.skoleGetURL(url, True)
+        findEvents(cname, bs)
