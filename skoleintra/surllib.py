@@ -109,6 +109,27 @@ def cleanupSoup(bs):
             del tag['class']
 
 
+def trimSoup(bs):
+    '''Trim children of bs for whitespace including <br/>'''
+    for rev in [False, True]:
+        children = list(bs.children)
+        if rev:
+            children = reversed(children)
+        for c in children:
+            if isinstance(c, bs4.element.Tag):
+                if c.name == 'br':
+                    c.extract()
+                    continue
+            if isinstance(c, bs4.element.NavigableString):
+                text = c.string
+                text = text.rstrip() if rev else text.lstrip()
+                if not text:
+                    c.extract()
+                    continue
+                c.string.replace_with(text)
+            break
+
+
 class Browser(mechanize.Browser):
     def __init__(self):
         mechanize.Browser.__init__(self)

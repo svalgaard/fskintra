@@ -13,7 +13,6 @@ SECTION = 'frp'
 
 
 def parseFrontpageItem(cname, div):
-
     # Do we have any comments?
     comments = div.find('div', 'sk-news-item-comments')
     cdiv = u''
@@ -33,6 +32,9 @@ def parseFrontpageItem(cname, div):
 
     author = div.find('div', 'sk-news-item-author')
     body = div.findAll('div', 'sk-user-input')[0]
+    # Trim extra white space - sometimes unecessary linebreaks are introduced
+    surllib.trimSoup(body)
+
     msg = semail.Message(cname, SECTION, unicode(body)+cdiv)
 
     title = body.get_text('\n').strip().split('\n')[0]
