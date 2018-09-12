@@ -38,6 +38,7 @@ Output is an semail.Message ready to be sent'''
 
     html = u'<div class="base">%s</div>\n' % jsn['BaseText']
     if jsn['PreviousMessagesText']:
+        jsn['Subject'] = u'Re: ' + jsn['Subject']
         html += u'<div class="prev">%s</div>\n' % jsn['PreviousMessagesText']
 
     msg = semail.Message(cname, SECTION, html)
