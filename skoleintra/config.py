@@ -322,7 +322,7 @@ om du har kaldt fskintra med argumenterne -p, -h og -t.
             illegal = u', '.join(repr(i) for i in illegal)
             parser.error((u'Ugyldig(e) navne på afsnit angivet: %s\nBrug '
                           u'--section LIST for at få en liste over lovlige '
-                          u'lovlige nane') % illegal)
+                          u'navne') % illegal)
 
     if args.doconfig:
         configure(args.configfilename, args.profile)
