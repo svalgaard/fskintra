@@ -196,6 +196,8 @@ class Message:
             if not self.mp['date-set']:
                 keys.remove('date')
             txt = u' '.join([self.mp[x] for x in keys if self.mp.get(x, None)])
+            if self.mp['attatchments']:
+                txt += ' '.join(text for _, text in self.mp['attatchments'])
             self.mp['md5'] = md5.md5(txt.encode('utf-8')).hexdigest()
 
     def getMessageID(self):
@@ -283,7 +285,7 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
 </head>
 <body style='font-family: Helvetica, sans-serif; font-size: 14px;'>
 <h1>%(title)s</h1>
-<div class='header' style='padding: 5px; background-color: #eee; margin-bottom: 15px;'>
+<div class='hd' style='padding:5px;background-color:#eee;margin-bottom:15px;'>
   %(sender)s%(recipient)s%(cc)s<span>%(date_string)s</span>
 </div>
 <div class='text'>
@@ -335,7 +337,7 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
                 data = None
                 try:
                     data = surllib.skoleGetURL(url, False)
-                except:
+                except urllib2.URLError:
                     # unable to fetch URL
                     config.log(u'%s: Kan ikke hente flg. URL: %s' %
                                (self.mp['title'] if self.mp['title'] else self,
