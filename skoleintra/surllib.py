@@ -18,12 +18,14 @@ import pgConfirm
 
 
 def absurl(url):
+    '''Turn an URL into an absolute URL'''
     if url and url[0] != '/':
         return url
     return 'https://%s%s' % (config.options.hostname, url)
 
 
 def unienc(s):
+    '''Ensure that s is encoded as a binary string (not unicode)'''
     if type(s) == unicode:
         return s.encode('utf-8')
     else:
@@ -142,6 +144,7 @@ class Browser(mechanize.Browser):
 
 
 def getBrowser():
+    '''Get the currently used browser instance'''
     global _browser
     if _browser is None:
         _browser = Browser()
@@ -154,7 +157,7 @@ _skole_login_done = False
 
 
 def skoleLogin():
-    'Login to the SkoleIntra website'
+    'Login to the ForældreIntra website'
     global _skole_login_done
     global br, resp, data
     if _skole_login_done:
@@ -293,6 +296,7 @@ def skoleLogin():
 
 
 def url2cacheFileName(url, postData):
+    '''For a given URL, return the filename used for caching the result'''
     assert(type(url) == str)
     if postData:
         url += postData

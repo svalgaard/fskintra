@@ -17,6 +17,7 @@ PHOTOS_PER_EMAIL = 50
 
 
 def sendPhotos(cname, title, mid, photos):
+    '''Send photos if they have not already been sent'''
 
     # First determine if any of the photos were sent earlier
     previouslySent = set()
@@ -65,6 +66,7 @@ def sendPhotos(cname, title, mid, photos):
 
 
 def findPhotosInFolder(cname, url, bs):
+    '''Search a folder for new photos'''
     title = bs.h2.text.strip()
     mid = md5.md5(url.encode('utf-8')).hexdigest()[::2]
     photos = []

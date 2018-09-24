@@ -11,6 +11,7 @@ MAX_CACHE_AGE = .49
 
 
 def findEvents(cname, bs):
+    '''Look for new events'''
     toptitle = bs.select('.sk-grid-top-header li')
     toptitle = toptitle[0].string.strip() if toptitle else u'Ukendt'
 

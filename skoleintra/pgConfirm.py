@@ -12,7 +12,7 @@ import semail
 
 def skoleConfirm(bs):
     '''Send e-mail wrt confirmation of your own contact details
-Do not actually click the confirm link'''
+Do not actually click the confirm link. This is done in surllib.'''
 
     forms = bs.select('.sk-l-content-wrapper form')
     assert(forms)

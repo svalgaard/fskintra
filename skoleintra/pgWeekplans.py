@@ -11,7 +11,7 @@ SECTION = 'pln'
 
 
 def formatWeekplan(bs):
-    """Format the weekplan nicely for email"""
+    '''Format the weekplan nicely for email'''
     weekplan = bs.find('div', "sk-weekly-plan-container")
     # Change into table
     table = weekplan.div

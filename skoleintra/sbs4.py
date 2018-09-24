@@ -10,20 +10,24 @@ import config
 
 
 def copy(bs):
+    'Return a copy of bs'
     return _copy.copy(bs)
 
 
 def extract(bs, sel):
+    'Extract (delete tags incl. contents) elements matching sel'
     for elm in list(bs.select(sel)):
         elm.extract()
 
 
 def unwrap(bs, sel):
+    'Unwrap (delete tags excl. contents) elements matching sel'
     for elm in list(bs.select(sel)):
         elm.unwrap()
 
 
 def find1orFail(bs, sel, asText=False):
+    'Find a single tag matching sel or fail'
     hits = bs.select(sel)
     if len(hits) != 1:
         config.log(u"'%s' var %d gange på siden (!=1)" % (sel, len(hits)), -1)
@@ -35,6 +39,7 @@ def find1orFail(bs, sel, asText=False):
 
 
 def contents2html(bs):
+    'Return HTML inside bs as unicode text'
     return u''.join(unicode(c) for c in bs.contents).strip()
 
 

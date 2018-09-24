@@ -13,6 +13,7 @@ MAX_CACHE_AGE = .99
 
 
 def docFindDocuments(cname, rootTitle, bs, title):
+    '''Search a folder for new documents'''
     folder = rootTitle
     if title:
         folder += u' / ' + title.replace(u'>', u'/')

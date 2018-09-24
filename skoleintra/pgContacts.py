@@ -11,6 +11,7 @@ MAX_CACHE_AGE = 6.9
 
 
 def contactCard(cname, bs):
+    'Check for new contact information for a single pupil'
     # Find name
     name = bs.select('.sk-contact-person-name span.sk-labeledtext-value')
     assert(name)

@@ -42,6 +42,7 @@ Output is an semail.Message ready to be sent'''
 
 
 def parseTrayMessage(cname, bs, mid, sender):
+    '''Parse single message (old message view)'''
     jsn = {}
     jsn['Id'] = int(mid)
     jsn['SenderName'] = sender
@@ -80,6 +81,7 @@ def parseTrayMessage(cname, bs, mid, sender):
 
 
 def parseTrayMessages(cname, bs):
+    '''Look for new messages in a message tray (old message view)'''
     msgs = []
 
     for div in bs.select('.sk-message-list-item'):
@@ -119,6 +121,7 @@ def markMessageAsRead(cname, mid, isRead=True):
 
 
 def parseMessages(cname, bs):
+    '''Look for new messages in each conversation'''
     # Look for a div with a very long attribute with json
     main = bs.find('div', 'sk-l-content-wrapper')
     conversations = None
@@ -191,14 +194,17 @@ def parseMessages(cname, bs):
 
 
 def getMsgsForChild(cname):
+    '''Find all new messages for a single child'''
     dtype = surllib.getBrowser().getState('dialogue')
     if dtype == 'conversations':
+        # New more "gmail" like message view
         url = schildren.getChildURL(cname, '/messages/conversations')
         config.clog(cname, u'Kigger efter nye beskeder på %s' % url)
         bs = surllib.skoleGetURL(url, asSoup=True, noCache=True)
 
         return parseMessages(cname, bs)
     elif dtype == 'inbox':
+        # Old message view
         msgs = []
         for tray in ['inbox', 'outbox']:
             url = schildren.getChildURL(cname, '/messages/'+tray)

@@ -30,6 +30,7 @@ email.Charset.add_charset('utf-8', email.Charset.QP, email.Charset.QP, 'utf-8')
 
 
 def headerEncodeField(f, maxlinelen=40):
+    '''Encode text suitable as a quoted-printable header'''
     if type(f) == str:
         try:
             f = f.decode('utf-8')
@@ -44,6 +45,7 @@ def headerEncodeField(f, maxlinelen=40):
 
 
 def niceFilename(fn):
+    '''Turn fn (probably an URL) into an (attachment) filename'''
     fn = urllib.unquote(fn).replace('\\', '/')
     fn = os.path.basename(fn)
     fn = fn.split('?')[0]
@@ -51,6 +53,7 @@ def niceFilename(fn):
 
 
 def generateMIMEAttachment(path, data, usefilename=None):
+    '''Turn data into an e-mail attachment'''
     fn = niceFilename(usefilename or path)
     if fn.lower().endswith('.asp'):
         fn = os.path.splitext(fn)[0] + '.html'
@@ -467,7 +470,7 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
 
 
 def hasSentMessage(date='', tp='', md5='', mid=''):
-
+    '''Check whether an e-mail has already been sent'''
     if not date:
         date = '?' * 10
     if not tp:

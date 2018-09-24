@@ -14,6 +14,7 @@ SECTION = 'frp'
 
 
 def parseFrontpageItem(cname, div):
+    '''Parse a single frontpage news item'''
     # Do we have any comments?
     comments = div.find('div', 'sk-news-item-comments')
     cdiv = u''
@@ -88,6 +89,7 @@ def parseFrontpageItem(cname, div):
 
 
 def parseFrontpage(cname, bs):
+    '''Look for new frontpage news items'''
     msgs = []
 
     # Find potential interesting events today in the sidebar
@@ -124,6 +126,7 @@ def parseFrontpage(cname, bs):
 
 
 def getMsgsForChild(cname):
+    '''Look for new frontpage news'''
     url = schildren.getChildURL(cname, '/Index')
     config.clog(cname, u'Behandler forsiden %s' % url)
     bs = surllib.skoleGetURL(url, asSoup=True, noCache=True)
