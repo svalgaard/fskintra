@@ -7,6 +7,7 @@ import semail
 import surllib
 
 SECTION = 'sgn'
+MAX_CACHE_AGE = .49
 
 
 def findEvents(cname, bs):
@@ -52,5 +53,5 @@ def skoleSignup(cname):
     config.clog(cname, u'Kigger efter nye samtaler/arrangementer')
     for suffix in ('conversation', 'event'):
         url = schildren.getChildURL(cname, '/signup/' + suffix)
-        bs = surllib.skoleGetURL(url, True)
+        bs = surllib.skoleGetURL(url, True, MAX_CACHE_AGE)
         findEvents(cname, bs)
