@@ -3,6 +3,7 @@
 import json
 
 import config
+import sbs4
 import schildren
 import semail
 import surllib
@@ -34,7 +35,7 @@ def docFindDocuments(cname, rootTitle, bs, title):
             # Create HTML snippet
             html = u"<p>Nyt dokument: <span></span> / <b></b></p>\n"
             html += u"<!-- Sidst opdateret: %s -->" % docDate
-            h = surllib.beautify(html)
+            h = sbs4.beautify(html)
             h.span.string = folder
             h.b.string = docTitle
 

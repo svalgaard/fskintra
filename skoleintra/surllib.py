@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import bs4
 import cgi
 import cookielib
 import datetime
@@ -14,6 +13,7 @@ import urllib2
 import urlparse
 
 import config
+import sbs4
 import pgConfirm
 
 
@@ -28,106 +28,6 @@ def unienc(s):
         return s.encode('utf-8')
     else:
         return s
-
-
-def todayComment():
-    '''Return bs4 comment 'Tag' with today's date'''
-    return bs4.Comment(u' I dag er %s ' % time.strftime(u'%Y-%m-%d'))
-
-
-def beautify(data):
-    bs = bs4.BeautifulSoup(data, 'lxml')
-    cleanupSoup(bs)
-    return bs
-
-
-def deobfuscateEmail(s):
-    'Deobfuscate an e-mail address. Return the address if possible o.w. None'
-    if len(s) % 2 or not s:
-        # Not with a length divible by 2
-        return
-    try:
-        # Check that this is a hex string
-        int(s, 16)
-    except ValueError:
-        # Not hex string somewhere
-        return
-    key = int(s[:2], 16)
-    mail = ''.join(chr(int(s[i:i+2], 16) ^ key) for i in range(2, len(s), 2))
-    if '@' not in mail:
-        return  # not an e-mail
-    return mail
-
-
-def cleanupSoup(bs):
-    '''Cleanup/deobfuscate the soup'''
-
-    # deobfuscate content/spans with email addresses
-    CLASS = '__cf_email__'
-    DATA = 'data-cfemail'
-    HREF_PREFIX = '/cdn-cgi/l/email-protection'
-    for tag in bs.find_all(**{'class': CLASS, DATA: re.compile('.')}):
-        email = deobfuscateEmail(tag[DATA])
-        if email:
-            del tag[DATA]
-            tag['class'].remove(CLASS)
-            tag.string = email
-            if tag.name == 'span' and tag.attrs == {}:
-                tag.unwrap()
-            if tag.name == 'a' and tag.has_attr('href') and \
-                    tag['href'].startswith(HREF_PREFIX):
-                tag['href'] = 'mailto:' + email
-
-    # deobfuscate href's with email links
-    for tag in bs.find_all('a', href=re.compile('^%s.*' % (HREF_PREFIX))):
-        href = tag['href']
-        email = deobfuscateEmail(href[len(HREF_PREFIX):].strip('#'))
-        if email:
-            tag['href'] = 'mailto:' + email
-        else:
-            tag.unwrap()
-
-    BLOCKED = 'blocked::'
-    for tag in bs.find_all('a', title=re.compile('^%s.*' % BLOCKED)):
-        tag['title'] = tag['title'][len(BLOCKED):]
-        if tag.has_attr('href') and tag['title'] == tag['href']:
-            del tag['title']
-
-    # Remove imgs without an actual image - probably copied into ForældreIntra
-    # from e.g., Outlook.
-    rec = re.compile('^(%s).*' % '|'.join(['cid']))
-    for img in bs.find_all('img', src=rec):
-        img.extract()
-
-    # Remove empty class attributes
-    for tag in bs.find_all(**{'class': ''}):
-        if not tag.has_attr('class'):
-            continue
-        if '' in tag['class']:
-            tag['class'].remove('')
-        if not tag['class']:
-            del tag['class']
-
-
-def trimSoup(bs):
-    '''Trim children of bs for whitespace including <br/>'''
-    for rev in [False, True]:
-        children = list(bs.children)
-        if rev:
-            children = reversed(children)
-        for c in children:
-            if isinstance(c, bs4.element.Tag):
-                if c.name == 'br':
-                    c.extract()
-                    continue
-            if isinstance(c, bs4.element.NavigableString):
-                text = c.string
-                text = text.rstrip() if rev else text.lstrip()
-                if not text:
-                    c.extract()
-                    continue
-                c.string.replace_with(text)
-            break
 
 
 class Browser(mechanize.Browser):
@@ -299,7 +199,7 @@ def skoleLogin():
         if url.endswith('/ConfirmContacts'):
             # Confirm contact details
             config.log(u'Bekræfter kontaktoplysninger på %s' % url, 1)
-            pgConfirm.skoleConfirm(beautify(data))
+            pgConfirm.skoleConfirm(sbs4.beautify(data))
             # Click "Bekræft"
             for form in br.forms():
                 if form.attrs.get('action').endswith('/Confirm'):
@@ -315,7 +215,7 @@ def skoleLogin():
         if url == br.getState('index') and data:
             # we are fine / logged in
             config.log(u'Succesfuldt log ind til %s' % url, 2)
-            _skole_login_done = beautify(data)
+            _skole_login_done = sbs4.beautify(data)
             return _skole_login_done
 
         if len(forms) == 1 and (
@@ -424,7 +324,7 @@ def skoleGetURL(url, asSoup=False, noCache=False, postData=None,
     if not url:
         data = ''
         if asSoup:
-            data = beautify(data)
+            data = sbs4.beautify(data)
             data.cachedate = datetime.date.today()
             return data
         else:
@@ -481,7 +381,7 @@ def skoleGetURL(url, asSoup=False, noCache=False, postData=None,
         config.log(u'skoleGetURL: Gemmer siden i filen %r' % lfn, 2)
 
     if asSoup:
-        data = beautify(data)
+        data = sbs4.beautify(data)
         data.url = url
         data.cachedate = datetime.date.fromtimestamp(os.path.getmtime(lfn))
         data.cacheage = (time.time() - os.path.getmtime(lfn))/(24 * 3600.)

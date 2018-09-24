@@ -5,6 +5,7 @@ import re
 import time
 
 import config
+import sbs4
 import schildren
 import semail
 import surllib
@@ -31,14 +32,31 @@ def parseFrontpageItem(cname, div):
             cdiv = u'<br>' + cdiv
 
     author = div.find('div', 'sk-news-item-author')
-    body = div.findAll('div', 'sk-user-input')[0]
+    body = div.find('div', 'sk-news-item-content')
+    # trim the body a bit
+    body = sbs4.copy(body)  # make a copy as we look for attachments later
+    for e in body.select('.sk-news-item-footer, .sk-news-item-comments'):
+        e.extract()
+    for e in body.select('.h-fnt-bd'):
+        e['style'] = 'font-weight: bold'
+    for e in body.select('div'):
+        # remove empty divs
+        contents = u''.join(map(unicode, e.children)).strip()
+        if not contents:
+            e.extract()
     # Trim extra white space - sometimes unecessary linebreaks are introduced
-    surllib.trimSoup(body)
+    sbs4.trimSoup(body)
 
     msg = semail.Message(cname, SECTION, unicode(body)+cdiv)
 
-    title = body.get_text('\n').strip().split('\n')[0]
-    title = ' '.join(title.replace(u'\xa0', ' ').strip().rstrip(' .').split())
+    for e in body.select('span, strong, b, i'):
+        e.unwrap()
+    sbs4.condenseSoup(body)
+
+    title = body.get_text(u'\n', strip=True).strip().split(u'\n')[0]
+    title = title.replace(u'\xa0', u' ').strip()
+    title = u' '.join(title.rstrip(u' .').split())
+
     msg.setTitle(title, True)
     msg.setMessageID(div['data-feed-item-id'])
     msg.setSender(author.span.text)
@@ -83,7 +101,7 @@ def parseFrontpage(cname, bs):
                 if u'har fødselsdag' in uc:
                     today = unicode(time.strftime(u'%d. %b. %Y'))
                     c.append(u" \U0001F1E9\U0001F1F0")  # Unicode DK Flag
-                    c.append(surllib.todayComment())
+                    sbs4.appendTodayComment(c)
                     msg = semail.Message(cname, SECTION, unicode(c))
                     msg.setTitle(c.text.strip())
                     msg.setDateTime(today)

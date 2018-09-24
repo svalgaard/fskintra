@@ -6,6 +6,7 @@ import md5
 import os
 
 import config
+import sbs4
 import schildren
 import semail
 import surllib
@@ -47,8 +48,8 @@ def sendPhotos(cname, title, mid, photos):
 
         # Create HTML snippet
         itag = u'<img style="max-width: 100%">'
-        ebs = surllib.beautify(u'<h2></h2><p>%s</p>' %
-                               u'<br/>'.join([itag] * len(pics)))
+        ebs = sbs4.beautify(u'<h2></h2><p>%s</p>' %
+                            u'<br/>'.join([itag] * len(pics)))
         ebs.h2.string = title
         for i, img in enumerate(ebs.select('img')):
             img['src'] = pics[i]

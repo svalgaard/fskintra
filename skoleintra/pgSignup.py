@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import config
+import sbs4
 import schildren
 import semail
 import surllib
@@ -15,7 +16,7 @@ def findEvents(cname, bs):
     for ul in bs.select('.sk-signup-container ul.ccl-rwgm-row'):
         if 'sk-grid-top-header' in ul['class']:
             continue   # Ignore top header
-        ebs = surllib.beautify('<p><dl></dl></p>')
+        ebs = sbs4.beautify('<p><dl></dl></p>')
         dl = ebs.dl
 
         key = ''

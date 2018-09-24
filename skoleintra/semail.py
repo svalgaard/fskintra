@@ -14,6 +14,7 @@ import urllib2
 import time
 
 import config
+import sbs4
 import surllib
 
 import email
@@ -293,7 +294,7 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
 </div>
 </body>
 </html>''' % mpp
-        html = surllib.beautify(html)
+        html = sbs4.beautify(html)
 
         # First look for inline images, if any
         # iimags: mapping from URL to (cid, binary string contents)

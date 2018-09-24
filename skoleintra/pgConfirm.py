@@ -6,8 +6,8 @@
 #
 # skoleConfirm is called from surllib
 
+import sbs4
 import semail
-import surllib
 
 
 def skoleConfirm(bs):
@@ -36,12 +36,8 @@ Do not actually click the confirm link'''
         li.name = 'p'
         li['style'] = 'margin:0'
 
-    for sel in 'script,div.ccl-formbuttonspanel'.split(','):
-        for kill in form.select(sel):
-            kill.extract()
-    for sel in 'label,legend,fieldset'.split(','):
-        for uw in form.select(sel):
-            uw.unwrap()
+    sbs4.extract(form, 'script,div.ccl-formbuttonspanel')
+    sbs4.unwrap(form, 'label,legend,fieldset')
     for tag in form.select('*'):
         del tag['class']
     for ol in form.select('ol'):
@@ -51,7 +47,7 @@ Do not actually click the confirm link'''
     form.name = 'div'
     for att in list(form.attrs):
         del form[att]
-    form.append(surllib.todayComment())
+    sbs4.appendTodayComment(form)
 
     msg = semail.Message(cnames[0], 'con', unicode(form))
     for cname in cnames[1:]:

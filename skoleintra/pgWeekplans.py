@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import config
-import surllib
+import sbs4
 import schildren
 import semail
+import surllib
 
 
 SECTION = 'pln'
@@ -16,15 +17,13 @@ def formatWeekplan(bs):
     table = weekplan.div
     table.name = 'table'
     # Remove a couple of unneeded tags
-    for div in weekplan.find_all('div', 'sk-weekly-plan-grid'):
-        div.unwrap()
-    for ul in weekplan.find_all('ul', 'sk-weekly-plan-grid-row'):
-        ul.unwrap()
+    sbs4.unwrap(weekplan, 'div.sk-weekly-plan-grid')
+    sbs4.unwrap(weekplan, 'ul.sk-weekly-plan-grid-row')
 
     # li -> tr + wrap div content in td
     for li in weekplan.select('.sk-weekly-plan-header'):
         li.name = 'tr'
-        # Clear attrobutes, so next loop can access ul in
+        # Clear attributes, so next loop can access ul in
         # li.sk-weekly-plan-grid-cell
         li.attrs = {}
         li.div.wrap(bs.new_tag('td'))

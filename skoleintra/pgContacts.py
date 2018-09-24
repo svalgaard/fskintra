@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import config
+import sbs4
 import schildren
 import semail
 import surllib
@@ -27,8 +28,7 @@ def contactCard(cname, bs):
         if 'sk-labeledtext-value' in span['class']:
             span['style'] = 'font-weight:bold;'
 
-    for div in table.findAll('div'):
-        div.unwrap()
+    sbs4.unwrap(table, 'div')
 
     for h2 in table.select('h2'):
         h2.wrap(bs.new_tag('tr'))

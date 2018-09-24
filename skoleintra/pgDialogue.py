@@ -3,29 +3,14 @@
 import collections
 import json
 import re
-import sys
 
 import config
+import sbs4
 import schildren
 import semail
 import surllib
 
 SECTION = 'msg'
-
-
-def find1orFail(bs, selector, asText=False):
-    hits = bs.select(selector)
-    if len(hits) != 1:
-        config.log(u"'%s' var %d gange på siden (!=1)" % (selector, len(hits)))
-        sys.exit(1)
-    hit = hits[0]
-    if asText:
-        hit = hit.text.strip()
-    return hit
-
-
-def filteredContents(bs):
-    return u''.join(unicode(c) for c in bs.contents).strip()
 
 
 def msgFromJson(cname, jsn, threadId=''):
@@ -61,14 +46,15 @@ def parseTrayMessage(cname, bs, mid, sender):
     jsn['Id'] = int(mid)
     jsn['SenderName'] = sender
     jsn['AdditionalLinkUrl'] = ''
-    jsn['Subject'] = find1orFail(bs, 'div.sk-message-subject-text', True)
-    jsn['SentReceivedDateText'] = find1orFail(
+    jsn['Subject'] = sbs4.find1orFail(bs, 'div.sk-message-subject-text', True)
+    jsn['SentReceivedDateText'] = sbs4.find1orFail(
         bs, 'div.sk-message-send-date', True)
-    jsn['BaseText'] = filteredContents(find1orFail(bs, 'div.sk-message-text'))
+    jsn['BaseText'] = sbs4.contents2html(sbs4.find1orFail(
+        bs, 'div.sk-message-text'))
 
     # Maybe we also have "Reply/Forward text"
     div = bs.select('div.sk-message-text + a + div')
-    jsn['PreviousMessagesText'] = filteredContents(div[0]) if div else u''
+    jsn['PreviousMessagesText'] = sbs4.contents2html(div[0]) if div else u''
 
     # Do we have any attachments?
     jsn['AttachmentsLinks'] = []
@@ -81,9 +67,9 @@ def parseTrayMessage(cname, bs, mid, sender):
     # Find list of recipients
     s = 'div.sk-message-senderrecipient-name'
     if bs.select('.sk-message-title-rows-container ' + s):
-        rec = find1orFail(bs, '.sk-message-title-rows-container ' + s)
+        rec = sbs4.find1orFail(bs, '.sk-message-title-rows-container ' + s)
     else:
-        rec = find1orFail(bs, s)
+        rec = sbs4.find1orFail(bs, s)
     rec.span.extract()  # remove 'Til:'
     more = rec.find('a', 'sk-message-show-more-link')
     if more:
