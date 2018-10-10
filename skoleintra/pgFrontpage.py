@@ -22,15 +22,16 @@ def parseFrontpageItem(cname, div):
         global c
         # Comments are enabled
         txt = comments.text.strip()
-        m = re.match(ur'.*vis (\d+) kommentarer.*', txt.lower())
-        assert(m)
-        nc = int(m.group(1))
-        if nc > 0:
-            suff = '/news/pins/%s/comments' % div['data-feed-item-id']
-            url = schildren.getChildURL(cname, suff)
-            bs = surllib.skoleGetURL(url, asSoup=True, postData={'_': str(nc)})
-            cdiv = unicode(bs.find('div', 'sk-comments-container'))
-            cdiv = u'<br>' + cdiv
+        if u'tilføj' not in txt.lower():
+            m = re.match(ur'.*vis (\d+) kommentarer.*', txt.lower())
+            assert(m)
+            nc = int(m.group(1))
+            if nc > 0:
+                suff = '/news/pins/%s/comments' % div['data-feed-item-id']
+                url = schildren.getChildURL(cname, suff)
+                bs = surllib.skoleGetURL(url, asSoup=True, postData={'_': str(nc)})
+                cdiv = unicode(bs.find('div', 'sk-comments-container'))
+                cdiv = u'<br>' + cdiv
 
     author = div.find('div', 'sk-news-item-author')
     body = div.find('div', 'sk-news-item-content')
