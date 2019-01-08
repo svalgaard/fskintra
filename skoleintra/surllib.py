@@ -4,6 +4,7 @@ import cgi
 import cookielib
 import datetime
 import mechanize
+import hashlib
 import os
 import re
 import sys
@@ -308,10 +309,15 @@ def url2cacheFileName(url, postData):
              up.netloc,
              p[1:] + '.cache']
     if up.query:
+        qq = ''
         az = re.compile(r'[^0-9a-zA-Z]')
         for (k, vs) in sorted(cgi.parse_qs(up.query).items()):
             xs = [az.sub(lambda x: hex(ord(x.group(0))), x) for x in [k] + vs]
-            parts[-1] += '_' + '-'.join(xs)
+            qq += '_' + '-'.join(xs)
+        if len(qq) > 32:
+            # Some queries are too long - this may fail when writing to disk
+            qq = '_' + hashlib.md5(qq).hexdigest()
+        parts[-1] += qq
 
     cfn = os.path.join(*parts)
     cfn = cfn.replace('\\', '/')
