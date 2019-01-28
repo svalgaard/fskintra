@@ -14,18 +14,14 @@ Alle emails bliver gemt, dvs. du får kun en email, såfremt der faktisk er komm
 NB: Ny version
 --------------
 
-August/September 2018: Denne version af fskintra bruger (modsat den tidligere) det nye design af ForældreIntra hjemmesiden. Endvidere kan man bruge uni-login til at logge ind og ikke kun "skole-specifikt/almindeligt" logind.
+Denne version af fskintra bruger (modsat den tidligere) det nye design af ForældreIntra hjemmesiden. Endvidere kan man bruge uni-login til at logge ind og ikke kun "skole-specifikt/almindeligt" logind.
 
 Nyeste version kan p.t. findes her:
 
     # Til ForældreIntra med nyt design
-    https://github.com/svalgaard/fskintra/tree/nyt.design
+    https://github.com/svalgaard/fskintra/
     # Til ForældreIntra Classic
     https://github.com/svalgaard/fskintra/tree/classic
-
-Når det har kørt i et stykke tid, skiftes over, så denne version bliver "standardversionen".
-
-Medmindre du selv har lyst til at kigge på Python kode, bør du nok vente lidt med at skifte over til at bruge den nye version lidt endnu.
 
 Eksempel
 ========
