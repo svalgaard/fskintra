@@ -6,14 +6,14 @@ lang: da-DK
 
 menu:
   - title: fskintra
-    url: /
+    url: .
   - title: Installation
-    url: /install
+    url: install
   - title: Opdatering
-    url: /upgrade
+    url: upgrade
   - title: Problemer?
-    url: /troubleshooting
+    url: troubleshooting
   - title: Automatisk kørsel
-    url: /cron
+    url: cron
   - title: Docker
-    url: /docker
+    url: docker
