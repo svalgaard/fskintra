@@ -1,216 +1,351 @@
 # -*- coding: utf-8 -*-
 
-import cookielib
-import urllib
-import config
-import mechanize
-import BeautifulSoup
-import urlparse
 import cgi
-import os
-import sys
-import re
+import cookielib
 import datetime
+import mechanize
 import hashlib
+import os
+import re
+import sys
 import time
+import urllib
+import urllib2
+import urlparse
+
+import config
+import sbs4
+import pgConfirm
+
+
+def absurl(url):
+    '''Turn an URL into an absolute URL'''
+    if url and url[0] != '/':
+        return url
+    return 'https://%s%s' % (config.options.hostname, url)
 
 
 def unienc(s):
+    '''Ensure that s is encoded as a binary string (not unicode)'''
     if type(s) == unicode:
         return s.encode('utf-8')
     else:
         return s
 
 
-def beautify(data):
-    try:
-        return BeautifulSoup.BeautifulSoup(
-            data,
-            convertEntities=BeautifulSoup.BeautifulStoneSoup.HTML_ENTITIES)
-    except ValueError:
-        # Maybe due to 'wide' unicode char, e.g., smiley &#128516;
-        # ValueError: unichr() arg not in range(0x10000) (narrow Python build)
-        # This breaks some python installs
-        return BeautifulSoup.BeautifulSoup(data)
-
-
-_browser = None
-
-
-def getBrowser():
-    global _browser
-    if _browser is None:
-        # Start browser
-        _browser = mechanize.Browser()
+class Browser(mechanize.Browser):
+    def __init__(self):
+        mechanize.Browser.__init__(self)
 
         # Cookie Jar
-        cj = cookielib.LWPCookieJar()
-        _browser.set_cookiejar(cj)
+        self._cj = cookielib.LWPCookieJar()
+        self.set_cookiejar(self._cj)
 
         # Browser options
-        _browser.set_handle_equiv(True)
-        # _browser.set_handle_gzip(True)
-        _browser.set_handle_redirect(True)
-        _browser.set_handle_referer(True)
-        _browser.set_handle_robots(False)
-
-        # Encoding
-        # _browser._factory.encoding = ENC
-        # _browser._factory._forms_factory.encoding = ENC
-        # _browser._factory._links_factory._encoding = ENC
+        self.set_handle_equiv(True)
+        # self.set_handle_gzip(True)
+        self.set_handle_redirect(True)
+        self.set_handle_referer(True)
+        self.set_handle_robots(False)
 
         # Follows refresh 0 but does not hang on refresh > 0
-        _browser.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(),
-                                    max_time=1)
+        self.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(),
+                                max_time=60)
 
         # Want debugging messages?
-        # _browser.set_debug_http(True)
-        # _browser.set_debug_redirects(True)
-        # _browser.set_debug_responses(True)
+        if False:
+            self.set_debug_http(True)
+            self.set_debug_redirects(True)
+            self.set_debug_responses(True)
 
         # User-Agent
-        _browser.addheaders = [
+        self.addheaders = [
             ('User-agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.6; '
              'rv:5.0.1) Gecko/20100101 Firefox/5.0.1'),
             ('Accept', 'text/html,application/xhtml+xml,application/xml;'
              'q=0.9,*/*;q=0.8')]
+
+        # Browser-state (not including cookies)
+        self.state = {
+            'index': None,
+            'dialogue': None,
+            'lastUpdateTime': None,
+            'lastUpdateURL': None,
+            'header': [],
+        }
+        self.firstPass = True
+
+        # Load browser state
+        sfn = self._browser_state_filename()
+        if os.path.isfile(sfn):
+            if not config.options.skipcache:
+                config.log(u'Henter tidligere browsertilstand fra %s' % sfn, 2)
+                self._cj.load(sfn, True, True)
+                for st in open(sfn).read().strip().split('\n'):
+                    sp = st.split()
+                    if st.startswith('# fskintra: ') and len(sp) == 4:
+                        self.state[sp[-2]] = sp[-1]
+                    if st.startswith('# fskintra-header: '):
+                        _, header = st.split(': ', 1)
+                        k, v = header.split(': ')
+                        self.state['header'].append((k, v))
+                if self.state['header']:
+                    self.addheaders = self.state['header']
+            else:
+                config.log(u'Indlæser ikke tidligere browsertilstand '
+                           u'fra %s pga --skipcache' % sfn)
+
+    def _browser_state_filename(self):
+        fn = '%s-%s.state' % (config.options.hostname, config.options.username)
+        return os.path.join(config.options.cachedir, fn)
+
+    def saveState(self):
+        sfn = self._browser_state_filename()
+        self._cj.save(sfn, ignore_discard=True, ignore_expires=True)
+        fd = open(sfn, 'a')
+        for (k, v) in sorted(self.state.items()):
+            if v:
+                if k == 'header':
+                    for k, v in v:
+                        fd.write('# fskintra-header: %s: %s\n' % (k, v))
+                    pass
+                else:
+                    fd.write('# fskintra: %s %s\n' % (k, v))
+        fd.close()
+
+    def open(self, url, *args, **aargs):
+        ofp, self.firstPass = self.firstPass, False
+        if type(url) in [str, unicode]:
+            furl = url
+        else:
+            furl = url.get_full_url()
+        config.log('Browser.open == %s' % furl, 4)
+        resp = mechanize.Browser.open(self, url, *args, **aargs)
+        surl = resp.geturl()
+        config.log('Browser.open => %s' % surl, 4)
+        self.firstPass = ofp
+        if ofp and re.match('.*/parent/[0-9]*/[^/]*/Index', surl):
+            self.state['index'] = absurl(surl)
+            for a in br.links(text_regex=re.compile('Besked')):
+                dt = a.url.split('/')[-1]
+                if dt:
+                    self.state['dialogue'] = dt
+
+        self.saveState()
+        return resp
+
+    def getState(self, key):
+        return self.state.get(key)
+
+    def setState(self, key, value):
+        assert(type(value) == str)
+        self.state[key] = value.strip()
+        if not self.state[key]:
+            del self.state[key]
+
+
+def getBrowser():
+    '''Get the currently used browser instance'''
+    global _browser
+    if _browser is None:
+        _browser = Browser()
+    _browser.set_handle_equiv(False)
     return _browser
 
+
+_browser = None
 _skole_login_done = False
 
 
 def skoleLogin():
-    global br, resp
-    'Login to the SkoleIntra website'
+    'Login to the ForældreIntra website'
     global _skole_login_done
+    global br, resp, data
     if _skole_login_done:
-        return
+        return _skole_login_done
+
     br = getBrowser()
     config.log(u'Login', 2)
 
-    URL_LOGIN = u'https://%s/Infoweb/Fi2/Login.asp' % config.HOSTNAME
-    config.log(u'Login på skoleintra')
-    err = True
-    try:
-        config.log(u'skoleLogin: URL %s' % URL_LOGIN, 2)
-        br.open(URL_LOGIN)
-        err = False
-    except Exception, e:
-        if 'EOF occurred in violation of protocol' in str(e.reason):
-            config.log(u'skoleLogin: Prøver igen med sslfix')
-            import sslfix
-            sslfix.override()
-            config.log(u'skoleLogin: URL %s' % URL_LOGIN, 2)
-            try:
-                br.open(URL_LOGIN)
-                err = False
-            except Exception, e:
-                pass
-    if err:
-        config.log(u'skoleLogin: Kan ikke logge på', 0)
-        config.log(u'skoleLogin: Check at URLen %s er rigtig' % URL_LOGIN, 0)
-        config.log(u'skoleLogIn: og prøv igen senere', 0)
-        sys.exit(0)
+    config.log(u'Log ind på ForældreIntra')
+    url = absurl('/Account/IdpLogin')
+    if br.getState('index'):
+        url = br.getState('index')
+        config.log(u'Genbruger sidst kendte forside URL %s' % url, 2)
+    else:
+        config.log(u'Logger på via %s' % url, 2)
 
-    config.log(u'skoleLogin: Brugernavn %s' % config.USERNAME, 2)
     try:
-        br.select_form(name='FrontPage_Form1')
-    except mechanize._mechanize.FormNotFoundError:
-        try:
-            br.select_form(nr=0)
-            if [c for c in br.form.controls if c.name == 'UserName']:
-                config.log(u'skoleLogin: Den angivne hjemmeside er til skolens "nye skoleintra".'
-                           u' Brug adressen til skolens "gamle skoleintraside".')
-                sys.exit(1)
-        except mechanize._mechanize.FormNotFoundError:
-            pass
-        config.log(u'skoleLogin: Kan ikke logge på', 0)
-        config.log(u'skoleLogin: Check at URLen %s er rigtig' % URL_LOGIN, 0)
-        config.log(u'skoleLogIn: og prøv igen senere', 0)
+        resp = br.open(url)
+    except urllib2.HTTPError as e:
+        config.log(u'skoleLogin: Kan ikke logge på ForældreIntra?', -1)
+        config.log(u'skoleLogin: URL: %s' % url, -1)
+        config.log(u'skoleLogin: Fejlkode: %d' % e.code, -1)
+        if e.code == 404 and not br.getState('index'):
+            # Login tried at the default URL
+            config.log(u'skoleLogin: Bruger du det rette `hostname` til det '
+                       u'nye ForældreIntra i konfigurationsfilen?', -1)
+
+        config.log(u'skoleLogin: Check at URLen er rigtig '
+                   u'og prøv evt. igen senere', -1)
         sys.exit(1)
 
-    br.form.set_all_readonly(False)
-    cNames = [c.name for c in br.form.controls]
-    br['fBrugernavn'] = config.USERNAME
+    N = 6
+    for round in range(N):  # try at most N times before failing
+        url = resp.geturl()
+        data = resp.read()
+        config.log(u'Log ind skridt %d/%d: %s' % (round + 1, N, url), 3)
 
-    # send password
-    if config.PASSWORD.startswith('pswd:'):
-        pswdReal = config.b64dec(config.PASSWORD)
-        pswdMD5 = hashlib.md5(pswdReal).hexdigest()
-    else:
-        pswdReal = None  # not possible to "decrypt" an md5 password
-        pswdMD5 = config.PASSWORD
-    if 'MD5kode' in cNames:
-        # send md5 encoded password
-        br['MD5kode'] = pswdMD5
-    elif 'fAdgangskode' in cNames:
-        # send real password
-        if pswdReal is None:
-            config.log(u'Din skoleintra installation er skiftet til at sende '
-                       u'kodeord via https i stedet for md5 over http', -2)
-            config.log(u'I den forbindelse bliver du nødt til at angive dit '
-                       u'kodeord', -2)
-            config.log(u'Anvend augumentet --password KODEORD for at lægge '
-                       u'kodeordet ind igen', -2)
-            sys.exit(256)
-        br['fAdgangskode'] = pswdReal
-    else:
-        # something is wrong
-        config.log(u'Kan ikke finde kodeordsfeltet på loginskærmen? Du får '
-                   u'nok en loginfejl om lidt', -2)
-    resp = br.submit()
-    if u'Fejlmeddelelse' in resp.geturl():
-        config.log(u'Login giver en fejlmeddelse -- har du angivet korrekt '
-                   u'kodeord? Check konfigurationsfilen, angiv evt. nyt '
-                   u'kodeord med --password eller --config ELLER '
-                   u'prøv igen senere...', -2)
-        sys.exit(256)
-    # otherwise we ignore the response and assume that things are ok
+        forms = list(br.forms())
+        if len(forms) == 1:
+            br.form = forms[0]
 
-    _skole_login_done = True
+        if url.endswith('/ConfirmContacts'):
+            # Confirm contact details
+            config.log(u'Bekræfter kontaktoplysninger på %s' % url, 1)
+            pgConfirm.skoleConfirm(sbs4.beautify(data))
+            # Click "Bekræft"
+            for form in br.forms():
+                if form.attrs.get('action').endswith('/Confirm'):
+                    br.form = form
+                    break
+            else:
+                config.log(u'Kunne ikke bekræfte kontaktoplysninger på %s'
+                           % url, -1)
+                sys.exit(1)
+            resp = br.submit(nr=0)
+            continue
+
+        if url == br.getState('index') and data:
+            # we are fine / logged in
+            config.log(u'Succesfuldt log ind til %s' % url, 2)
+            _skole_login_done = sbs4.beautify(data)
+            return _skole_login_done
+
+        if len(forms) == 1 and (
+                '/sso/ssocomplete' in url or
+                re.search('<form[^>]*name=.relay.', data)):
+            # One of the intermediate small pages on the way
+            resp = br.submit()
+            continue
+
+        if url.startswith('https://login.emu.dk/'):
+            config.log(u'Uni-login med brugernavn %r' %
+                       config.options.username, 3)
+
+            if 'forkert brugernavn' in data.lower():
+                config.log(u'Log ind giver en fejlmeddelse -- '
+                           u'har du angivet korrekt kodeord?')
+                config.log(u'Check konfigurationsfilen, angiv evt. nyt '
+                           u'kodeord med --password eller --config ELLER '
+                           u'prøv igen senere...', -2)
+                sys.exit(1)
+
+            assert(config.options.logintype != 'alm')  # This must be uni login
+            for form in br.forms():
+                if form.attrs.get('id') == 'pwd':
+                    br.form = form
+                    break
+            else:
+                config.log(u'Kunne ikke finde logind formular på %s' % url, -1)
+                sys.exit(1)
+            br['user'] = config.options.username
+            br['pass'] = config.options.password
+            resp = br.submit()
+            continue
+
+        if '/Account/IdpLogin' in resp.geturl() \
+                and len(forms) == 1 \
+                and 'UserName' in br and 'Password' in br:
+
+            if 'ikke adgang' in data:
+                config.log(u'Log ind giver en fejlmeddelse -- '
+                           u'har du angivet korrekt kodeord?')
+                config.log(u'Check konfigurationsfilen, angiv evt. nyt '
+                           u'kodeord med --password eller --config ELLER '
+                           u'prøv igen senere...', -2)
+                sys.exit(1)
+
+            # This is the main login page
+            if config.options.logintype != 'alm':
+                # UNI-login
+                links = list(br.links(url_regex=re.compile(
+                    '.*RedirectToUniLogin.*')))
+                if not links:
+                    config.log(u'Kan IKKE finde LOG PÅ MED UNILOGIN '
+                               u'linket på siden?', -1)
+                    sys.exit(1)
+                config.log(u'Går videre til uni-login', 3)
+                resp = br.follow_link(links[0])
+                continue
+            else:
+                config.log(u'Bruger alm. login med brugernavn %r' %
+                           config.options.username, 3)
+                # "Ordinary login"
+                br['UserName'] = config.options.username
+                br['Password'] = config.options.password
+                resp = br.submit()
+                continue
+        break
+
+    config.log(u'skoleLogin: Kan ikke logge på ForældreIntra?', -1)
+    config.log(u'skoleLogin: Vi var nået til flg URL', -1)
+    config.log(u'skoleLogin: %s' % url, -1)
+    config.log(u'skoleLogin: Check at URLen er rigtig '
+               u'og prøv evt. igen senere', -1)
+    sys.exit(0)
 
 
-def url2cacheFileName(url, perChild, postData):
+def url2cacheFileName(url, postData):
+    '''For a given URL, return the filename used for caching the result'''
     assert(type(url) == str)
-    if perChild:
-        url += '&CHILDNAME=' + unienc(config.CHILDNAME)
     if postData:
         url += postData
     up = urlparse.urlparse(url)
-    parts = [config.CACHE_DN,
+    p = urllib.url2pathname(up.path)
+    p = p.decode('utf-8', 'replace').replace(u'\ufffd', '_')
+    parts = [config.options.cachedir,
              up.scheme,
              up.netloc,
-             urllib.url2pathname(up.path)[1:]]
+             p[1:] + '.cache']
     if up.query:
+        qq = ''
         az = re.compile(r'[^0-9a-zA-Z]')
         for (k, vs) in sorted(cgi.parse_qs(up.query).items()):
             xs = [az.sub(lambda x: hex(ord(x.group(0))), x) for x in [k] + vs]
-            parts[-1] += '_' + '-'.join(xs)
+            qq += '_' + '-'.join(xs)
+        if len(qq) > 32:
+            # Some queries are too long - this may fail when writing to disk
+            qq = '_' + hashlib.md5(qq).hexdigest()
+        parts[-1] += qq
+
     cfn = os.path.join(*parts)
+    cfn = cfn.replace('\\', '/')
     if type(cfn) == unicode and not os.path.supports_unicode_filenames:
         cfn = cfn.encode('utf-8')
     return cfn
 
 
-def skoleGetURL(url, asSoup=False, noCache=False, perChild=True,
-                postData=None):
+def skoleGetURL(url, asSoup=False, noCache=False, postData=None,
+                addTimeSuffix=False):
     '''Returns data from url as raw string or as a beautiful soup'''
-    if type(url) == unicode:
-        url, uurl = url.encode('utf-8'), url
-    else:
-        uurl = url.decode('utf-8')
-
-    # FIXME? fix urls without host names
 
     # Sometimes the URL is actually an empty string
     if not url:
         data = ''
         if asSoup:
-            data = beautify(data)
+            data = sbs4.beautify(data)
             data.cachedate = datetime.date.today()
             return data
         else:
             return data
+
+    if type(url) == unicode:
+        url, uurl = url.encode('utf-8'), url
+    else:
+        uurl = url.decode('utf-8')
+    if url.startswith('/'):
+        url = absurl(url)
 
     if type(postData) == dict:
         pd = {}
@@ -220,20 +355,30 @@ def skoleGetURL(url, asSoup=False, noCache=False, perChild=True,
     else:
         postData = unienc(postData)
 
-    lfn = url2cacheFileName(url, perChild, postData)
+    lfn = url2cacheFileName(url, postData)
 
-    if os.path.isfile(lfn) and not noCache and not config.SKIP_CACHE:
-        config.log('skoleGetURL: Henter fra cache %s' % uurl, 2)
-        config.log('skoleGetURL: %s' % unienc(lfn), 2)
+    if type(noCache) in [int, float] and os.path.isfile(lfn):
+        # noCache is a "max-age" in days of the file
+        age = (time.time() - os.path.getmtime(lfn))/(24. * 3600)
+        if age > noCache:
+            config.log('skoleGetURL: Bruger ikke gammel cache for %s'
+                       % uurl, 2)
+            noCache = True
+        else:
+            noCache = False
+
+    if os.path.isfile(lfn) and not noCache and not config.options.skipcache:
+        config.log(u'skoleGetURL: Henter fra cache %s' % uurl, 2)
+        config.log(u'skoleGetURL: %r' % lfn, 2)
         data = open(lfn, 'rb').read()
     else:
+        if addTimeSuffix:
+            if '?' in url:
+                url += '&_=' + str(int(time.time()*1000))
+            else:
+                url += '?_=' + str(int(time.time()*1000))
         qurl = urllib.quote(url, safe=':/?=&%')
-        msg = u'Prøver at hente %s' % qurl
-        if perChild:
-            msg += u' child='+config.CHILDNAME
-        if postData:
-            msg += u' '+postData
-        config.log(u'skoleGetURL: %s' % msg, 2)
+        config.log(u'skoleGetURL: Prøver at hente %s' % qurl, 2)
         skoleLogin()
         br = getBrowser()
         resp = br.open(qurl, postData)
@@ -246,7 +391,8 @@ def skoleGetURL(url, asSoup=False, noCache=False, perChild=True,
         config.log(u'skoleGetURL: Gemmer siden i filen %r' % lfn, 2)
 
     if asSoup:
-        data = beautify(data)
+        data = sbs4.beautify(data)
+        data.url = url
         data.cachedate = datetime.date.fromtimestamp(os.path.getmtime(lfn))
         data.cacheage = (time.time() - os.path.getmtime(lfn))/(24 * 3600.)
         return data

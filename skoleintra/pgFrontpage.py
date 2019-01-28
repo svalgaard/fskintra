@@ -1,251 +1,156 @@
 # -*- coding: utf-8 -*-
 
-import config
-import surllib
-import semail
+import collections
 import re
-import BeautifulSoup
 import time
 
-# special titles
-TITLE_IGNORE = [u'Fælles nyheder',  # ignored (use RSS)
-                u'Dialog mellem skole og hjem',  # extra menu (with flags)
-                u'Information om klassen',  # ekstra menu
-                u'Nyeste dokumenter',  # handled separately in pgDocuments
-                ]
-TITLE_COVERPIC = u'Forsidebillede'
-TITLE_BBB = u'Klassens opslagstavle'
-TITLE_NEWS = u'Nyt fra ...'
+import config
+import sbs4
+import schildren
+import semail
+import surllib
 
-TEXT_I_CONFIRM = u'Jeg bekr\xe6fter, at oplysningerne er korrekte'
+SECTION = 'frp'
 
 
-def _unwrap(bs):
-    if 'childGenerator' not in dir(bs):
-        return bs
-    rs = list(bs.childGenerator())
-    if len(rs) == 1:
-        return _unwrap(rs[0])
-    else:
-        return rs
+def parseFrontpageItem(cname, div):
+    '''Parse a single frontpage news item'''
+    # Do we have any comments?
+    comments = div.find('div', 'sk-news-item-comments')
+    cdiv = u''
+    if comments:
+        global c
+        # Comments are enabled
+        txt = comments.text.strip()
+        if u'tilføj' not in txt.lower():
+            m = re.match(ur'.*vis (\d+) kommentarer.*', txt.lower())
+            assert(m)
+            nc = int(m.group(1))
+            if nc > 0:
+                suff = '/news/pins/%s/comments' % div['data-feed-item-id']
+                url = schildren.getChildURL(cname, suff)
+                bs = surllib.skoleGetURL(url, asSoup=True, postData={'_': str(nc)})
+                cdiv = unicode(bs.find('div', 'sk-comments-container'))
+                cdiv = u'<br>' + cdiv
+
+    author = div.find('div', 'sk-news-item-author')
+    body = div.find('div', 'sk-news-item-content')
+    # trim the body a bit
+    body = sbs4.copy(body)  # make a copy as we look for attachments later
+    for e in body.select('.sk-news-item-footer, .sk-news-item-comments'):
+        e.extract()
+    for e in body.select('.h-fnt-bd'):
+        e['style'] = 'font-weight: bold'
+    for e in body.select('div'):
+        # remove empty divs
+        contents = u''.join(map(unicode, e.children)).strip()
+        if not contents:
+            e.extract()
+    # Trim extra white space - sometimes unecessary linebreaks are introduced
+    sbs4.trimSoup(body)
+
+    msg = semail.Message(cname, SECTION, unicode(body)+cdiv)
+
+    for e in body.select('span, strong, b, i'):
+        e.unwrap()
+    sbs4.condenseSoup(body)
+
+    title = body.get_text(u'\n', strip=True).strip().split(u'\n')[0]
+    title = title.replace(u'\xa0', u' ').strip()
+    title = u' '.join(title.rstrip(u' .').split())
+
+    msg.setTitle(title, True)
+    msg.setMessageID(div['data-feed-item-id'])
+    msg.setSender(author.span.text)
+
+    # Find list of recipients
+    author.span.extract()  # Remove author
+    for tag in [
+            author.span,  # Remove author
+            author.find('span', 'sk-news-item-for'),  # Remove 'til'
+            author.find('span', 'sk-news-item-and'),  # Remove ' og '
+            author.find('a', 'sk-news-show-more-link')]:
+        if tag:
+            tag.extract()
+    recp = re.sub(ur'\s*(,| og )\s*', ',', author.text.strip())
+    recp = recp.split(u',')
+    msg.setRecipient(recp)
+
+    msg.setDateTime(div.find('div', 'sk-news-item-timestamp').text)
+
+    # Do we have any attachments?
+    divA = div.find('div', 'sk-attachments-list')
+    if divA:
+        for att in (divA.findAll('a') or []):
+            url = att['href']
+            text = att.text.strip()
+            msg.addAttachment(url, text)
+
+    return msg
 
 
-def _getTitle(bs):
-    '''Titles on the front page are wrapped as this:
+def parseFrontpage(cname, bs):
+    '''Look for new frontpage news items'''
+    msgs = []
 
-<table width="100%" border="0" cellpadding="0" cellspacing="0">
-  <tr>
-    <td valign="middle" align="left">
-        <b>Forsidebillede</b><hr noshade="noshade" size="1" />
-    </td>
-  </tr>
-</table>
+    # Find potential interesting events today in the sidebar
+    ul = bs.find('ul', 'sk-reminders-container')
+    if ul:
+        for li in ul.findAll('li', recursive=False):
+            for c in li.contents:
+                uc = unicode(c).strip().lower()
+                if not uc:
+                    continue
+                if u'har fødselsdag' in uc:
+                    today = unicode(time.strftime(u'%d. %b. %Y'))
+                    c.append(u" \U0001F1E9\U0001F1F0")  # Unicode DK Flag
+                    sbs4.appendTodayComment(c)
+                    msg = semail.Message(cname, SECTION, unicode(c))
+                    msg.setTitle(c.text.strip())
+                    msg.setDateTime(today)
 
-i.e., a <table><tr><td> wrapping a <b> + <hr>
-'''
-    uw = _unwrap(bs)
+                    msgs.append(msg)
+                elif u'der er aktiviteter i dag' in uc:
+                    continue  # ignore
+                else:
+                    config.clog(cname, u'Hopper mini-besked %r over' %
+                                c.text.strip(), 2)
 
-    # The first tag must be a b and the second a hr
-    # In some cases we might get a white space string before the <b><hr>
-    uw = [e for e in uw if type(e) != BeautifulSoup.NavigableString or
-          e.string.strip()]
+    # Find interesting main front page items
+    fps = bs.findAll('div', 'sk-news-item')
+    assert(len(fps) > 0)  # 1+ msgs on the frontpage or something is wrong
+    for div in fps[::-1]:
+        msg = parseFrontpageItem(cname, div)
+        msgs.append(msg)
 
-    if len(uw) != 2 \
-            or uw[0].name != 'b' \
-            or uw[1].name != 'hr':
-        return None
-    else:
-        return uw[0].text
-
-
-def skoleCoverPic(phtml):
-    msg = semail.Message('frontpage', phtml)
-    msg.setTitle(u'Nyt forsidebillede')
-    msg.updatePersonDate()
-    semail.maybeEmail(msg)
-
-
-def skoleFrontBBB(phtml):
-    msg = semail.Message('frontpage', phtml)
-    [styletag.replaceWith('') for styletag in phtml.findAll('style')]
-    txt = phtml.renderContents().decode('utf-8')
-    txt = re.sub('<.*?>', ' ', txt)
-    txt = re.sub('[ \n\t]+', ' ', txt)
-
-    if u'har fødselsdag' in txt and u'Skrevet af' not in txt:
-        # somebody's birthday
-        msg.setTitle(txt)
-        msg.setSender(txt.split(u' har ')[0].strip())
-        msg.setDate(time.strftime('%d-%m-%Y'))
-    else:
-        txt = re.sub('<.*?>', ' ', txt)
-        txt = re.sub('[ \n\t]+', ' ', txt)
-        msg.setTitle(' '.join(txt.split()), True)
-        msg.updatePersonDate()
-
-    semail.maybeEmail(msg)
+    return msgs
 
 
-def skoleExamineNews(url, mid):
-    bs = surllib.skoleGetURL(url, True)
+def getMsgsForChild(cname):
+    '''Look for new frontpage news'''
+    url = schildren.getChildURL(cname, '/Index')
+    config.clog(cname, u'Behandler forsiden %s' % url)
+    bs = surllib.skoleGetURL(url, asSoup=True, noCache=True)
 
-    # title + main text
-    title = bs.h3.text
-    main = bs.findAll('table')[3].table
-
-    # create msg
-    msg = semail.Message(u'dialogue', main)
-    msg.setMessageID(mid)
-    msg.setTitle(title)
-    msg.updatePersonDate()
-
-    semail.maybeEmail(msg)
+    return parseFrontpage(cname, bs)
 
 
-def skoleNewsFrom(bss):
-    # /Infoweb/Fi/VisNytFra.asp?ID=97&Kat=2
+@config.Section(SECTION)
+def skoleFrontpage(cnames):
+    'Forside inkl. opslagstavle'
+    msgs = collections.OrderedDict()
+    for cname in cnames:
+        for msg in getMsgsForChild(cname):
+            if msg.hasBeenSent():
+                continue
+            config.clog(cname, u'Ny besked fundet: %s' % msg.mp['title'], 2)
+            mid = msg.getLongMessageID()
+            if mid in msgs:
+                msgs[mid].addChild(cname)
+            else:
+                msgs[mid] = msg
 
-    for bs in bss:
-        if not bs.a or not bs.a['href']:
-            continue  # ignore
-        href = bs.a['href']
-        mid = href.split('/')[-1].replace('.asp?ID=', '-').split('&')[0]
-        # e.g. VisNytFra-97
-        if 'VisNytFra' not in href:
-            continue
-        skoleExamineNews(href, mid)
-
-
-def skoleOtherStuff(title, phtml):
-    # some part of the frontpage, e.g., weekly schedule
-    msg = semail.Message('frontpage', phtml)
-    msg.setTitle(title)
-    semail.maybeEmail(msg)
-
-
-def skoleConfirmPersonalData(bs):
-    # check that we actually have the right form
-
-    txts = [
-        u'Bekræft personoplysninger',
-        u'Navn og adresse:',
-        u'E-mailadresse',
-        u'Fastnettelefon:',
-        u'Mobiltelefon',
-    ]
-    e = False
-    for txt in txts:
-        if txt not in bs.text:
-            config.log(u'Hmmm.. "%s" ikke fundet på bekræftigelsessiden...')
-            e = True
-    if e:
-        return
-
-    # Find first form, and first table inside the form
-    f = bs.findAll('form')
-    if f:
-        bs = f[0]
-    f = bs.findAll('table')
-    if f:
-        bs = f[0]
-
-    msg = semail.Message('frontpage', bs)
-    msg.setTitle(u'Bekræft personoplysninger')
-    semail.maybeEmail(msg)
-
-    # And now, click the button to confirm the details
-    br = surllib.getBrowser()
-    fs = list(br.forms())
-
-    if len(fs) == 1 and fs[0].name == 'FrontPage_Form1':
-        # we have one form!
-        br.select_form(fs[0].name)
-
-        ss = bs.findAll('input', type='submit')
-        if len(ss) == 1 and ss[0]['value'] == TEXT_I_CONFIRM:
-            config.log(u'Bekræfter personlige data')
-            br.submit()  # click submit!
-            return
-
-    # something went wront above
-    config.log(u'Hmmm.. "%s" ikke fundet på Bekræftigelsessiden...')
-
-
-def skoleFrontpage():
-    surllib.skoleLogin()
-
-    config.log('Behandler forsiden')
-
-    url = 'http://%s/Infoweb/Fi2/Forside.asp' % config.HOSTNAME
-    data = surllib.skoleGetURL(url, asSoup=True, noCache=True)
-
-    br = surllib.getBrowser()
-    aurl = br.geturl()
-    if u'Personoplysninger.asp' in aurl:
-        # We are actually asked to confirm our personal data
-        config.log(u'Bekræfter først vores personlige data')
-        skoleConfirmPersonalData(data)
-
-        data = surllib.skoleGetURL(url, asSoup=True, noCache=True)
-
-    # find main table
-    maint = []
-    for mt in data.findAll('table'):
-        if mt.findParents('table') or mt.has_key('bgcolor'):
-            continue
-        txt = mt.text
-        if len(txt) < 30 and txt.lower().startswith(u'forældreintra for '):
-            continue  # just the title
-        maint.append(mt)
-    assert(len(maint) == 1)  # assume exactly one main table
-
-    maint = maint[0]
-
-    # find interesting table tags
-    itags = []
-    for tag in maint:
-        for ttag in tag.findAll('table'):
-            if ttag.text:
-                itags.append(ttag)
-
-    g = []
-    for itag in itags:
-        t = _getTitle(itag)
-        if t is None:
-            # not a title
-            if not g:
-                # In some cases (slideshows), the real title may be missing
-                g.append((itags[0].text, []))
-            g[-1][1].append(itag)
-        else:
-            # we have a new title
-            g.append((t, []))
-
-    for (t, xs) in g:
-        ignore = len(xs) == 0 or t in TITLE_IGNORE
-        config.log(u'Kategori [%s]%s' %
-                   (t, ' (hoppes over)' if ignore else ''))
-        if ignore:
-            continue
-
-        if t == TITLE_COVERPIC:
-            assert(len(xs) == 1)  # exactly one cover picture
-            skoleCoverPic(xs[0])
-            continue
-        elif t == TITLE_BBB:
-            # BBB news are split
-            # ignore first table which is a wrapper around all entries
-            xs = xs[1:]
-            map(skoleFrontBBB, xs)
-        elif t == TITLE_NEWS:
-            # News from...
-            skoleNewsFrom(xs)
-        else:
-            # send msg if something has changed
-            for x in xs:
-                skoleOtherStuff(t, x)
-
-
-if __name__ == '__main__':
-    # test
-    skoleFrontpage()
+    for mid, msg in msgs.items():
+        cname = ','.join(msg.mp['children'])
+        config.clog(cname, u'Sender ny besked: %s' % msg.mp['title'], 2)
+        msg.maybeSend()

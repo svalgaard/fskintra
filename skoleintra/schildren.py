@@ -1,58 +1,55 @@
 # -*- coding: utf-8 -*-
 
+import re
+
 import config
 import surllib
 
-URL_PREFIX = 'http://%s/Infoweb/Fi2/' % config.HOSTNAME
-URL = URL_PREFIX + 'Faneblade.asp'
-
-NAMES_IGNORE = [u'Skolebestyrelsen', u'Kontaktforældre']
-
-# map of children => pageToSelectChild
+# Map of children => urlPrefix
+# 'Andrea 0A' => '/parent/1234/Andrea/'
 _children = None
 
 
-def skoleGetChildren():
+def getChildren():
     '''Returns of list of "available" children in the system'''
-    global URL, _children
+    global _children
 
-    # ensure that we are logged in
-    # surllib.skoleLogin() # done automatically later
-
-    config.log(u'Henter liste af børn')
+    def ckey(n): return tuple(n.rsplit(' ', 1)[::-1])
 
     if not _children:
-        data = surllib.skoleGetURL(URL, asSoup=True, noCache=True)
+        _children = dict()
+        seen = set()
 
-        _children = {}
-        for a in data.findAll('a'):
-            href = a['href']
-            name = a.span.text
+        config.log(u'Henter liste af børn')
+        data = surllib.skoleLogin()
 
-            if name in NAMES_IGNORE:
-                config.log(u'Ignorerer [%s]' % name)
+        # Name of "First child"
+        fst = data.find(id="sk-personal-menu-button").text.strip()
+
+        for a in data.findAll('a', href=re.compile('.*/Index$')):
+            url = a['href'].rsplit('/', 1)[0].rstrip('/')
+            if url in seen:
                 continue
+            seen.add(url)
+            name = a.text.strip() or fst
+            if name not in _children:
+                config.log(u'Barn %s => %s' % (name, url), 2)
+                _children[name] = url
+        cns = sorted(_children.keys(), key=ckey)
+        config.log(u'Følgende børn blev fundet: ' + u', '.join(cns))
 
-            _children[name] = href
-
-    return sorted(_children.keys())
+    return sorted(_children.keys(), key=ckey)
 
 
-def skoleSelectChild(name):
-    global _children, URL_PREFIX
-    assert(name in _children)
+def getChildURLPrefix(cname):
+    getChildren()
+    assert(cname in _children)
 
-    if name == config.CHILDNAME:
-        config.log(u'[%s] er allerede valgt som barn' % name)
-    else:
-        config.log(u'Vælger [%s]' % name)
-        url = URL_PREFIX + _children[name]
-        surllib.skoleGetURL(url, False, noCache=True)
-        config.CHILDNAME = name
+    return surllib.absurl(_children[cname])
 
-if False:
-    c = skoleGetChildren()
-    print repr(_children)
-    for cname in c:
-        print cname
-        skoleSelectChild(cname)
+
+def getChildURL(cname, suffix):
+    # Guessing a bug in forældre intra as weekplan urls have the following
+    # format: parent/CHILD_ID/CHILD_NAMEitem/weeklyplansandhomework/list
+    assert(suffix.startswith('/') or suffix.startswith('item/'))
+    return getChildURLPrefix(cname) + suffix

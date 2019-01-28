@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!-- =================================================================
+==== Denne fil kan bruges til at køre fskintra som et Mac cron job.
+==== Se yderligere information i doc/cron.md
+=================================================================== -->
+<dict>
+    <key>Label</key>
+    <string>com.github.fskintra</string>
+    <key>ProgramArguments</key>
+    <array>
+        <!-- Opdater med den fulde sti til hvor run-cron.sh kan findes -->
+        <string>/Users/USERNAME/sti/til/fskintra/run-cron.sh</string>
+    </array>
+    <!-- Kør programmet hver 2. time, dvs. 7200 sekunder -->
+    <key>StartInterval</key>
+    <integer>7200</integer>
+    <!-- Ret evt. hvor output + fejl skal skrives -->
+    <key>StandardOutPath</key>
+    <string>/tmp/fskintra.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/fskintra-error.log</string>
+</dict>
+</plist>
