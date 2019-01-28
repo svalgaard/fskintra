@@ -9,7 +9,7 @@ def dependencyError(package, required, current=None):
         err += u'\n%s version %s er installeret' % (package, current)
     sys.exit(u'''%s
 Se evt. her for hjælp:
-    https://github.com/svalgaard/fskintra/#krav''' % err)
+    https://svalgaard.github.io/fskintra/install#krav''' % err)
 
 
 #

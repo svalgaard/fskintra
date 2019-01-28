@@ -11,22 +11,21 @@ ForældreIntra er en del af SkoleIntra, der brugers af næsten alle danske folke
 
 Alle emails bliver gemt, dvs. du får kun en email, såfremt der faktisk er kommet nyt.
 
+
 NB: Ny version
---------------
+==============
 
 Denne version af fskintra bruger (modsat den tidligere) det nye design af ForældreIntra hjemmesiden. Endvidere kan man bruge uni-login til at logge ind og ikke kun "skole-specifikt/almindeligt" logind.
 
-Nyeste version kan p.t. findes her:
+Nyeste version kan findes [på Github](https://github.com/svalgaard/fskintra/).
 
-    # Til ForældreIntra med nyt design
-    https://github.com/svalgaard/fskintra/
-    # Til ForældreIntra Classic
-    https://github.com/svalgaard/fskintra/tree/classic
+Den tidligere version (der bruger det ældre design), kan findes ved at kigge på 'branchen' [classic](https://github.com/svalgaard/fskintra/tree/classic).
+
 
 Eksempel
 ========
 
-Som standard tilbyde ForældreIntra at sende dig en email hvis der er nye beskeder eller andet, men du får kun overskriften/første linje af beskeden - nogle gange endda kun, hvem der har skrevet den:
+Som standard tilbyder ForældreIntra at sende dig en email hvis der er nye beskeder eller andet, men du får kun overskriften/første linje af beskeden - nogle gange endda kun, hvem der har skrevet den:
 
 ```
 > Advisering om nyt i ForældreIntra - Dinoskolen:
@@ -38,7 +37,7 @@ Som standard tilbyde ForældreIntra at sende dig en email hvis der er nye besked
 ```
 
 Med fskintra får du i stedet en email med selve indholdet af beskeden
-og behøver ikke længere at logge på, for at se, hvad der står
+og behøver ikke længere at logge på, for at se, hvad der står:
 
 ```
 > Hvor er Annas sorte højregummistøvle?
@@ -58,7 +57,7 @@ og behøver ikke længere at logge på, for at se, hvad der står
 Hvem?
 =====
 
-fskintra er skrevet/opdateres af
+```fskintra``` er skrevet/opdateres af
 [Jens Svalgaard kohrt](http://svalgaard.net/jens/) - github AT svalgaard.net
 
 Ændringer og forslag er bl.a. kommet fra
@@ -68,3 +67,5 @@ fskintra er skrevet/opdateres af
 * Kasper Lund
 * [Jesper Rønn-Jensen](https://github.com/jesperronn)
 * [Benny Simonsen](https://github.com/bennyslbs)
+
+Bemærk at ```fskintra``` *ikke* er udviklet af itslearning (der laver selve ForældreIntra), men er et uofficielt program fra en tredjepart. Hvis du oplever fejl kan du indsende en fejlrapport på vores [Github site](https://github.com/svalgaard/fskintra/issues).

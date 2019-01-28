@@ -36,5 +36,5 @@ nulstille at alt indhold er hentet.
 user@sputnik:~/fskintra$ ./fskintra.py --catch-up
 ```
 
-Bemærk at indhold der er kommet ind på ForældreIntra i tidsrummet mellem
-du har kørt trin 1 og 3 ikke vil blive udsendt til dig som e-email.
+Bemærk at indhold, der er kommet ind på ForældreIntra i tidsrummet mellem
+trin 1 og 3, i så fald ikke vil blive udsendt som e-mail.

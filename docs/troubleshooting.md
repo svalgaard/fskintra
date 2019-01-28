@@ -8,16 +8,17 @@ får man en fejl lignende følgende:
 
 ```python
 user@sputnik:~/fskintra$ ./fskintra.py
-fskintra kræver Python 2.7.x
-Du kører med version 3.6.6
-Måske har du flere Python-versioner installeret?
+fskintra kræver Python version 2.7.x
+Python version 3.7.2 er installeret
+Se evt. her for hjælp:
+    https://svalgaard.github.io/fskintra/install#krav
 ```
 
 Løsningen er først at sikre at man har Python 2.7.x installeret og dernæst
 eksplicit vælge den når man kører ```fskintra```, fx:
 
 ```console
-user@sputnik:~/fskintra$ python2 fskintra.py
+user@sputnik:~/fskintra$ python2 ./fskintra.py
 ```
 
 
