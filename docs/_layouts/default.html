@@ -29,6 +29,18 @@
         </header>
     </div>
 
+    <!-- MENU CONTENT -->
+    <div id="menu_wrap" class="outer">
+        <section id="menu_content" class="inner">
+            {% for item in site.menu %}
+                {% if forloop.first == false %}
+                <span>&nbsp;|&nbsp;</span>
+                {% endif %}
+                <span><a href="{{item.url}}">{{ item.title}}</a></span>
+            {% endfor %}
+      </section>
+    </div>
+
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">

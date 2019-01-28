@@ -3,3 +3,17 @@ description: ForældreIntra 👪 til️ e-mail 📧
 show_downloads: false
 theme: jekyll-theme-slate
 lang: da-DK
+
+menu:
+  - title: fskintra
+    url: /
+  - title: Installation
+    url: /install
+  - title: Opdatering
+    url: /upgrade
+  - title: Problemer?
+    url: /troubleshooting
+  - title: Automatisk kørsel
+    url: /cron
+  - title: Docker
+    url: /docker

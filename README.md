@@ -58,7 +58,8 @@ og behøver ikke længere at logge på, for at se, hvad der står
 Hvordan?
 ========
 
-Se i underkataloget ```docs``` for information om, hvordan du installerer ```fskintra```.
+Se i underkataloget ```docs``` eller direkte på
+[vores github pages side](https://svalgaard.github.io/fskintra/)  for information om, hvordan du installerer ```fskintra```.
 
 
 Hvem?
