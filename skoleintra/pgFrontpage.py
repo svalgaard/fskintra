@@ -23,7 +23,7 @@ def parseFrontpageItem(cname, div):
         # Comments are enabled
         txt = comments.text.strip()
         if u'tilføj' not in txt.lower():
-            m = re.match(ur'.*vis (\d+) kommentarer.*', txt.lower())
+            m = re.match(ur'.*vis (\d+) kommentar.*', txt.lower())
             assert(m)
             nc = int(m.group(1))
             if nc > 0:
