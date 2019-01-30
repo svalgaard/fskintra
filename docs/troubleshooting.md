@@ -6,7 +6,7 @@ Hvis man prøver at køre ```fskintra``` med Python version 3.x -
 fx. hvis ens standard Python version netop er version 3 -
 får man en fejl lignende følgende:
 
-```python
+```
 user@sputnik:~/fskintra$ ./fskintra.py
 fskintra kræver Python version 2.7.x
 Python version 3.7.2 er installeret
@@ -20,6 +20,26 @@ eksplicit vælge den når man kører ```fskintra```, fx:
 ```console
 user@sputnik:~/fskintra$ python2 ./fskintra.py
 ```
+
+## Dansk locale ##
+
+ForældreIntra bruger danske ugenavne, månedsnavne m.v. en del steder.
+For at ```fskintra``` kan fortolke disse, kræver det at Python kan bruge,
+hvad der kaldes et dansk locale, specifikt et dansk ```LC_TIME``` locale.
+Hvis det ikke har, får du en fejl lignende følgende:
+
+```
+fskintra kræver at Python kan forstå datoformater på dansk (dansk locale).
+Se evt. her for hjælp:
+    https://svalgaard.github.io/fskintra/troubleshooting#locale
+```
+
+Hvordan du får et dansk locale (gerne ```da_DK.UTF-8```) på dit system,
+afhænger af hvilken Linux distribution du bruger.
+NB: Det er *ikke nødvendigt* (eller nok) at rette ```LC_TIME``` miljøvariablen.
+Fejlen opstår, fordi dit system ikke har et dansk locale til rådighed -
+for Ubuntu, se afsnittet *(Re-)Generating locales* på
+[denne side](https://help.ubuntu.com/community/Locale) for hvordan dette gøres.
 
 
 ## UnicodeEncodeError ##

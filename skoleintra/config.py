@@ -72,9 +72,6 @@ def ensureDanish():
 
 ensureDanish()
 
-# Also ensure that we can parse Danish time stamps
-locale.setlocale(locale.LC_TIME, "da_DK")
-
 
 # logging levels:
 #  0 only important stuff (always printed)
