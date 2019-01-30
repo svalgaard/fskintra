@@ -26,12 +26,12 @@ user@sputnik:~/fskintra$ python2 ./fskintra.py
 ForældreIntra bruger danske ugenavne, månedsnavne m.v. en del steder.
 For at ```fskintra``` kan fortolke disse, kræver det at Python kan bruge,
 hvad der kaldes et dansk locale, specifikt et dansk ```LC_TIME``` locale.
-Hvis det ikke har, får du en fejl lignende følgende:
+Hvis Python ikke kan, får du en fejl lignende følgende:
 
 ```
 fskintra kræver at Python kan forstå datoformater på dansk (dansk locale).
 Se evt. her for hjælp:
-    https://svalgaard.github.io/fskintra/troubleshooting#locale
+    https://svalgaard.github.io/fskintra/troubleshooting#dansk-locale
 ```
 
 Hvordan du får et dansk locale (gerne ```da_DK.UTF-8```) på dit system,
