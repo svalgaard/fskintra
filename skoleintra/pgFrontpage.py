@@ -37,7 +37,7 @@ def parseFrontpageItem(cname, div):
     body = div.find('div', 'sk-news-item-content')
     # trim the body a bit
     body = sbs4.copy(body)  # make a copy as we look for attachments later
-    for e in body.select('.sk-news-item-footer, .sk-news-item-comments'):
+    for e in body.select('.sk-attachments-list, .sk-news-item-comments'):
         e.extract()
     for e in body.select('.h-fnt-bd'):
         e['style'] = 'font-weight: bold'
