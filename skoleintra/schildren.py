@@ -26,7 +26,7 @@ def getChildren():
         # Name of "First child"
         fst = data.find(id="sk-personal-menu-button").text.strip()
 
-        for a in data.findAll('a', href=re.compile('.*/Index$')):
+        for a in data.findAll('a', href=re.compile('^(/[^/]*){3}/Index$')):
             url = a['href'].rsplit('/', 1)[0].rstrip('/')
             if url in seen:
                 continue
