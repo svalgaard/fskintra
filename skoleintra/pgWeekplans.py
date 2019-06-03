@@ -13,6 +13,9 @@ SECTION = 'pln'
 def formatWeekplan(bs):
     '''Format the weekplan nicely for email'''
     weekplan = bs.find('div', "sk-weekly-plan-container")
+    if not weekplan:
+        # Sometimes there is actually not a weekly plan
+        return None
     # Change into table
     table = weekplan.div
     table.name = 'table'
@@ -68,6 +71,8 @@ def skoleWeekplans(cname):
         for a in ul.find_all('a', href=True):
             url = a['href']
             plan = getWeekplan(cname, url)
+            if not plan:
+                continue
             wid = url.split('/')[-1]  # e.g. 35-2018
             title = plan.find('h3').text.strip()
 
