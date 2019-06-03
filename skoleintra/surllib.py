@@ -248,16 +248,17 @@ def skoleLogin():
                     break
             else:
                 config.log(u'Kunne ikke finde logind formular på %s' % url, -1)
+                config.log(u'Måske er Javascript logind beskyttelse '
+                           u'slået til? Prøv igen senere eller se '
+                           u'https://svalgaard.github.io/fskintra/'
+                           u'troubleshooting', -1)
                 sys.exit(1)
             br['user'] = config.options.username
             br['pass'] = config.options.password
             resp = br.submit()
             continue
 
-        if '/Account/IdpLogin' in resp.geturl() \
-                and len(forms) == 1 \
-                and 'UserName' in br and 'Password' in br:
-
+        if urlparse.urlparse(resp.geturl()).path == '/Account/IdpLogin':
             if 'ikke adgang' in data:
                 config.log(u'Log ind giver en fejlmeddelse -- '
                            u'har du angivet korrekt kodeord?')
@@ -282,8 +283,14 @@ def skoleLogin():
                 config.log(u'Bruger alm. login med brugernavn %r' %
                            config.options.username, 3)
                 # "Ordinary login"
-                br['UserName'] = config.options.username
-                br['Password'] = config.options.password
+                try:
+                    br['UserName'] = config.options.username
+                    br['Password'] = config.options.password
+                except mechanize.ControlNotFoundError:
+                    config.log(u'Kan IKKE finde ALM LOGIN på siden.', -1)
+                    config.log(u'Skal du måske bruge unilogin i stedet?', -1)
+                    sys.exit(1)
+
                 resp = br.submit()
                 continue
         break
