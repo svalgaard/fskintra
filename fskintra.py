@@ -8,6 +8,7 @@ import skoleintra.pgFrontpage
 import skoleintra.pgContacts
 import skoleintra.pgDialogue
 import skoleintra.pgDocuments
+import skoleintra.pgHomework
 import skoleintra.pgPhotos
 import skoleintra.pgSignup
 import skoleintra.pgWeekplans

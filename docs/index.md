@@ -7,6 +7,7 @@ ForældreIntra er en del af SkoleIntra, der brugers af næsten alle danske folke
 * Beskeder (både sendt og modtaget)
 * Dokumenter
 * Billeder
+* Lektier
 * Tilmeldinger til samtaler og arrangementer
 
 Alle emails bliver gemt, dvs. du får kun en email, såfremt der faktisk er kommet nyt.
@@ -65,6 +66,7 @@ Hvem?
 * [Jacob Kjeldahl](https://github.com/kjeldahl)
 * [Michael Legart](https://github.com/legart)
 * Kasper Lund
+* Lars Jakobsen
 * [Jesper Rønn-Jensen](https://github.com/jesperronn)
 * [Benny Simonsen](https://github.com/bennyslbs)
 

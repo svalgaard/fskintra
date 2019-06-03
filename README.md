@@ -21,6 +21,7 @@ Hvem?
 * [Jacob Kjeldahl](https://github.com/kjeldahl)
 * [Michael Legart](https://github.com/legart)
 * Kasper Lund
+* Lars Jakobsen
 * [Jesper Rønn-Jensen](https://github.com/jesperronn)
 * [Benny Simonsen](https://github.com/bennyslbs)
 
