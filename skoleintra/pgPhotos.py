@@ -13,7 +13,7 @@ import surllib
 
 SECTION = 'pht'
 MAX_CACHE_AGE = .99
-PHOTOS_PER_EMAIL = 50
+PHOTOS_PER_EMAIL = 5
 
 
 def sendPhotos(cname, title, mid, photos):
