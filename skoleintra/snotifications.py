@@ -12,6 +12,9 @@ DT_FORMAT = '%Y.%m.%d-%H.%M.%S.%f'
 def checkForUpdates():
     now = datetime.datetime.now()
 
+    # Ignore this as it apparently doesn't work
+    return (True, (now, ''))
+
     bs = surllib.skoleGetURL(
         '/notifications/v1?useNewerThan=False&pageSize=10', True, True)
 
