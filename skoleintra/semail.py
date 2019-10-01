@@ -413,8 +413,11 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
             sender = u'Skoleintra - %s' % self.mp['sender']
         else:
             sender = u'Skoleintra'
-        sender = '%s <%s>' % (headerEncodeField(sender),
-                              config.options.senderemail)
+        sender = headerEncodeField(sender, 80)
+        if ',' in sender:
+            # In this case the sender name must be quoted
+            sender = '"%s"' % sender
+        sender = '%s <%s>' % (sender, config.options.senderemail)
         msg['From'] = sender
         msg['To'] = config.options.email
 
