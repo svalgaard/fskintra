@@ -462,8 +462,8 @@ msg--625922d86ffef60cfef5efc7822a7cff--123456'''
                 server.starttls()
             except smtplib.SMTPException:
                 pass  # ok, but we tried...
-            server.login(config.options.smtpusername,
-                         config.options.smtppassword)
+            server.login(config.options.smtpusername.encode('ascii'),
+                         config.options.smtppassword.encode('ascii'))
         server.sendmail(config.options.senderemail,
                         config.options.email, msg.as_string())
         server.quit()
