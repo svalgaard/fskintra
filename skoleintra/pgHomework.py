@@ -8,6 +8,7 @@ import schildren
 import semail
 import surllib
 import md5
+import re
 from datetime import datetime
 
 SECTION = 'hwk'
@@ -76,11 +77,17 @@ def formatHomework(cname, bs):
                 )
         html_temp += u'</tbody></table><br>'
         checksum = md5.md5(html_temp.encode('utf8')).hexdigest()
-        if datetime.strptime(header, '%A, %d. %b. %Y:').date() == \
-                datetime.today().date() and checksum in previouslySent:
+        if checksum in previouslySent:
             # hvis lektien tidligere er sendt og har due-date i dag,
             # så undlad at sende
-            continue
+            if re.match(r'^\D+, \d+\. \D+\. \d+:', header):
+                # Måned angivet som forkortelse
+                ft = '%A, %d. %b. %Y:'
+            else:
+                # Måned angivet fuldt ud ("Maj")
+                ft = '%A, %d. %b %Y:'
+            if datetime.strptime(header, ft).date() == datetime.today().date():
+                continue
         homework_checksums.add(checksum)
         html_temp += html
         html = html_temp
