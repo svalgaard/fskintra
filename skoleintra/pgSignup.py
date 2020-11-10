@@ -48,7 +48,7 @@ def findEvents(cname, bs):
         msg.maybeSend()
 
 
-@config.Section(SECTION)
+@config.Section(SECTION, True)
 def skoleSignup(cname):
     'Tilmelding til samtaler/arrangementer'
     config.clog(cname, u'Kigger efter nye samtaler/arrangementer')

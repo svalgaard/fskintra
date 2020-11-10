@@ -284,22 +284,30 @@ https://github.com/svalgaard/fskintra/
 
     if not args.sections:
         # Run everything by default
-        args.sections = defsecs.copy()
+        args.sections = set()
+        for s in PAGE_SECTIONS:
+            if not s.optional:
+                args.sections.add(s.section)
     else:
         secs = filter(None, u','.join(args.sections).lower().split(u','))
         args.sections = defsecs.copy()
 
         if u'list' in secs:
-            msg = u'''
-Det er muligt at angive følgende mulige afsnit som argument til --section:
+            msg = u'Det er muligt at angive følgende mulige afsnit '
+            msg += u'som argument til --section:\n\n'
 
-%s
+            for s in PAGE_SECTIONS:
+                desc = s.desc
+                if s.optional:
+                    desc += u' (køres kun hvis angivet med -section)'
+                msg += u'  %-5s %s\n' % (s.section, desc)
 
+            msg += u'''
 Brug fx. --section frp,doc for kun at se efter nyt fra forsiden og beskeder.
 Eller --section ,-pht,-doc for at se efter nyt på alle sider undtagen billeder
 og dokumenter. Det ekstra komma er nødvendig for at -pht ikke bliver set som
 om du har kaldt fskintra med argumenterne -p, -h og -t.
-''' % u'\n'.join(u'  %-5s %s' % (s.section, s.desc) for s in PAGE_SECTIONS)
+'''
             sys.stderr.write(msg.lstrip())
             sys.exit(0)
 
@@ -410,9 +418,10 @@ Eller kør fskintra med --config'''.strip() + '\n'
 
 
 class Section:
-    def __init__(self, section):
+    def __init__(self, section, optional=False):
         assert(len(section) == 3)
         self.section = section
+        self.optional = optional
 
     def __call__(self, f):
         self.f = f
