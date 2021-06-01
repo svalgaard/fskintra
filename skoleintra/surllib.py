@@ -130,6 +130,8 @@ class Browser(mechanize.Browser):
                 dt = a.url.split('/')[-1]
                 if dt:
                     self.state['dialogue'] = dt
+                    if dt in ['conversations', 'inbox']:
+                        break
 
         self.saveState()
         return resp

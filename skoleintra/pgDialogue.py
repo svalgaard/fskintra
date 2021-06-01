@@ -215,7 +215,7 @@ def getMsgsForChild(cname):
 
         return msgs
     else:
-        config.clog(cname, u'Beskede-indbakke-type %r ikke understøttet'
+        config.clog(cname, u'Besked-indbakke-type %r ikke understøttet'
                     % dtype, 0)
         return []
 
