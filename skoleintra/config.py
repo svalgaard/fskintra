@@ -344,7 +344,7 @@ om du har kaldt fskintra med argumenterne -p, -h og -t.
     if err:
         parser.error(
             err % args.configfilename +
-            '\nKør evt fskintra med --config for at sætte det op.')
+            u'\nKør evt fskintra med --config for at sætte det op.')
 
     if not cfg.has_section(args.profile):
         parser.error((u'Konfigurationsfilen %s har ikke afsnittet [%s] '
