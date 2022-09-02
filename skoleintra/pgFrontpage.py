@@ -76,7 +76,10 @@ def parseFrontpageItem(cname, div):
     recp = recp.split(u',')
     msg.setRecipient(recp)
 
-    msg.setDateTime(div.find('div', 'sk-news-item-timestamp').text)
+    myDateTime = div.find('div', 'sk-news-item-timestamp').text
+    myDateTime = myDateTime.replace(u'\xa0', u'')
+    myDateTime = myDateTime.partition(u'opdateret')[0].strip()
+    msg.setDateTime(myDateTime)
 
     # Do we have any attachments?
     divA = div.find('div', 'sk-attachments-list')
