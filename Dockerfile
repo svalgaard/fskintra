@@ -1,4 +1,4 @@
-FROM python:2-slim
+FROM python:2
 LABEL description='https://github.com/svalgaard/fskintra'
 
 ENV PYTHONUNBUFFERED 1
