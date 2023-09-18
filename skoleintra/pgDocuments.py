@@ -23,8 +23,16 @@ def docFindDocuments(cname, rootTitle, bs, title):
                 (folder, len(docs)))
 
     for doc in docs:
-        docTitle = doc.find('span', 'sk-documents-document-title').text.strip()
-        docDate = doc.find('div', 'sk-documents-date-column').text.strip()
+        if doc.find('span', 'sk-documents-document-title') is not None:
+            docTitle = doc.find('span', 'sk-documents-document-title').text.strip()
+        else:
+            continue
+            
+        if doc.find('div', 'sk-documents-date-column') is not None:
+            docDate = doc.find('div', 'sk-documents-date-column').text.strip()
+        else:
+            continue
+
         a = doc.find('a')
         url = a and a['href'] or ''
         if '.' in docTitle:
