@@ -33,7 +33,18 @@ Output is an semail.Message ready to be sent'''
         msg.setMessageID(str(jsn["Id"]))
     msg.setTitle(jsn['Subject'])
     msg.setDateTime(jsn['SentReceivedDateText'])
-    msg.setRecipient(jsn['Recipients'])
+
+    # Support new format from August 2025 where recipients are now stored in a dictionary instead of a list
+    if isinstance(jsn['Recipients'], dict):
+        assert ("" in jsn['Recipients'])
+        recipient_list = []
+        for recipient in jsn['Recipients'][""]:
+            # Only consider recipients with a name
+            assert("Name" in recipient)
+            recipient_list.append(recipient["Name"])
+        msg.setRecipient(recipient_list)
+    else:
+        msg.setRecipient(jsn['Recipients'])
     msg.setSender(jsn['SenderName'])
     for att in (jsn['AttachmentsLinks'] or []):
         msg.addAttachment(att['HrefAttributeValue'], att['Text'])
