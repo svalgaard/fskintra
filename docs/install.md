@@ -10,7 +10,7 @@ ELLER
 * Docker - se i så fald på [Docker siden](docker.md).
 * Email-konto enten som smtp server hos dig selv eller fx. en Gmail konto
 
-Givet at Python 2.7 er ved at blive udfaset, er Docker-løsningen nok
+Givet at Python 2.7 er ved at blive udfaset, er Docker-løsningen nok klart
 nemmest at få til at virke.
 
 ## 1. Hent fskintra ##

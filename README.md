@@ -14,14 +14,14 @@ Hvem?
 =====
 
 ```fskintra``` er skrevet/opdateres af
-[Jens Svalgaard kohrt](http://svalgaard.net/jens/) - github AT svalgaard.net
+[Jens Svalgaard Kohrt](http://svalgaard.net/jens/) - github AT svalgaard.net
 
 Ændringer og forslag er bl.a. kommet fra
 * [Aske Olsson](https://github.com/dvaske)
 * [Jacob Kjeldahl](https://github.com/kjeldahl)
 * [Michael Legart](https://github.com/legart)
 * Kasper Lund
-* Lars Jakobsen
+* [Lars Jakobsen](https://github.com/LaJako)
 * [Jesper Rønn-Jensen](https://github.com/jesperronn)
 * [Benny Simonsen](https://github.com/bennyslbs)
 
