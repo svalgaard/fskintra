@@ -7,13 +7,13 @@ fskintra kan også køres i [Docker](https://www.docker.com/).
 Hent nyeste version af fskintra fra Docker Hub:
 
 ```bash
-docker pull svalgaard/fskintra
+docker pull ghcr.io/svalgaard/fskintra:master
 ```
 
 Lav en konfigurationsfil ved at køre følgende Docker-kommando:
 
 ```bash
-docker run --rm -it -v ~/.skoleintra:/root/.skoleintra svalgaard/fskintra --config
+docker run --rm -it -v ~/.skoleintra:/root/.skoleintra ghcr.io/svalgaard/fskintra:master --config
 ```
 
 Lav endvidere evt. et lille bash script der starter fskintra via Docker:
@@ -24,7 +24,7 @@ Lav endvidere evt. et lille bash script der starter fskintra via Docker:
 # Gemmes fx i /bin/fskintra
 # Kan IKKE bruges når du skal køre med --config
 
-docker run --rm -v ~/.skoleintra:/root/.skoleintra svalgaard/fskintra "$@"
+docker run --rm -v ~/.skoleintra:/root/.skoleintra ghcr.io/svalgaard/fskintra:master "$@"
 ```
 
 Bemærk at docker her *ikke* bliver kørt med `-it` parameteren og derfor ikke bliver
@@ -40,7 +40,7 @@ Du starter derfor bare en ny container hver gang du vil hente nyt.
 Nu kan du køre fskintra i Docker med følgende kommando:
 
 ```bash
-docker run --rm -it -v ~/.skoleintra:/root/.skoleintra svalgaard/fskintra
+docker run --rm -it -v ~/.skoleintra:/root/.skoleintra ghcr.io/svalgaard/fskintra:master
 # ELLER
 /bin/fskintra
 ```
@@ -50,7 +50,7 @@ docker run --rm -it -v ~/.skoleintra:/root/.skoleintra svalgaard/fskintra
 Du kan evt bruge Docker kommandoen i [cron](cron.md):
 
 ```bash
-15 6,17 * * * /usr/bin/docker run --rm -v ~/.skoleintra:/root/.skoleintra svalgaard/fskintra
+15 6,17 * * * /usr/bin/docker run --rm -v ~/.skoleintra:/root/.skoleintra ghcr.io/svalgaard/fskintra:master
 ELLER
 15 6,17 * * * /bin/fskintra
 ```
@@ -63,12 +63,12 @@ Bemærk at `-it` *ikke* skal med, da det ikke er en interaktiv kørsel.
 Hvis der kommer ny udgave af fskintra, hentes et nyt med `docker pull`:
 
 ```
-docker pull svalgaard/fskintra
+docker pull ghcr.io/svalgaard/fskintra:master
 ```
 
 ## Docker med egne ændringer ##
 
-I stedet for at bruge det officielle `svalgaard/fskintra` Docker image,
+I stedet for at bruge det officielle `ghcr.io/svalgaard/fskintra:master` Docker image,
 kan du bygge dit eget i samme katalog som `Dockerfile` filen ligger i:
 
 ```bash
