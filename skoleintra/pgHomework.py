@@ -33,15 +33,10 @@ def formatHomework(cname, bs):
             if data:
                 previouslySent.update(data)
     # print(previouslySent)
-    import locale
-    locale.setlocale(locale.LC_TIME, 'da_DK.UTF-8')
+
     for li in bs.select('ul.sk-list > li'):
         # Locate header with due-dates
         header = li.find('div', 'sk-white-box').b.text
-        if isinstance(header, bytes):
-            header = header.decode('utf-8')
-        else:
-            header = str(header)
         html_temp = u'<b>{0}</b>'.format(header)
         html_temp += u'<table border="1" cellpadding="1" cellspacing="1">'
         html_temp += u'<tbody>'
