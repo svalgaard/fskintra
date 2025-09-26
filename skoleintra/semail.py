@@ -160,7 +160,10 @@ class Message:
         self.mp['sender'] = sender
 
     def setRecipient(self, recipient):
-        if type(recipient) == list and recipient:
+        if not recipient:
+            # Sometimes there are no recipients
+            return
+        if type(recipient) == list:
             N = 9
             if len(recipient) == 1:
                 recipient = recipient[0]
