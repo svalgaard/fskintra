@@ -10,7 +10,7 @@ WORKDIR /fskintra
 COPY . /fskintra
 
 RUN apt-get update && \
-    apt-get install -y locales python python-pip && \
+    apt-get install -y locales python python-pip libxml2-dev libxslt1-dev && \
     localedef -i da_DK -c -f UTF-8 -A /usr/share/locale/locale.alias da_DK
 
 RUN pip install --no-cache-dir -r requirements.txt
