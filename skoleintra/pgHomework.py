@@ -37,6 +37,9 @@ def formatHomework(cname, bs):
     for li in bs.select('ul.sk-list > li'):
         # Locate header with due-dates
         header = li.find('div', 'sk-white-box').b.text
+        config.clog(cname, u'Fandt lektietitel: %r' % header, 3)
+        if type(header) == str:
+            header = header.decode('utf-8')
         html_temp = u'<b>{0}</b>'.format(header)
         html_temp += u'<table border="1" cellpadding="1" cellspacing="1">'
         html_temp += u'<tbody>'
