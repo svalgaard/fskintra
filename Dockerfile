@@ -1,6 +1,7 @@
 FROM ubuntu:18.04
 LABEL description='https://github.com/svalgaard/fskintra'
 
+ENV LC_ALL=da_DK.utf-8
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONIOENCODING=UTF-8
 
