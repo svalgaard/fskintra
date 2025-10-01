@@ -121,7 +121,10 @@ def parseFrontpage(cname, bs):
 
     # Find interesting main front page items
     fps = bs.findAll('div', 'sk-news-item')
-    assert(len(fps) > 0)  # 1+ msgs on the frontpage or something is wrong
+    if len(fps) == 0:
+        # no items on the main front page?
+        config.clog(cname, u'Der er ikke ingen nyheder på forsiden?', 2)
+
     for div in fps[::-1]:
         msg = parseFrontpageItem(cname, div)
         msgs.append(msg)
