@@ -46,14 +46,15 @@ def formatHomework(cname, bs):
         for row in table.select('tbody tr'):
             delete_row = False
             # Loop through each cell in the row
-            for cell in row.find_all('td'):
+            for cell in row.find_all(['td', 'th']):
                 # Remove unneded tags
                 if cell.find('span'):
                     cell.span.unwrap()
                 if cell.find('div'):
                     for div in cell.find_all('div'):
                         cell.div.unwrap()
-                del cell['style']
+                if cell.has_attr('style'):
+                    del cell['style']
                 cell.string = '<br/>'.join(cell.stripped_strings)
                 if cell.string == '':  # '\xa0':
                     delete_row = True
@@ -66,15 +67,17 @@ def formatHomework(cname, bs):
             if delete_row:
                 row.decompose()
             else:
+                cells = row.find_all(['td', 'th'], recursive=False)
+                if len(cells) < 2:
+                    config.clog(cname, u'Hopper lektierække over uden to kolonner', 2)
+                    continue
                 html_temp += (
                     u'<tr style="font-size:14px">'
                     u'<td style="width:173">{0}:</td>'
                     u'<td style="width:717">{1}</td>'
                     u'</tr>').format(
-                        row.select_one(
-                            'td:nth-of-type(1)').get_text(strip=True),
-                        row.select_one(
-                            'td:nth-of-type(2)').get_text(strip=True)
+                        cells[0].get_text(strip=True),
+                        cells[1].get_text(strip=True)
                 )
         html_temp += u'</tbody></table><br>'
         checksum = md5.md5(html_temp.encode('utf8')).hexdigest()
